@@ -383,7 +383,7 @@ def run(
     n_peaks: List[int] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     out_heatmap: bool = False,
     max_sample: int = 10000,
-    n_job=6,
+    n_job: int = 6,
 ):
     """Script which builds dataset ready for ml
     Args:\n
