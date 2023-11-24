@@ -1,0 +1,5 @@
+typer
+pathlib
+pandas
+matplotlib
+plotly
