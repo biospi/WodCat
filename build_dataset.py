@@ -75,7 +75,7 @@ def create_activity_graph(
     fig.savefig(filepath)
 
 
-def create_training_sets(activity, metadata, out_dir, tag, filename):
+def create_training_sets(activity, metadata, out_dir, filename):
     training_set = []
     training_set.extend(activity)
     training_set.append(metadata["label"])
@@ -88,19 +88,18 @@ def create_training_sets(activity, metadata, out_dir, tag, filename):
     training_set.append(metadata["name"])
     training_set.append(metadata["mobility_score"])
 
-    path = out_dir / "training_sets" / tag
-    Path(path).mkdir(parents=True, exist_ok=True)
-    filename = f"{path}/{filename}"
+    filepath = out_dir / filename
+    filepath = filepath.as_posix()
     training_str_flatten = (
         str(training_set).strip("[]").replace(" ", "").replace("None", "NaN")
     )
     print(
         f"set size is {len(training_set)}, {training_str_flatten[0:50]}.....{training_str_flatten[-50:]}"
     )
-    with open(filename, "a") as outfile:
+    with open(filepath, "a") as outfile:
         outfile.write(training_str_flatten)
         outfile.write("\n")
-    return filename
+    return filepath
 
 
 def get_cat_meta(output_dir, cat_id, output_fig=False):
@@ -211,13 +210,22 @@ def find_region_of_interest(activity, w_size, thresh):
     return rois
 
 
-def main(data_dir, out_dir, bin, w_size, thresh, n_peaks, out_heatmap, max_sample):
+def main(data_dir, out_dir, bin, w_size, thresh, n_peak, out_heatmap, max_sample):
+    print(f"data_dir={data_dir}")
+    print(f"out_dir={out_dir}")
+    print(f"bin={bin}")
+    print(f"w_size={w_size}")
+    print(f"thresh={thresh}")
+    print(f"n_peak={n_peak}")
+    print(f"out_heatmap={out_heatmap}")
+    print(f"max_sample={max_sample}")
+    out_dir.mkdir(parents=True, exist_ok=True)
+
     if bin not in ["S", "T"]:
         print(f"bin value must be 'S' or 'T'. {bin} is not supported!")
 
-    dataset_path = out_dir / "training_testing_sets"
-    if dataset_path.exists():
-        shutil.rmtree(dataset_path)  # purge dataset if already created
+    if out_dir.exists():
+        shutil.rmtree(out_dir)  # purge dataset if already created
 
     print(data_dir)
     print(out_dir)
@@ -286,7 +294,7 @@ def main(data_dir, out_dir, bin, w_size, thresh, n_peaks, out_heatmap, max_sampl
         rois = []
         if w_size is not None:
             rois = find_region_of_interest(activity, w_size, thresh)
-            rois, stop = build_n_peak_samples(n_peaks, rois, max_sample)
+            rois, stop = build_n_peak_samples(n_peak, rois, max_sample)
 
         cat_id = int(file.stem.split("_")[0])
         cat_meta = get_cat_meta(out_dir, cat_id)
@@ -312,7 +320,7 @@ def main(data_dir, out_dir, bin, w_size, thresh, n_peaks, out_heatmap, max_sampl
 
         for roi in rois:
             w = roi
-            create_training_sets(w, cat_meta, out_dir, "samples", "samples.csv")
+            create_training_sets(w, cat_meta, out_dir, "samples.csv")
             activity_list_w.append(w)
             datetime_list_w.append(df["date_time"].values[0 : len(w)])
             individual_list_w.append(f"{cat_meta['name']} {cat_id} {i}")
@@ -404,11 +412,9 @@ def run(
             for t in threshs:
                 dirname = f"{max_sample}_{t}_{str(w).zfill(3)}_{str(n_peak).zfill(3)}"
                 out_dataset_dir = out_dir / dirname / "dataset"
-                print(out_dataset_dir)
-                out_dataset_dir.mkdir(parents=True, exist_ok=True)
                 pool.apply_async(
                     main,
-                    (data_dir, out_dataset_dir, bin, w, t, n_peaks, out_heatmap, max_sample),
+                    (data_dir, out_dataset_dir, bin, w, t, n_peak, out_heatmap, max_sample),
                 ),
 
     pool.close()
@@ -417,7 +423,6 @@ def run(
 
 if __name__ == "__main__":
     #run(data_dir=Path("E:/Cats"), out_dir=Path("E:/Cats/output"), n_job=1)
-
     typer.run(run)
     # local_run_now()
     # local_run()
