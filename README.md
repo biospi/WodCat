@@ -16,7 +16,7 @@ python3 -m venv cats
 ```
 4) Activate the environment
 ```bash
-source wynd/bin/cats
+source cats/bin/activate
 ```
 5) Install dependencies 
 ```bash

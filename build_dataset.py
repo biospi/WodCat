@@ -212,6 +212,9 @@ def find_region_of_interest(activity, w_size, thresh):
 
 
 def main(data_dir, out_dir, bin, w_size, thresh, n_peaks, out_heatmap, max_sample):
+    if bin not in ["S", "T"]:
+        print(f"bin value must be 'S' or 'T'. {bin} is not supported!")
+
     dataset_path = out_dir / "training_testing_sets"
     if dataset_path.exists():
         shutil.rmtree(dataset_path)  # purge dataset if already created
@@ -374,7 +377,7 @@ def run(
     out_dir: Path = typer.Option(
         ..., exists=True, file_okay=False, dir_okay=True, resolve_path=True
     ),
-    bin: Literal["S", "T"] = "S",
+    bin: str = "S",
     w_size: List[int] = [10, 30, 60, 90],
     threshs: List[int] = [10, 100, 1000],
     n_peaks: List[int] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
