@@ -375,7 +375,7 @@ def run(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
     out_dir: Path = typer.Option(
-        ..., exists=True, file_okay=False, dir_okay=True, resolve_path=True
+        ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
     bin: str = "S",
     w_size: List[int] = [10, 30, 60, 90],
@@ -404,6 +404,7 @@ def run(
             for t in threshs:
                 dirname = f"{max_sample}_{t}_{str(w).zfill(3)}_{str(n_peak).zfill(3)}"
                 out_dir = out_dir / dirname / "dataset"
+                print(out_dir)
                 out_dir.mkdir(parents=True, exist_ok=True)
                 pool.apply_async(
                     main,
