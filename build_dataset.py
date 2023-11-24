@@ -6,7 +6,7 @@ from itertools import permutations
 # from scipy.signal import find_peaks, find_peaks_cwt
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Literal, List
+from typing import List
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -403,12 +403,12 @@ def run(
         for n_peak in n_peaks:
             for t in threshs:
                 dirname = f"{max_sample}_{t}_{str(w).zfill(3)}_{str(n_peak).zfill(3)}"
-                out_dir = out_dir / dirname / "dataset"
-                print(out_dir)
-                out_dir.mkdir(parents=True, exist_ok=True)
+                out_dataset_dir = out_dir / dirname / "dataset"
+                print(out_dataset_dir)
+                out_dataset_dir.mkdir(parents=True, exist_ok=True)
                 pool.apply_async(
                     main,
-                    (data_dir, out_dir, bin, w, t, n_peaks, out_heatmap, max_sample),
+                    (data_dir, out_dataset_dir, bin, w, t, n_peaks, out_heatmap, max_sample),
                 ),
 
     pool.close()
@@ -416,6 +416,8 @@ def run(
 
 
 if __name__ == "__main__":
+    #run(data_dir=Path("E:/Cats"), out_dir=Path("E:/Cats/output"), n_job=1)
+
     typer.run(run)
     # local_run_now()
     # local_run()
