@@ -409,15 +409,14 @@ def run(
                 out_dataset_dir = out_dir / dirname / "dataset"
                 if out_dataset_dir.exists():
                     shutil.rmtree(out_dataset_dir)  # purge dataset if already created
-                # pool.apply_async(
-                #     main,
-                #     (cat_data, out_dataset_dir, bin, w, t, n_peak, out_heatmap, max_sample, cpt, tot),
-                # ),
-                main(cat_data, out_dataset_dir, bin, w, t, n_peak, out_heatmap, max_sample, cpt, tot)
+                pool.apply_async(
+                    main,
+                    (cat_data, out_dataset_dir, bin, w, t, n_peak, out_heatmap, max_sample, cpt, tot),
+                ),
+                #main(cat_data, out_dataset_dir, bin, w, t, n_peak, out_heatmap, max_sample, cpt, tot)
                 cpt += 1
-
-    # pool.close()
-    # pool.join()
+    pool.close()
+    pool.join()
 
 
 if __name__ == "__main__":
