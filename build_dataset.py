@@ -245,9 +245,9 @@ def format_raw_data(df, bin):
     df = df.reindex(columns=columns_titles)
     df["date_time"] = pd.to_datetime(df["date_time"], format=format)
     df.sort_values(by="date_time")
-    df["hour"] = df["date_time"].dt.hour
-    df["weekday"] = np.where(df["date_time"].dt.dayofweek < 5, True, False)
-    df["day_light"] = df["hour"].apply(check_if_hour_daylight)
+    #df["hour"] = df["date_time"].dt.hour
+    #df["weekday"] = np.where(df["date_time"].dt.dayofweek < 5, True, False)
+    #df["day_light"] = df["hour"].apply(check_if_hour_daylight)
     df = df.resample(bin, on="date_time").sum()
     df = df.reset_index()
 
@@ -258,7 +258,11 @@ def format_raw_data(df, bin):
 
     df = df.set_index("date_time")
     df.reset_index(level=0, inplace=True)
-    df["color"] = df.apply(attribute_color, axis=1)
+    #df["color"] = df.apply(attribute_color, axis=1)
+    df["epoch"] = df["epoch"].astype(np.int32)
+    df["day"] = df["day"].astype(np.int8)
+    df["elapsed_seconds"] = df["elapsed_seconds"].astype(np.int32)
+    df["activity_counts"] = df["activity_counts"].astype(np.int32)
     return df
 
 
@@ -291,18 +295,20 @@ def main(cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatmap, max_sample
                 title=f"{cat_id}_{cat_meta['name']}",
             )
 
-        activity_list.append(activity)
-        datetime_list.append(df["date_time"].values)
-        individual_list.append(f"{cat_meta['name']} {cat_id}")
+        if out_heatmap:
+            activity_list.append(activity)
+            datetime_list.append(df["date_time"].values)
+            individual_list.append(f"{cat_meta['name']} {cat_id}")
 
         for roi in rois:
             create_training_sets(run_id, roi, cat_meta, out_dir, "samples.csv")
-            activity_list_w.append(roi)
-            datetime_list_w.append(df["date_time"].values[0 : len(roi)])
-            individual_list_w.append(f"{cat_meta['name']} {cat_id} {i}")
+            if out_heatmap:
+                activity_list_w.append(roi)
+                datetime_list_w.append(df["date_time"].values[0 : len(roi)])
+                individual_list_w.append(f"{cat_meta['name']} {cat_id} {i}")
             total += 1
 
-    if out_heatmap and len(activity_list_w) == 0:
+    if out_heatmap and len(activity_list_w) != 0:
         print("create heatmap...")
         df_herd = pd.DataFrame(activity_list)
         datetime_xaxis = max(datetime_list, key=len)

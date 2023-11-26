@@ -39,3 +39,4 @@ def check_if_hour_daylight(hour):
         return True
     else:
         return False
+
