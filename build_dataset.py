@@ -1,3 +1,4 @@
+import itertools
 import os
 import random
 import shutil
@@ -15,7 +16,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import typer
 
-from utils import anscombe, check_if_hour_daylight, attribute_color
+from utils import anscombe, check_if_hour_daylight, attribute_color, efficient_permutation
 
 
 def plot_heatmap(out_dir, datetime_xaxis, matrix, y_axis, filename, title="title"):
@@ -164,25 +165,27 @@ def get_cat_meta(output_dir, cat_id, output_fig=False):
     }
 
 
-def build_n_peak_samples(run_id, n, rois, max_sample):
-    print(f"[{run_id}] number of peaks is {n}, sample shape is{rois.shape}")
-    stop = False
-    permutation = list(permutations(range(len(rois)), n))
-    if len(permutation) > max_sample:
-        rois_double_idx = random.sample(permutation, k=max_sample)
-    else:
-        rois_double_idx = random.sample(permutation, len(permutation))  # shuffle
-        stop = True
+def build_n_peak_samples(run_id, n_peak, rois, max_sample):
+    print(f"[{run_id}] number of peaks is {n_peak}, sample shape is{rois.shape}")
+    idxs_peaks = np.arange(rois.shape[0])
+    # permutation = list(permutations(idxs_peaks, n_peak))
+    # if len(permutation) > max_sample:
+    #     rois_idxs = random.sample(permutation, k=max_sample)
+    # else:
+    #     rois_idxs = random.sample(permutation)
+    # del permutation
+    rois_idxs = efficient_permutation(idxs_peaks, max_sample, n_peak)
 
+    #build augmented sample by concatenating permutations of peaks
     n_peak_samples = []
-    for idxs in rois_double_idx:
+    for idxs in rois_idxs:
         new_samples = []
         for i in idxs:
             sample = rois[i]
             new_samples.append(sample)
         n_peak_samples.append(np.concatenate(new_samples))
     n_peak_samples = np.array(n_peak_samples)
-    return n_peak_samples, stop
+    return n_peak_samples
 
 
 def find_region_of_interest(run_id, activity, w_size, thresh):
@@ -280,7 +283,7 @@ def main(cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatmap, max_sample
         rois = []
         if w_size is not None:
             rois = find_region_of_interest(run_id, activity, w_size, thresh)
-            rois, stop = build_n_peak_samples(run_id, n_peak, rois, max_sample)
+            rois = build_n_peak_samples(run_id, n_peak, rois, max_sample)
 
         cat_meta = get_cat_meta(out_dir, cat_id)
         cat_meta["date"] = df["date_time"].dt.strftime("%d/%m/%Y").values[0]

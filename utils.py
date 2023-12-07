@@ -1,3 +1,6 @@
+import random
+
+
 def anscombe(arr, sigma_sq=0, alpha=1):
     """
     Generalized Anscombe variance-stabilizing transformation
@@ -40,3 +43,30 @@ def check_if_hour_daylight(hour):
     else:
         return False
 
+
+def random_permutations(input_list, k):
+    result = []
+    # Fill the reservoir with the first k elements
+    for i in range(len(input_list)):
+        if i < k:
+            result.append(input_list[i])
+        else:
+            # Randomly choose an index to potentially replace
+            j = random.randint(0, i)
+            if j < k:
+                result[j] = input_list[i]
+    return result
+
+
+def efficient_permutation(input_list, n_max, n_peak):
+    idxs = [random_permutations(input_list, n_peak) for _ in range(n_max)]
+    return idxs
+
+
+if __name__ == "__main__":
+    # Example usage with input list [1, 2, 3, ..., 1000000] and k = 10
+    input_list = list(range(1, 1000001))
+    k = 10
+    selected_permutations = [random_permutations(input_list, 3) for _ in range(k)]
+
+    print(selected_permutations)
