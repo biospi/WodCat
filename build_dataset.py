@@ -1,10 +1,7 @@
-import itertools
 import os
 import random
 import shutil
 from itertools import permutations
-
-# from scipy.signal import find_peaks, find_peaks_cwt
 from multiprocessing import Pool
 from pathlib import Path
 from typing import List
@@ -15,8 +12,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import typer
-
-from utils import anscombe, check_if_hour_daylight, attribute_color, efficient_permutation
+from utils._anscombe import anscombe
 
 
 def plot_heatmap(out_dir, datetime_xaxis, matrix, y_axis, filename, title="title"):
@@ -76,7 +72,7 @@ def create_activity_graph(
     fig.savefig(filepath)
 
 
-def create_training_sets(run_id, activity, metadata, out_dir, filename):
+def create_training_sets(run_id, activity, metadata, max_sample, n_peak, w_size, thresh, out_dir, filename):
     training_set = []
     training_set.extend(activity)
     training_set.append(metadata["label"])
@@ -88,6 +84,10 @@ def create_training_sets(run_id, activity, metadata, out_dir, filename):
     training_set.append(metadata["age"])
     training_set.append(metadata["name"])
     training_set.append(metadata["mobility_score"])
+    training_set.append(max_sample)
+    training_set.append(n_peak)
+    training_set.append(w_size)
+    training_set.append(thresh)
     out_dir.mkdir(parents=True, exist_ok=True)
     filepath = out_dir / filename
     filepath = filepath.as_posix()
@@ -168,13 +168,19 @@ def get_cat_meta(output_dir, cat_id, output_fig=False):
 def build_n_peak_samples(run_id, n_peak, rois, max_sample):
     print(f"[{run_id}] number of peaks is {n_peak}, sample shape is{rois.shape}")
     idxs_peaks = np.arange(rois.shape[0])
-    # permutation = list(permutations(idxs_peaks, n_peak))
+    permutation = list(permutations(idxs_peaks, n_peak))
+    try:
+        rois_idxs = random.sample(permutation, k=max_sample)
+    except ValueError as e:
+        print(e)
+        print(f"There are less samples than max_sample={max_sample}")
+        rois_idxs = permutation
     # if len(permutation) > max_sample:
     #     rois_idxs = random.sample(permutation, k=max_sample)
     # else:
     #     rois_idxs = random.sample(permutation)
     # del permutation
-    rois_idxs = efficient_permutation(idxs_peaks, max_sample, n_peak)
+    # rois_idxs = efficient_permutation(idxs_peaks, max_sample, n_peak)
 
     #build augmented sample by concatenating permutations of peaks
     n_peak_samples = []
@@ -193,22 +199,24 @@ def find_region_of_interest(run_id, activity, w_size, thresh):
     rois = []
     df = pd.DataFrame(activity, columns=["count"])
     df["index"] = df.index
-    df = df.sort_values(by=["count"], ascending=False)
+    df_sorted = df.sort_values(by=["count"], ascending=False)
     n_top = thresh
     # n_top = int(len(activity) * thresh / 100)
-    df = df.iloc[0:n_top, :]
-    for index, row in df.iterrows():
+    df_sorted = df_sorted.iloc[0:n_top, :]
+    for index, row in df_sorted.iterrows():
         i = row["index"]
         if row["count"] <= 0:
             print("negative count!")
             continue
-        w_idx = list(range(i - w_size, i + w_size))
+        w = int(w_size/2)
+        w_idx = list(range(i - w, i + w))
         if sum(n < 0 for n in w_idx) > 0 or i + w_size > len(
             activity
         ):  # make sure that the window is in bound
             continue
-        rois.append(activity[w_idx])
-    rois = np.array(rois).astype(np.int8)
+        roi = activity[w_idx]
+        rois.append(roi)
+    rois = np.array(rois).astype(np.int32)
     return rois
 
 
@@ -304,7 +312,7 @@ def main(cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatmap, max_sample
             individual_list.append(f"{cat_meta['name']} {cat_id}")
 
         for roi in rois:
-            create_training_sets(run_id, roi, cat_meta, out_dir, "samples.csv")
+            create_training_sets(run_id, roi, cat_meta, max_sample, n_peak, w_size, thresh, out_dir, "samples.csv")
             if out_heatmap:
                 activity_list_w.append(roi)
                 datetime_list_w.append(df["date_time"].values[0 : len(roi)])
@@ -411,21 +419,24 @@ def run(
     tot = len(w_size) * len(n_peaks) * len(threshs)
     cpt = 0
     cat_data = get_cat_data(data_dir, bin)
-    for w in w_size:
-        for n_peak in n_peaks:
-            for t in threshs:
-                dirname = f"{max_sample}_{t}_{str(w).zfill(3)}_{str(n_peak).zfill(3)}"
-                out_dataset_dir = out_dir / dirname / "dataset"
-                if out_dataset_dir.exists():
-                    shutil.rmtree(out_dataset_dir)  # purge dataset if already created
-                pool.apply_async(
-                    main,
-                    (cat_data, out_dataset_dir, bin, w, t, n_peak, out_heatmap, max_sample, cpt, tot),
-                ),
-                #main(cat_data, out_dataset_dir, bin, w, t, n_peak, out_heatmap, max_sample, cpt, tot)
-                cpt += 1
+    datasets = []
+    for t in threshs:
+        for w in w_size:
+            for n_peak in n_peaks:
+                    dirname = f"{max_sample}_{t}_{str(w).zfill(3)}_{str(n_peak).zfill(3)}"
+                    out_dataset_dir = out_dir / dirname / "dataset"
+                    datasets.append(out_dataset_dir / "samples.csv")
+                    if out_dataset_dir.exists():
+                        shutil.rmtree(out_dataset_dir)  # purge dataset if already created
+                    pool.apply_async(
+                        main,
+                        (cat_data, out_dataset_dir, bin, w, t, n_peak, out_heatmap, max_sample, cpt, tot),
+                    ),
+                    #main(cat_data, out_dataset_dir, bin, w, t, n_peak, out_heatmap, max_sample, cpt, tot)
+                    cpt += 1
     pool.close()
     pool.join()
+    return datasets
 
 
 if __name__ == "__main__":

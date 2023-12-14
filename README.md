@@ -23,3 +23,14 @@ source cats/bin/activate
 make environment
 ```
 
+## Dataset
+Download dataset her xxx 
+```bash
+curl xxx
+```
+
+## Reproduce paper results
+Run paper.py
+```bash
+python paper.py
+```
