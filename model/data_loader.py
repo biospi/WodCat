@@ -35,18 +35,14 @@ def load_activity_data(
     out_dir,
     meta_columns,
     filepath,
-    n_activity_days,
     class_healthy,
     class_unhealthy,
-    imputed_days=7,
     preprocessing_steps=None,
     farm=None,
-    meta_cols_str=None,
     sampling='T',
     individual_to_ignore=[],
     individual_to_keep=[],
     plot_s_distribution=True,
-    resolution = None,
     sample_date_filter = None
 ):
     print(f"load activity from datasets...{filepath}")
@@ -78,33 +74,10 @@ def load_activity_data(
     if len(individual_to_keep) > 0:
         data_frame = data_frame.loc[data_frame['name'].isin(individual_to_keep)]
 
-    if n_activity_days > 0:
-        df_activity_window = data_frame.iloc[:, data_frame.columns.str.isnumeric()]
-        #assert sampling == "T", "activity sampling must be 1 min per bin!"
-        end = int(df_activity_window.shape[1])
-        start = int(end - n_activity_days * 1440)
-        df_activity_window = df_activity_window.iloc[:, start:end]
-        #df_activity_window = df_activity_window.iloc[:, ::-1]
-        if sampling != "T":
-            df_activity_window = resample(df_activity_window, sampling)
-
-        # if resolution is not None and resolution > 0:
-        #     df_activity_window = resample_s(df_activity_window, int(np.ceil(df_activity_window.shape[1] / resolution)))
-
-        df_meta = data_frame[meta_columns]
-        data_frame = pd.concat([df_activity_window, df_meta], axis=1)
-        #seasons = seasons[np.repeat(seasons.columns.values, df_activity_window.shape[1])]
-
-    if imputed_days > 0:
-        data_frame = data_frame[~np.isnan(data_frame["imputed_days"])]
-        data_frame = data_frame[data_frame["imputed_days"] <= imputed_days]
-
-    #data_frame = data_frame[data_frame.nunique(1) > 10]
     data_frame = data_frame.dropna(
         subset=data_frame.columns[: -len(meta_columns)], how="all"
     )
-    data_frame = data_frame.fillna(999999)
-    #if imputed_days > 0:
+
     if len(preprocessing_steps) > 0:
         if "ZEROPAD" in preprocessing_steps[0]:
             data_frame = data_frame.fillna(0)
@@ -117,7 +90,6 @@ def load_activity_data(
     data_frame = data_frame.dropna()
 
     data_frame['id'] = data_frame['id'].astype(np.float16)
-    #data_frame = data_frame[data_frame['id'] != 40]
 
     # clip negative values
     data_frame[data_frame.columns.values[: -len(meta_columns)]] = data_frame[
@@ -125,7 +97,6 @@ def load_activity_data(
     ].astype(np.float16).clip(lower=0)
 
     data_frame["target"] = data_frame["target"].astype(int)
-    data_frame["imputed_days"] = data_frame["imputed_days"].astype(int)
     data_frame["label"] = data_frame["label"].astype(str)
     new_label = []
     # data_frame_health = data_frame.copy()
@@ -140,7 +111,6 @@ def load_activity_data(
 
     data_frame["health"] = new_label
 
-    # Hot Encode of FAmacha targets and assign integer target to each famacha label
     data_frame_labeled = pd.get_dummies(data_frame, columns=["label"])
     flabels = [x for x in data_frame_labeled.columns if "label" in str(x)]
 

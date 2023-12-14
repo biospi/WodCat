@@ -72,22 +72,37 @@ def create_activity_graph(
     fig.savefig(filepath)
 
 
-def create_training_sets(run_id, activity, metadata, max_sample, n_peak, w_size, thresh, out_dir, filename):
+def create_training_sets(run_id, activity, timestamp, metadata, max_sample, n_peak, w_size, thresh, out_dir, filename):
+    meta_names = []
     training_set = []
     training_set.extend(activity)
+    for n, t in enumerate(timestamp):
+        training_set.append(t)
+        meta_names.append(f"peak{n}_datetime")
     training_set.append(metadata["label"])
+    meta_names.append("label")
     training_set.append(metadata["id"])
-    training_set.append(metadata["imputed_days"])  # imputed days meta
+    meta_names.append("id")
     training_set.append(metadata["date"])
+    meta_names.append("date")
     training_set.append(metadata["health"])  # health
+    meta_names.append("health")
     training_set.append(metadata["target"])
+    meta_names.append("target")
     training_set.append(metadata["age"])
+    meta_names.append("age")
     training_set.append(metadata["name"])
+    meta_names.append("name")
     training_set.append(metadata["mobility_score"])
+    meta_names.append("mobility_score")
     training_set.append(max_sample)
+    meta_names.append("max_sample")
     training_set.append(n_peak)
+    meta_names.append("n_peak")
     training_set.append(w_size)
+    meta_names.append("w_size")
     training_set.append(thresh)
+    meta_names.append("n_top")
     out_dir.mkdir(parents=True, exist_ok=True)
     filepath = out_dir / filename
     filepath = filepath.as_posix()
@@ -100,7 +115,7 @@ def create_training_sets(run_id, activity, metadata, max_sample, n_peak, w_size,
     with open(filepath, "a") as outfile:
         outfile.write(training_str_flatten)
         outfile.write("\n")
-    return filepath
+    return filepath, meta_names
 
 
 def get_cat_meta(output_dir, cat_id, output_fig=False):
@@ -157,7 +172,6 @@ def get_cat_meta(output_dir, cat_id, output_fig=False):
         "id": cat_meta["DJD_ID"].item(),
         "name": cat_meta["Cat"].item(),
         "age": cat_meta["Age"].item(),
-        "imputed_days": -1,
         "target": -1,
         "health": cat_meta["Status"].item(),
         "mobility_score": cat_meta["Mobility_Score%"].item(),
@@ -165,7 +179,7 @@ def get_cat_meta(output_dir, cat_id, output_fig=False):
     }
 
 
-def build_n_peak_samples(run_id, n_peak, rois, max_sample):
+def build_n_peak_samples(run_id, n_peak, rois, rois_timestamp, max_sample):
     print(f"[{run_id}] number of peaks is {n_peak}, sample shape is{rois.shape}")
     idxs_peaks = np.arange(rois.shape[0])
     permutation = list(permutations(idxs_peaks, n_peak))
@@ -186,17 +200,23 @@ def build_n_peak_samples(run_id, n_peak, rois, max_sample):
     n_peak_samples = []
     for idxs in rois_idxs:
         new_samples = []
+        timestamps = []
         for i in idxs:
             sample = rois[i]
             new_samples.append(sample)
-        n_peak_samples.append(np.concatenate(new_samples))
+            timestamp = str(rois_timestamp[i])
+            timestamps.append(timestamp)
+        activity = np.concatenate(new_samples)
+        s = activity.tolist() + timestamps
+        n_peak_samples.append(s)
     n_peak_samples = np.array(n_peak_samples)
     return n_peak_samples
 
 
-def find_region_of_interest(run_id, activity, w_size, thresh):
+def find_region_of_interest(run_id, timestamp, activity, w_size, thresh):
     #print(f"[{run_id}] find_region_of_interest...")
     rois = []
+    rois_timestamp = []
     df = pd.DataFrame(activity, columns=["count"])
     df["index"] = df.index
     df_sorted = df.sort_values(by=["count"], ascending=False)
@@ -216,8 +236,9 @@ def find_region_of_interest(run_id, activity, w_size, thresh):
             continue
         roi = activity[w_idx]
         rois.append(roi)
+        rois_timestamp.append(timestamp[i])
     rois = np.array(rois).astype(np.int32)
-    return rois
+    return rois, rois_timestamp
 
 
 def format_raw_data(df, bin):
@@ -268,7 +289,7 @@ def format_raw_data(df, bin):
         df = df.iloc[: 86400 * 12, :]
 
     df = df.set_index("date_time")
-    df.reset_index(level=0, inplace=True)
+    #df.reset_index(level=0, inplace=True)
     #df["color"] = df.apply(attribute_color, axis=1)
     df["epoch"] = df["epoch"].astype(np.int32)
     df["day"] = df["day"].astype(np.int8)
@@ -287,18 +308,21 @@ def main(cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatmap, max_sample
     for i, (cat_id, df) in enumerate(cat_data):
         print(f"[{run_id}] progress[{i}/{len(cat_data)}]...")
         activity = df["activity_counts"].values
+        timestamp = df.index
 
         rois = []
         if w_size is not None:
-            rois = find_region_of_interest(run_id, activity, w_size, thresh)
-            rois = build_n_peak_samples(run_id, n_peak, rois, max_sample)
+            rois, rois_timestamp = find_region_of_interest(run_id, timestamp, activity, w_size, thresh)
+            rois = build_n_peak_samples(run_id, n_peak, rois, rois_timestamp, max_sample)
+            rois_timestamp = rois[:, -n_peak:]
+            rois = rois[:, :-n_peak].astype(int)
 
         cat_meta = get_cat_meta(out_dir, cat_id)
-        cat_meta["date"] = df["date_time"].dt.strftime("%d/%m/%Y").values[0]
+        cat_meta["date"] = df.index.strftime("%d/%m/%Y").values[0]
 
         if bin == "T":
             create_activity_graph(
-                df["date_time"].values,
+                df.index.values,
                 df["color"].values,
                 activity,
                 out_dir,
@@ -308,16 +332,17 @@ def main(cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatmap, max_sample
 
         if out_heatmap:
             activity_list.append(activity)
-            datetime_list.append(df["date_time"].values)
+            datetime_list.append(df.index.values)
             individual_list.append(f"{cat_meta['name']} {cat_id}")
 
-        for roi in rois:
-            create_training_sets(run_id, roi, cat_meta, max_sample, n_peak, w_size, thresh, out_dir, "samples.csv")
+        for roi, timestamp in zip(rois, rois_timestamp):
+            _, meta_names = create_training_sets(run_id, roi, timestamp, cat_meta, max_sample, n_peak, w_size, thresh, out_dir, "samples.csv")
             if out_heatmap:
                 activity_list_w.append(roi)
-                datetime_list_w.append(df["date_time"].values[0 : len(roi)])
+                datetime_list_w.append(df.index.values[0 : len(roi)])
                 individual_list_w.append(f"{cat_meta['name']} {cat_id} {i}")
             total += 1
+        pd.DataFrame(meta_names).to_csv(out_dir / "meta_columns.csv", index=False)
 
     if out_heatmap and len(activity_list_w) != 0:
         print("create heatmap...")
@@ -369,6 +394,7 @@ def main(cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatmap, max_sample
     del activity_list
     del datetime_list
     del individual_list
+    return meta_names
 
 
 def get_cat_data(data_dir, bin):

@@ -541,15 +541,11 @@ def plot_ml_report(clf_name, path, output_dir):
 
 def plot_zeros_distrib(
     meta_columns,
-    a_days,
     label_series,
     data_frame_no_norm,
     graph_outputdir,
     title="Percentage of zeros in activity per sample",
 ):
-    if a_days is None:
-        print("skip plot_zeros_distrib.")
-        return
     print("plot_zeros_distrib...")
     data = {}
     target_labels = []
@@ -633,7 +629,6 @@ def plot_roc_range(
     fig,
     fig_roc_merge,
     cv_name,
-    days,
     info="None",
     tag="",
     export_fig_as_pdf=False,
@@ -662,7 +657,7 @@ def plot_roc_range(
     ax[1].set(
         xlim=[-0.05, 1.05],
         ylim=[-0.05, 1.05],
-        title=f"(Testing data) Receiver operating characteristic days:{days} cv:{cv_name} \n info:{info}",
+        title=f"(Testing data) Receiver operating characteristic cv:{cv_name} \n info:{info}",
     )
     ax[1].set_xlabel("False positive rate")
     ax[1].set_ylabel("True positive rate")
@@ -674,7 +669,7 @@ def plot_roc_range(
     ax_roc_merge.set(
         xlim=[-0.05, 1.05],
         ylim=[-0.05, 1.05],
-        title=f"(Training/Testing data) Receiver operating characteristic days:{days} cv:{cv_name} \n info:{info}",
+        title=f"(Training/Testing data) Receiver operating characteristic cv:{cv_name} \n info:{info}",
     )
     ax_roc_merge.set_xlabel("False positive rate")
     ax_roc_merge.set_ylabel("True positive rate")
@@ -697,7 +692,7 @@ def plot_roc_range(
     ax[0].set(
         xlim=[-0.05, 1.05],
         ylim=[-0.05, 1.05],
-        title=f"(Training data) Receiver operating characteristic days:{days} cv:{cv_name} \n info:{info}",
+        title=f"(Training data) Receiver operating characteristic cv:{cv_name} \n info:{info}",
     )
     ax[0].set_xlabel("False positive rate")
     ax[0].set_ylabel("True positive rate")
@@ -709,7 +704,7 @@ def plot_roc_range(
     ax_roc_merge.set(
         xlim=[-0.05, 1.05],
         ylim=[-0.05, 1.05],
-        title=f"(Training data) Receiver operating characteristic days:{days} cv:{cv_name} \n info:{info}",
+        title=f"(Training data) Receiver operating characteristic cv:{cv_name} \n info:{info}",
     )
     ax_roc_merge.legend(loc="lower right")
 
@@ -904,7 +899,7 @@ def plot_mean_groups(
 
 
 def plot_high_dimension_db(
-    out_dir, X, y, train_index, meta, clf, days, steps, ifold, export_fig_as_pdf
+    out_dir, X, y, train_index, meta, clf, steps, ifold, export_fig_as_pdf
 ):
     """
     Plot high-dimensional decision boundary
@@ -920,7 +915,7 @@ def plot_high_dimension_db(
         models_visu_dir = (
             out_dir
             / "models_visu_pca"
-            / f"{type(clf).__name__}_{clf.kernel}_{days}_{steps}"
+            / f"{type(clf).__name__}_{clf.kernel}_{steps}"
         )
         models_visu_dir.mkdir(parents=True, exist_ok=True)
         filepath = models_visu_dir / f"{ifold}.png"
@@ -937,7 +932,7 @@ def plot_high_dimension_db(
         models_visu_dir = (
             out_dir
             / "models_visu_pls"
-            / f"{type(clf).__name__}_{clf.kernel}_{days}_{steps}"
+            / f"{type(clf).__name__}_{clf.kernel}_{steps}"
         )
         models_visu_dir.mkdir(parents=True, exist_ok=True)
         filepath = models_visu_dir / f"{ifold}.png"
@@ -1625,98 +1620,6 @@ def plot_histogram(x, farm_id, threshold_gap, title):
         # plt.imsave()
     except Exception as e:
         print(e)
-
-
-def build_report(
-    output_dir,
-    n_imputed_days,
-    activity_days,
-    data,
-    y,
-    steps,
-    study_id,
-    sampling,
-    downsample,
-    days,
-    cv,
-    cross_validation_method,
-    class_healthy_label,
-    class_unhealthy_label,
-):
-    for k, v in data.items():
-        scores = {}
-        report_rows_list = []
-        test_precision_score0, test_precision_score1 = [], []
-        test_precision_recall0, test_precision_recall1 = [], []
-        test_precision_fscore0, test_precision_fscore1 = [], []
-        test_precision_support0, test_precision_support1 = [], []
-        test_balanced_accuracy_score = []
-        aucs = []
-        fit_times = []
-        for item in v:
-            test_precision_score0.append(item["test_precision_score_0"])
-            test_precision_score1.append(item["test_precision_score_1"])
-            test_precision_recall0.append(item["test_recall_0"])
-            test_precision_recall1.append(item["test_recall_1"])
-            test_precision_fscore0.append(item["test_fscore_0"])
-            test_precision_fscore1.append(item["test_fscore_1"])
-            test_precision_support0.append(item["test_support_0"])
-            test_precision_support1.append(item["test_support_1"])
-            fit_times.append(item["fit_time"])
-            test_balanced_accuracy_score.append(item["accuracy"])
-            aucs.append(item["auc"])
-
-        scores["downsample"] = downsample
-        scores["class0"] = y[y == 0].size
-        scores["class1"] = y[y == 1].size
-        scores["post_p"] = steps
-        scores[
-            "steps"
-        ] = f"{study_id}->ID={n_imputed_days}->AD={activity_days}->H={str(class_healthy_label)}->UH={str(class_unhealthy_label)}->{steps}->{cv}"
-        scores["days"] = days
-        scores["farm_id"] = study_id
-        scores["balanced_accuracy_score_mean"] = np.mean(test_balanced_accuracy_score)
-        scores["test_balanced_accuracy_score"] = test_balanced_accuracy_score
-        scores["precision_score0_mean"] = np.mean(test_precision_score0)
-        scores["test_precision_score0"] = test_precision_score0
-        scores["precision_score1_mean"] = np.mean(test_precision_score1)
-        scores["test_precision_score1"] = test_precision_score1
-        scores["recall_score0_mean"] = np.mean(test_precision_recall0)
-        scores["test_recall_score0"] = test_precision_recall0
-        scores["recall_score1_mean"] = np.mean(test_precision_recall1)
-        scores["test_recall_score1"] = test_precision_recall1
-        scores["f1_score0_mean"] = np.mean(test_precision_recall0)
-        scores["f1_score1_mean"] = np.mean(test_precision_recall1)
-        scores["test_f1_score0"] = test_precision_fscore0
-        scores["test_f1_score1"] = test_precision_fscore1
-        scores["sampling"] = sampling
-        scores["classifier"] = f"->{k}"
-        scores["classifier_details"] = k
-        scores["roc_auc_score_mean"] = np.mean(aucs)
-        scores["roc_auc_scores"] = aucs
-        scores["fit_time"] = fit_times
-        report_rows_list.append(scores)
-
-        df_report = pd.DataFrame(report_rows_list)
-
-        df_report["class_0_label"] = str(class_healthy_label)
-        df_report["class_1_label"] = str(class_unhealthy_label)
-        df_report["nfold"] = cross_validation_method.get_n_splits()
-
-        df_report["total_fit_time"] = [
-            time.strftime("%H:%M:%S", time.gmtime(np.nansum(x)))
-            for x in df_report["fit_time"].values
-        ]
-
-        out = output_dir / cv
-        out.mkdir(parents=True, exist_ok=True)
-        filename = (
-            out
-            / f"{k}_{activity_days}_{n_imputed_days}_{str(class_unhealthy_label)}_{study_id}_classification_report_days_{days}_{steps}_downsampled_{downsample}_sampling_{sampling}.csv"
-        )
-        df_report.to_csv(filename, sep=",", index=False)
-        print("filename=", filename)
-        plot_ml_report(k, filename, out)
 
 
 if __name__ == "__main__":

@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with seaMass.  If not, see <http://www.gnu.org/licenses/>.
 #
-
+import pandas as pd
 import typer
 import build_dataset
 import run_ml
@@ -38,25 +38,27 @@ def main(
     Args:\n
         data_dir: Directory containing the Cats data .csv.
     """
-    out_dir = data_dir / "output_test6"
+    out_dir = data_dir / "output"
 
     if create_dataset:
         build_dataset.run(
-            w_size=[10, 30, 60, 120],
+            w_size=[10, 20, 30, 120],
             threshs=[10, 20],
-            n_peaks=[1],
+            n_peaks=[1, 2],
             data_dir=data_dir,
             out_dir=out_dir,
             n_job=n_job,
         )
 
     datasets = [x for x in Path(out_dir).glob("**/*/samples.csv")]
+    meta_columns = [pd.read_csv(x).values.flatten().tolist() for x in Path(out_dir).glob("**/*/meta_columns.csv")]
 
     assert len(datasets) > 0, f"There is no dataset in {out_dir}."
 
     results = []
-    for dataset in datasets:
+    for meta_columns, dataset in zip(meta_columns, datasets):
         run_ml.run(
+            meta_columns=meta_columns,
             dataset_filepath=dataset,
             out_dir=out_dir,
             preprocessing_steps=[],

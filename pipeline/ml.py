@@ -45,8 +45,6 @@ def build_hpc_string(
     preprocessing_steps,
     class_healthy_label,
     class_unhealthy_label,
-    n_imputed_days,
-    n_activity_days,
     classifiers,
     pre_visu,
     n_job,
@@ -101,20 +99,10 @@ def main(
         ..., exists=True, file_okay=True, dir_okay=False, resolve_path=True
     ),
     preprocessing_steps: List[str] = ["QN", "ANSCOMBE", "LOG", "STDS"],
-    class_healthy_label: List[str] = ["1To1"],
-    class_unhealthy_label: List[str] = ["2To2"],
-    meta_columns: List[str] = [
-        "label",
-        "id",
-        "imputed_days",
-        "date",
-        "health",
-        "target",
-    ],
-    meta_col_str: List[str] = ["label", "id"],
+    class_healthy_label: List[str] = [],
+    class_unhealthy_label: List[str] = [],
+    meta_columns: List[str] = [],
     add_feature: List[str] = [],
-    n_imputed_days: int = 7,
-    n_activity_days: int = 7,
     n_scales: int = 8,
     sub_sample_scales: int = 1,
     n_splits: int = 5,
@@ -135,7 +123,6 @@ def main(
     individual_to_keep: List[str] = [],
     individual_to_test: List[str] = [],
     save_model: bool = False,
-    resolution: float = None,
     plot_2d_space: bool = False,
     export_fig_as_pdf: bool = False,
     skip: bool = False,
@@ -177,8 +164,6 @@ def main(
             preprocessing_steps,
             class_healthy_label,
             class_unhealthy_label,
-            n_imputed_days,
-            n_activity_days,
             classifiers,
             pre_visu,
             n_job,
@@ -215,16 +200,12 @@ def main(
         output_dir,
         meta_columns,
         dataset_filepath,
-        n_activity_days,
         class_healthy_label,
         class_unhealthy_label,
-        imputed_days=n_imputed_days,
         preprocessing_steps=preprocessing_steps,
-        meta_cols_str=meta_col_str,
         sampling=sampling,
         individual_to_keep=individual_to_keep,
-        individual_to_ignore=individual_to_ignore,
-        resolution=resolution,
+        individual_to_ignore=individual_to_ignore
     )
 
     N_META = len(meta_columns)
@@ -251,7 +232,6 @@ def main(
 
         df_norm, _, time_freq_shape = apply_preprocessing_steps(
             meta_columns,
-            n_activity_days,
             sfft_window,
             dwt_window,
             wavelet_f0,
@@ -262,7 +242,6 @@ def main(
             class_healthy_label,
             class_unhealthy_label,
             clf_name="SVM_QN_VISU",
-            output_dim=data_frame.shape[0],
             n_scales=n_scales,
             keep_meta=True,
             output_qn_graph=output_qn_graph,
@@ -272,7 +251,6 @@ def main(
 
         plot_zeros_distrib(
             meta_columns,
-            n_activity_days,
             label_series,
             df_norm,
             output_dir,
@@ -280,7 +258,6 @@ def main(
         )
         plot_zeros_distrib(
             meta_columns,
-            n_activity_days,
             label_series,
             data_frame.copy(),
             output_dir,
@@ -423,7 +400,6 @@ def main(
             time_freq_shape,
         ) = apply_preprocessing_steps(
             meta_columns,
-            n_activity_days,
             sfft_window,
             dwt_window,
             wavelet_f0,
@@ -434,7 +410,6 @@ def main(
             class_healthy_label,
             class_unhealthy_label,
             clf_name="SVM",
-            output_dim=data_frame.shape[0],
             n_scales=n_scales,
             sub_sample_scales=sub_sample_scales,
             enable_qn_peak_filter=enable_qn_peak_filter,
@@ -490,8 +465,6 @@ def main(
         animal_ids,
         sample_dates,
         df_processed,
-        n_activity_days,
-        n_imputed_days,
         study_id,
         step_slug,
         n_splits,

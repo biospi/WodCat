@@ -31,7 +31,6 @@ from utils.visualisation import (
     plot_roc_range,
     build_proba_hist,
     build_individual_animal_pred,
-    build_report,
     plot_high_dimension_db, plot_learning_curves, plot_fold_details, mean_confidence_interval)
 
 
@@ -59,8 +58,6 @@ def process_ml(
     animal_ids,
     sample_dates,
     data_frame,
-    activity_days,
-    n_imputed_days,
     study_id,
     steps,
     n_splits,
@@ -168,7 +165,6 @@ def process_ml(
             output_dir,
             steps,
             cv,
-            activity_days,
             label_series,
             cross_validation_method,
             X,
@@ -194,23 +190,6 @@ def process_ml(
             output_dir, steps, class_unhealthy_label, scores, ids, meta_columns, tt="train"
         )
         build_proba_hist(output_dir, steps, class_unhealthy_label, scores_proba)
-
-    build_report(
-        output_dir,
-        n_imputed_days,
-        activity_days,
-        scores,
-        y_h,
-        steps,
-        study_id,
-        sampling,
-        downsample_false_class,
-        activity_days,
-        cv,
-        cross_validation_method,
-        class_healthy_label,
-        class_unhealthy_label,
-    )
 
 
 def augment(df, n, ids, meta, meta_short, sample_dates):
@@ -286,7 +265,6 @@ def fold_worker(
     meta,
     meta_data_short,
     sample_dates,
-    days,
     steps,
     tprs_test,
     tprs_train,
@@ -366,7 +344,7 @@ def fold_worker(
 
     if save_model:
         models_dir = (
-            out_dir / "models" / f"{type(clf).__name__}_{clf_kernel}_{days}_{steps}"
+            out_dir / "models" / f"{type(clf).__name__}_{clf_kernel}_{steps}"
         )
         models_dir.mkdir(parents=True, exist_ok=True)
         filename = models_dir / f"model_{ifold}.pkl"
@@ -434,7 +412,6 @@ def fold_worker(
             list(np.arange(len(X_train))),
             np.concatenate((meta_train, meta_test), axis=0),
             clf,
-            days,
             steps,
             ifold,
             export_fig_as_pdf,
@@ -587,7 +564,6 @@ def cross_validate_svm_fast(
     out_dir,
     steps,
     cv_name,
-    days,
     label_series,
     cross_validation_method,
     X,
@@ -637,7 +613,6 @@ def cross_validate_svm_fast(
                     None,
                     meta_,
                     clf,
-                    days,
                     steps,
                     0,
                     export_fig_as_pdf
@@ -715,7 +690,6 @@ def cross_validate_svm_fast(
                         meta,
                         meta_data_short,
                         sample_dates,
-                        days,
                         steps,
                         tprs_test,
                         tprs_train,
@@ -969,7 +943,6 @@ def cross_validate_svm_fast(
                 fig_roc,
                 fig_roc_merge,
                 cv_name,
-                days,
                 info=info,
                 tag=f"{type(clf).__name__}_{clf_kernel}",
                 export_fig_as_pdf=export_fig_as_pdf,

@@ -28,7 +28,6 @@ def setup_graph_output_path(output_dir):
 
 def apply_preprocessing_steps(
     meta_columns,
-    days,
     sfft_window,
     dwt_window,
     wavelet_f0,
@@ -39,7 +38,6 @@ def apply_preprocessing_steps(
     class_healthy_label,
     class_unhealthy_label,
     clf_name="",
-    output_dim=2,
     n_scales=9,
     farm_name="",
     keep_meta=False,
@@ -85,14 +83,6 @@ def apply_preprocessing_steps(
             df.iloc[:, :-N_META] = StandardScaler(
                 with_mean=True, with_std=True
             ).fit_transform(df.iloc[:, :-N_META].values)
-
-            # if "TEMPERATURE" not in step_slug and "HUMIDITY" not in step_slug and "PCA" not in step_slug:
-            #     if "CWT" in step_slug:
-            #         SampleVisualisation(df, CWT_Transform.shape, N_META, graph_outputdir + "/" + step, step_slug, None, None, CWT_Transform.scales)
-            #
-            #     if "STFT" in step_slug and "PCA" not in step_slug:
-            #         SampleVisualisation(df, STFT_Transform.shape, N_META, graph_outputdir + "/" + step, step_slug,
-            #                             STFT_Transform.sfft_window, STFT_Transform.stft_time, STFT_Transform.freqs)
 
         if step == "CENTER":
             df.iloc[:, :-N_META] = CenterScaler(center_by_sample=False).fit_transform(
