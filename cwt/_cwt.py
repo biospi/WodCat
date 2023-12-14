@@ -59,8 +59,7 @@ def plot_cwt_power_sidebyside(
     total_unhealthy = df_timedomain[df_timedomain["health"] == 1].shape[0]
     plt.clf()
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(19.2, 7.2))
-    # fig.suptitle(title, fontsize=18)
-    # wavelength = 1 / freqs
+
 
     df_healthy = df_timedomain[df_timedomain["health"] == 0].iloc[:, :-meta_size].values
     df_unhealthy = (
@@ -96,44 +95,12 @@ def plot_cwt_power_sidebyside(
         ax2.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
         ax2.xaxis.set_major_locator(mdates.DayLocator())
 
-    # ax3.plot(np.log(coi_line_array), linestyle="--", linewidth=3, c="yellow")
     imshow_y_axis = []
     p0 = power_cwt_healthy.copy()
-    # if "anscombe" in step_slug.lower():
-    #         p0 = anscombe(p0)
-    # if "log" in step_slug.lower():
-    #     p0 = np.log(p0)
 
     imshow_y_axis.append(np.nanmin(p0))
     imshow_y_axis.append(np.nanmax(p0))
-
-    # ax3.set_yscale('log')
-    # n_y_ticks = ax3.get_yticks().shape[0] - 2
-    # labels = ["%.f" % item for item in wavelength]
-    # labels_ = np.array(labels)[list(range(1, len(labels), int(len(labels) / n_y_ticks)))]
-    # ax3.set_yticklabels(labels_)
-    # cwty = ax3.get_yticks()
-    # n_y_ticks = cwty.shape[0] - len([x for x in cwty if x < 0])
-    # labels = ["%.2f" % item for item in wavelength]
-    # print(labels)
-    # labels_ = np.array(labels)[list(range(1, len(labels), int(len(labels) / n_y_ticks)))][1:]
-    # new_lab = []
-    # for ii, l in enumerate(labels_):
-    #    new_lab.append(matplotlib.text.Text(cwty[ii], float(l), l))
-    # ax3.set_yticklabels(new_lab)
-
-    # n_x_ticks = ax3.get_xticks().shape[0]
-    # labels_ = [item.strftime("%H:00") for item in ticks]
-    # labels_ = np.array(labels_)[list(range(1, len(labels_), int(len(labels_) / n_x_ticks)))]
-    # labels_[:] = labels_[0]
-    # ax3.set_xticklabels(labels_)
-
-    # ax4.plot(coi_line_array, linestyle="--", linewidth=3, c="yellow")
     p1 = power_cwt_unhealthy.copy()
-    # if "anscombe" in step_slug.lower():
-    #         p1 = anscombe(p1)
-    # if "log" in step_slug.lower():
-    #     p1 = np.log(p1)
 
     imshow_y_axis.append(np.nanmin(p1))
     imshow_y_axis.append(np.nanmax(p1))
@@ -157,15 +124,6 @@ def plot_cwt_power_sidebyside(
         interpolation="nearest",
     )
     fig.colorbar(pos1, ax=ax4)
-
-    # ax3.set_yticks(np.arange(1, len(scales)+1))
-    # ax3.set_yticklabels(scales)
-    #
-    # ax4.set_yticks(np.arange(1, len(scales)+1))
-    # ax4.set_yticklabels(scales)
-
-    # ax3.set_ylim([min(imshow_y_axis), max(imshow_y_axis)])
-    # ax4.set_ylim([min(imshow_y_axis), max(imshow_y_axis)])
 
     ax3.set_aspect("auto")
     ax3.set_title(
@@ -194,22 +152,6 @@ def plot_cwt_power_sidebyside(
     ax4.set_yticklabels(
         ["%.1f" % x if i % 2 == 0 else "" for i, x in enumerate(scales)]
     )
-
-    # n_y_ticks = ax4.get_yticks().shape[0] - 1
-    # labels = ["%.2f" % item for item in wavelength]
-    # print(labels)
-    # labels_ = np.array(labels)[list(range(1, len(labels), int(len(labels) / n_y_ticks)))][1:]
-    # new_lab = []
-    # for ii, l in enumerate(labels_):
-    #    new_lab.append(matplotlib.text.Text(cwty[ii], float(l), l))
-    # ax4.set_yticklabels(new_lab)
-
-    # n_x_ticks = ax4.get_xticks().shape[0]
-    # labels_ = [item.strftime("%H:00") for item in ticks]
-    # labels_ = np.array(labels_)[list(range(1, len(labels_), int(len(labels_) / n_x_ticks)))]
-    # labels_[:] = labels_[0]
-    # ax4.set_xticklabels(labels_)
-
     # plt.show()
     filename = (
         f"{step_slug.replace('->', '_')}_{title.replace(' ', '_')}_{filename_sub}.png"
@@ -342,8 +284,7 @@ def plot_dwt_power(
         axs[0].plot(activity, label="activity")
     else:
         axs[0].plot(ticks, activity, label="activity")
-    # axs[0].plot(ticks, activity_centered,
-    #             label='activity centered (signal - average of all sample (=%.2f))' % avg)
+
     axs[0].legend(loc="upper right")
     axs[0].set_title(
         "Time domain signal\n %s %s %s" % (date.replace("_", "/"), animal_id, str(target))
@@ -352,10 +293,6 @@ def plot_dwt_power(
     axs[0].set(xlabel="Time", ylabel="activity")
     if format_xaxis:
         axs[0].set(xlabel="Time", ylabel="activity")
-
-    # if format_xaxis:
-    #     axs[0].xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
-    #     axs[0].xaxis.set_major_locator(mdates.DayLocator())
 
     p = dwt_scalogram.copy()
     # if "ANSCOMBE" in step_slug:
@@ -550,16 +487,7 @@ def plot_cwt_power(
         axs[0].xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
         axs[0].xaxis.set_major_locator(mdates.DayLocator())
 
-    # axs[1].set_yticks(scales)
-
-    # pos = axs[1].imshow(np.log(power_masked), extent=[0, len(activity), len(scales), 1])
     p = power_masked.copy()
-    # if "raw_after_qn" in str(out_dir):
-    #     p = np.sqrt(p)
-    # if "anscombe" in step_slug.lower():
-    #     p = anscombe(p)
-    # if "log" in step_slug.lower():
-    #     p = np.log(p)
     if vmax is not None:
         pos = axs[1].imshow(
             p,
@@ -612,20 +540,6 @@ def plot_cwt_power(
         axs[2].legend(loc="upper right")
         axs[2].set_title("%s wavelet function" % wavelet.name)
         axs[2].set(xlabel="Time (unit of time)", ylabel="amplitude")
-
-    # # n_y_ticks = axs[1].get_yticks().shape[0]-2
-    # cwty = axs[1].get_yticks()
-    # n_y_ticks = cwty.shape[0] - len([x for x in cwty if x < 0])
-    #
-    # labels_wl = ["%.2f" % item for item in wavelength]
-    # # print(labels)
-    # labels_wt = np.array(labels_wl)[list(range(1, len(labels_wl), int(len(labels_wl) / n_y_ticks)))][1:]
-    # # new_lab = [matplotlib.text.Text(0, float(labels_wt[0]), labels_wt[0])]
-    # new_lab = []
-    # for ii, l in enumerate(labels_wt):
-    #     new_lab.append(matplotlib.text.Text(cwty[ii], float(l), l))
-    # # new_lab[-1] = matplotlib.text.Text(8, float(l), l)
-
     # axs[1].tick_params(axis='y', which='both', colors='black')
     filename = f"{animal_id}_{str(target)}_{epoch}_{date}_idx_{i}_{step_slug}_cwt_{filename_sub}_scales_{len(scales)}.png"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -778,11 +692,6 @@ def even_list(n):
 
 
 def compute_cwt_paper_sd(activity, scales):
-    # w = pywt.ContinuousWavelet('coif')
-    # # scales = np.concatenate([np.arange(1, 10, 1), np.arange(10, 30, 2), np.arange(30, 60, 4), np.arange(60, 60 * 2, 6),
-    # #                          np.arange(120, 60 * 24, 20), np.arange(60 * 24, 60 * 24 * 7, 60)])
-    # sampling_frequency = 1 / 60
-    # sampling_period = 1 / sampling_frequency
     coefs, freqs = pywt.cwt(activity, scales, "coif1")
     return coefs, None, scales, freqs
 
@@ -798,10 +707,6 @@ def compute_cwt_paper_hd(activity, scales, wavelet_f0, step_slug):
         activity, delta_t, wavelet=w, freqs=freqs
     )
     wavelet_type = w.name.lower()
-    # plt.clf()
-    # iwave_test = wavelet.icwt(coefs, scales, delta_t, wavelet=wavelet_type)
-    # plt.plot(iwave_test)
-    # plt.show()
     return coefs.astype(np.complex64), coi.astype(np.float16), scales, freqs, wavelet_type, delta_t
 
 
@@ -914,23 +819,11 @@ def dwt_power(
     out_dir,
 ):
     w = pywt.Wavelet('coif1')
-    # order = "freq"
-    # level = 4
-    # wp = pywt.WaveletPacket(activity, w, maxlevel=level)
-    # nodes = wp.get_level(level, order=order)
-    # labels = [n.path for n in nodes]
-    # values = np.array([n.data for n in nodes])
-    # cc = values
-    # dwt_time = np.arange(cc.shape[1])
-    # freqs = np.arange(cc.shape[0]
     mode = "symmetric"
     coeffs = pywt.wavedec(activity, w, mode=mode)
     wavelet = w.name
 
     dwt_time, levels, cc = scalogram(activity, coeffs)#ignore bottom 2 levels
-
-    #coefs_cc = np.conj(cc)
-    #power_dwt = np.real(np.multiply(cc, cc))
 
     if enable_graph_out:
         plot_dwt_power(
@@ -966,12 +859,6 @@ def stft_power(
     freqs, stft_time, coefs = signal.stft(activity, fs=1, nperseg=sfft_window)
     coefs_cc = np.conj(coefs)
     power = np.real(np.multiply(coefs, coefs_cc))
-    # scales = np.concatenate(
-    #     [np.arange(2, 10, 1), np.arange(10, 30, 2), np.arange(30, 60, 3), np.arange(60, 60 * 12, 6)])
-    # coefs, coi, scales, freqs = compute_spectogram_matlab(activity, scales)
-    # stft_time = np.arange(0, coefs.shape[1])
-
-    # power_cwt = coefs.real
 
     if enable_graph_out:
         plot_stft_power(
@@ -1011,50 +898,8 @@ def cwt_power(
     enable_coi=True,
     sub_sample_scales= 1
 ):
-    # y = center_signal(activity, avg)
-    # scales = np.concatenate([np.arange(2, 10, 1), np.arange(10, 30, 2), np.arange(30, 60, 3), np.arange(60, 60 * 2, 6),
-    #                          np.arange(120, 60 * 24, 20), np.arange(60 * 24, 60 * 24 * 7, 60)])
-    # scales = np.concatenate([np.arange(2, 10, 1), np.arange(10, 30, 10), np.arange(30, 60, 20), np.arange(60, 60 * 2, 30), np.arange(120, 60 * 24, 40), np.arange(60 * 24, 60 * 24 * 7, 60)])
-    # scales = np.array([2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 10080])
-    # scales = np.concatenate(
-    #     [np.arange(2, 10, 1), np.arange(10, 30, 2), np.arange(30, 60, 3), np.arange(60, 60 * 2, 6),
-    #      np.arange(120, 60 * 24, 20), np.arange(60 * 24, 60 * 24 * 7, 60)])
-    # scales = np.concatenate(
-    #     [np.arange(2, 10, 1), np.arange(10, 30, 3), np.arange(30, 60, 5), np.arange(60, 60 * 12, 10)])
-    # if hd:
-    #     scales = np.arange(2, len(activity))
-    #     # scales = np.concatenate(
-    #     #     [np.arange(2, 10, 1), np.arange(10, 30, 2), np.arange(30, 60, 3), np.arange(60, 60 * 2, 6)])
-    # else:
     scales = np.array([float(np.power(2, n)) for n in np.arange(1, nscales + 1, 0.1)])[::sub_sample_scales]
-    #print(scales)
 
-    # scales = np.array([2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 10081])
-    # scales = np.concatenate(
-    #     [np.arange(2, 10, 1), np.arange(10, 30, 2), np.arange(30, 60, 5), np.arange(60, 120, 10),
-    #      np.arange(120, 60 * 24, 20), np.arange(60 * 24, 60 * 24 * 7, 30)])
-    # scales = np.concatenate(
-    #     [np.arange(2, 10, 1), np.arange(10, 30, 2), np.arange(30, 60, 3), np.arange(60, 60 * 2, 6),
-    #      np.arange(120, 60 * 24, 20), np.arange(60 * 24, 60 * 24 * 7, 60)])
-    # scales = np.array([2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 10081])
-    # scales = np.concatenate([np.arange(2, 60, 5), np.arange(61, len(activity), 30)])
-    # print(scales.tolist())
-
-    # coefs, coi, scales, freqs = compute_cwt_matlab(activity, "db1", scales)
-    # coefs, coi, scales, freqs = compute_spectogram_matlab(activity, scales)
-    # coefs, coi, scales, freqs = compute_cwt_matlab(activity, "sym4", scales)
-    # coefs, coi, scales, freqs = compute_cwt_matlab(activity, "coif1", scales)
-    # coefs, coi, scales, freqs = compute_cwt_matlab(activity, "haar", scales)
-    # coefs, coi, scales, freqs = compute_cwt_matlab(activity, "morl", scales)
-    # coefs, coi, scales, freqs = compute_cwt_matlab(activity, "mexh", scales)
-    # coefs, coi, scales, freqs = compute_cwt_matlab(activity, "shan0.5-1", scales)
-    # coefs, coi, scales, freqs = compute_cwt_matlab_2(activity, "morse")
-    # coefs, coi, scales, freqs = compute_cwt_matlab_2(activity, "bump")
-    # coefs, coi, scales, freqs = compute_cwt_matlab_2(activity, "amor")
-
-    # compute_multi_res(activity, animal_id, target, epoch, date, i, step_slug, out_dir, scales, wavelet_f0)
-
-    # coefs, coi, scales, freqs = compute_cwt_paper_sd(activity, scales)
     coefs, coi, scales, freqs, wavelet_type, delta_t = compute_cwt_paper_hd(
         activity, scales, wavelet_f0, step_slug
     )
@@ -1063,13 +908,6 @@ def cwt_power(
         coi, (coi.min(), coi.max()), (0, len(scales))
     )  # todo fix weird hack
 
-    # if(enable_graph_out):
-    #     plot_cwt_power(vmin, vmax, epoch, date, animal_id, target, step_slug, out_dir, i, activity, coefs.copy().real, coi, scales,
-    #                    format_xaxis=format_xaxis, wavelet=None, log_yaxis=False, filename_sub="real")
-
-    # print("number of scales is %d" % len(scales))
-    # print(scales)
-    # conver cwt coefs to power
     coefs_cc = np.conj(coefs)
     power_cwt = np.real(np.multiply(coefs, coefs_cc))
     # power_cwt = coefs.real
@@ -1079,7 +917,6 @@ def cwt_power(
     else:
         power_masked = power_cwt.copy()
 
-    # return coefs.copy().real, freqs, coi, power_masked.shape, scales
     imag = coefs.copy().imag.astype(np.float16)
     real = coefs.copy().real.astype(np.float16)
     mag = abs(coefs.copy()).astype(np.float16)
@@ -1908,14 +1745,6 @@ if __name__ == "__main__":
             fig.update_xaxes(showticklabels=False)  # hide all the xticks
             fig.update_xaxes(showticklabels=True, row=4, col=1)
 
-            # fig.update_layout(shapes=[
-            #     dict(
-            #         type='line',
-            #         color="MediumPurple",
-            #         yref='paper', y0=0.945, y1=0.945,
-            #         xref='x', x0=-0.5, x1=7.5
-            #     )
-            # ])
             fig.update_yaxes(showgrid=True, gridwidth=1)
             fig.update_xaxes(showgrid=True, gridwidth=1)
 

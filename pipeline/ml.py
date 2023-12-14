@@ -34,7 +34,7 @@ from utils.visualisation import (
     plot_time_pca,
     plot_time_lda,
     plot_umap,
-    plot_time_pls, plot_zeros_distrib, plot_groups,
+    plot_time_pls, plot_zeros_distrib, plot_groups, plot_crepuscular,
 )
 
 
@@ -356,7 +356,7 @@ def main(
             class_unhealthy_label,
             output_dir,
             data_frame.copy(),
-            title="Raw imputed",
+            title="Raw data",
             xlabel="Time",
             ylabel="activity",
             ntraces=ntraces,
@@ -376,6 +376,9 @@ def main(
             stepid=2,
             ntraces=ntraces,
         )
+
+        plot_crepuscular(output_dir, data_frame, filename="raw_median_peak", ylabel="Activity count")
+        plot_crepuscular(output_dir, df_norm, filename="qn_median_peak", ylabel="Activity count")
         ################################################################################################################
 
     step_slug = "_".join(preprocessing_steps)

@@ -283,7 +283,6 @@ def fold_worker(
     axis_test,
     axis_train,
     ifold,
-    augment_training,
     nfold,
     export_fig_as_pdf,
     plot_2d_space,
@@ -453,7 +452,6 @@ def fold_worker(
 
     fold_result = {
         "clf": type(clf).__name__,
-        "days": days,
         "clf_kernel": clf_kernel,
         "cross_validation": cv_name,
         "steps": steps,
@@ -708,7 +706,6 @@ def cross_validate_svm_fast(
                         axis_test,
                         axis_train,
                         ifold,
-                        augment_training,
                         cross_validation_method.get_n_splits(),
                         export_fig_as_pdf,
                         plot_2d_space,

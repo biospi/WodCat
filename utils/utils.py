@@ -128,6 +128,21 @@ def purge_hpc_file(filename):
         os.remove(filename)
 
 
+def time_of_day(x):
+    if (x > 4) and (x <= 8):
+        return 'Early Morning'
+    elif (x > 8) and (x <= 12 ):
+        return 'Morning'
+    elif (x > 12) and (x <= 16):
+        return'Noon'
+    elif (x > 16) and (x <= 20) :
+        return 'Eve'
+    elif (x > 20) and (x <= 24):
+        return'Night'
+    elif (x <= 4):
+        return'Late Night'
+
+
 if __name__ == "__main__":
     # Example usage with input list [1, 2, 3, ..., 1000000] and k = 10
     input_list = list(range(1, 1000001))
