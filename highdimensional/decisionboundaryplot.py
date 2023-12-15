@@ -1,22 +1,23 @@
-import numpy as np
-import matplotlib.pyplot as mplt
 import os
+import random
+
+import matplotlib.pyplot as mplt
+import nlopt
+import numpy as np
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
+from scipy.spatial.distance import euclidean, squareform, pdist
 from sklearn.base import BaseEstimator
 from sklearn.cross_decomposition import PLSRegression
-from sklearn.model_selection import train_test_split
 from sklearn.decomposition import PCA
-from sklearn.neighbors import NearestNeighbors
-from sklearn.neighbors import KNeighborsClassifier
-import nlopt
-import random
-from scipy.spatial.distance import euclidean, squareform, pdist
-from highdimensional.utils import minimum_spanning_tree, polar_to_cartesian
 from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neighbors import NearestNeighbors
 from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score, f1_score
-from matplotlib.patches import Patch
-from matplotlib.lines import Line2D
-import datetime
+import matplotlib.colors as mcolors
+
+from highdimensional.utils import minimum_spanning_tree, polar_to_cartesian
 
 
 class DBPlot(BaseEstimator):
@@ -500,8 +501,7 @@ class DBPlot(BaseEstimator):
             alpha=0.8,
             zorder=1
         )
-        # blue 1to1
-        # green 2to2
+
         if legend:
             legend_elements = [
                 Line2D(
@@ -563,25 +563,17 @@ class DBPlot(BaseEstimator):
             legend0 = mplt.legend(handles=legend_elements, loc="lower center", ncol=2, bbox_to_anchor=(0.5, -0.20))
 
             # label data points with their indices
-            colors = mplt.cm.twilight(np.linspace(0, 1, 12))
-            map_color = {1: colors[0],
-                         2: colors[1],
-                         3: colors[2],
-                         4: colors[3],
-                         5: colors[4],
-                         6: colors[5],
-                         7: colors[6],
-                         8: colors[7],
-                         9: colors[8],
-                         10: colors[9],
-                         11: colors[10],
-                         12: colors[11]}
+            colors = list(mcolors.CSS4_COLORS.values())
+            map_color = {}
+            for n, m in enumerate(np.unique(meta)):
+                map_color[m] = colors[n]
+
             legend_elements = []
             for k, v in map_color.items():
                 legend_elements.append(Patch(facecolor=v, edgecolor="black", alpha=0.6,
-                                             label=datetime.date(1900, k, 1).strftime('%B')))
+                                             label=k))
 
-            legend1 = mplt.legend(handles=legend_elements, ncol=int(len(legend_elements) / 2), loc='upper center',
+            legend1 = mplt.legend(handles=legend_elements, ncol=8, loc='upper center',
                                   bbox_to_anchor=(0., 1.02, 1., .102))
 
             ax.add_artist(legend0)
@@ -591,35 +583,6 @@ class DBPlot(BaseEstimator):
             if isinstance(self.dimensionality_reduction, PLSRegression):
                 ax.set_xlabel("PLS component 1")
                 ax.set_ylabel("PLS component 2")
-
-            # plt.legend(handles=[plt.scatter([0, 1], [2, 3], marker="p", c="c").legend_elements()[0],
-            #                     plt.scatter([0, 1], [2, 3], marker="s", c="b").legend_elements()[0],
-            #                     plt.scatter([0, 1], [2, 3], marker="o", c="b").legend_elements()[0],
-            #                     plt.scatter([0, 1], [2, 3], marker="s", c="g").legend_elements()[0],
-            #                     plt.scatter([0, 1], [2, 3], marker="o", c="g").legend_elements()[0],
-            #                     plt.scatter([0, 1], [2, 3], marker="o", c="r").legend_elements()[0],
-            #                     ],
-            #            labels=[
-            #             "Estimated decision boundary keypoints",
-            #             "Training data healthy",
-            #             "Testing data healthy",
-            #             "Training data unhealthy",
-            #             "Testing data unhealthy",
-            #             "Misclassification",
-            #             ],
-            #            loc="lower right"
-            #            )
-
-            # plt.legend(
-            #     [
-            #         "Estimated decision boundary keypoints",
-            #         # "Generated test data around decision boundary",
-            #         "Training data",
-            #         "Testing data",
-            #     ],
-            #     loc="lower right",
-            #     prop={"size": 9},
-            # )
 
         # decision boundary keypoints, in case not visible in background
         ax.scatter(
@@ -683,16 +646,9 @@ class DBPlot(BaseEstimator):
                 zorder=5
             )
 
-        # months = [map_color[int(x.split(' ')[2].split('/')[1])] for x in meta]
         for i in range(len(self.X2d)):
             data = meta[i]
-            label = data[0]
-            id = int(str(int(data[1]))[-3:])
-            imputed_days = data[2]
-            date = data[3]
-            health = data[4]
-            target = data[5]
-            month = int(date.split('/')[1])
+            label = data
             text_ = f"{label}"
             t = ax.text(
                 self.X2d[i, 0] + (self.X2d_xmax - self.X2d_xmin) * 0.5e-2 * 5,
@@ -704,32 +660,7 @@ class DBPlot(BaseEstimator):
                 color="white",
                 zorder=4
             )
-            t.set_bbox(dict(facecolor=map_color[month], alpha=0.5, edgecolor=map_color[month]))
-
-
-        # if len(self.test_idx) == 0:
-        #     print("No demo performance calculated, as no testing data was specified")
-        # else:
-        #     freq = np.array(
-        #         np.unique(self.y[self.test_idx], return_counts=True)
-        #     ).T.astype(float)
-        #     imbalance = np.round(
-        #         np.max((freq[0, 1], freq[1, 1])) / len(self.test_idx), 3
-        #     )
-        #     acc_score = np.round(
-        #         accuracy_score(self.y[self.test_idx], self.y_pred[self.test_idx]), 3
-        #     )
-        #     f1 = np.round(
-        #         f1_score(self.y[self.test_idx], self.y_pred[self.test_idx]), 3
-        #     )
-        #     ax.set_title(
-        #         "Test accuracy: "
-        #         + str(acc_score)
-        #         + ", F1 score: "
-        #         + str(f1)
-        #         + ". Imbalance (max chance accuracy): "
-        #         + str(imbalance)
-        #     )
+            t.set_bbox(dict(facecolor=map_color[label], alpha=0.5, edgecolor=map_color[label]))
 
         if self.verbose:
             print(

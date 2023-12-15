@@ -1,7 +1,5 @@
 import pathlib
-import pathlib
 import random
-import time
 from collections import Counter
 from datetime import datetime, timedelta
 from operator import itemgetter
@@ -37,7 +35,6 @@ def get_time_ticks(nticks):
     date_string = "2012-12-12 00:00:00"
     Today = datetime.fromisoformat(date_string)
     date_list = [Today + timedelta(minutes=1 * x) for x in range(0, nticks)]
-    # datetext = [x.strftime('%H:%M') for x in date_list]
     return date_list
 
 
@@ -837,9 +834,6 @@ def plot_mean_groups(
                         line_color="#000000",
                     )
                 )
-                # fig_group.add_trace(
-                #     go.Scatter(x=x, y=m2[1].values, mode="lines", name=f"Median {m2[0]}", line_color="#000000")
-                # )
                 fig_group_means.add_trace(
                     go.Scatter(x=x, y=m1[1].values, mode="lines", name=f"Mean {m1[0]}")
                 )
@@ -956,7 +950,7 @@ def plot_high_dimension_db(
     try:
         db = DBPlot(clf)
         db.fit(X, y, training_indices=train_index)
-        fig, ax = plt.subplots(figsize=(9.20, 9.20))
+        fig, ax = plt.subplots(figsize=(10.20, 10.20))
         db.plot(
             ax, generate_testpoints=True, meta=meta
         )  # set generate_testpoints=False to speed up plotting
@@ -973,7 +967,7 @@ def plot_high_dimension_db(
         plot_learning_curves(clf, X, y, ifold, models_visu_dir)
         db = DBPlot(clf, dimensionality_reduction=PLSRegression(n_components=2))
         db.fit(X, y, training_indices=train_index)
-        fig, ax = plt.subplots(figsize=(8.20, 8.20))
+        fig, ax = plt.subplots(figsize=(10.20, 10.20))
         _, l1, l2 = db.plot(
             ax, generate_testpoints=True, meta=meta
         )  # set generate_testpoints=False to speed up plotting
