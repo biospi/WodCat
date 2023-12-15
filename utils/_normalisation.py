@@ -312,15 +312,13 @@ def plot_all(
     ts = []
     for trace in traces:
         ts.append(trace[1])
-    cbarlocs = [0.96, 0.75, 0.60, 0.50, 0.23, 0.05]
-    if simple:
-        cbarlocs = [0.96, 0, 0.50, 0, 0.05]
     fig = make_subplots(rows=len(traces), cols=1, subplot_titles=tuple(ts))
     for i, trace in enumerate(traces):
-        trace[0].colorbar = dict(len=0.10, y=cbarlocs[i])
         fig.append_trace(trace[0], row=i + 1, col=1)
+
     fig.update_layout(title_text=title)
     fig.update_layout(showlegend=False)
+
     out_dir.mkdir(parents=True, exist_ok=True)
     file_path = out_dir / filename.replace("=", "_").lower()
     print(file_path)

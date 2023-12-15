@@ -261,12 +261,10 @@ def plot_groups(
 
     # plt.show()
     fig.tight_layout()
-    filename = "%d_%s.png" % (stepid, title.replace(" ", "_"))
-    filepath = "%s/%s" % (graph_outputdir, filename)
+    filename = f"{stepid}_{title.replace(' ', '_')}.png"
+    filepath = graph_outputdir / filename
     # print('saving fig...')
     fig.savefig(filepath)
-    fig.savefig(filepath.replace("png", "svg"))
-    # print("saved!")
 
     print("building heatmaps...")
     cbarlocs = [0.81, 0.19]
@@ -335,8 +333,8 @@ def plot_groups(
     fig_.data[1].update(zmin=zmin, zmax=zmax)
 
     fig_.update_layout(title_text=title)
-    filename = "%d_%s_heatmap.html" % (stepid, title.replace(" ", "_"))
-    filepath = "%s/%s" % (graph_outputdir, filename)
+    filename = f"{stepid}_{title.replace(' ', '_')}_heatmap.html"
+    filepath = graph_outputdir / filename
     print(filepath)
     fig_.write_html(filepath)
 
@@ -950,7 +948,7 @@ def plot_high_dimension_db(
     try:
         db = DBPlot(clf)
         db.fit(X, y, training_indices=train_index)
-        fig, ax = plt.subplots(figsize=(10.20, 10.20))
+        fig, ax = plt.subplots(figsize=(10.20, 12.00))
         db.plot(
             ax, generate_testpoints=True, meta=meta
         )  # set generate_testpoints=False to speed up plotting
@@ -962,7 +960,6 @@ def plot_high_dimension_db(
         models_visu_dir.mkdir(parents=True, exist_ok=True)
         filepath = models_visu_dir / f"{ifold}.png"
         print(filepath)
-        # fig.tight_layout()
         fig.savefig(filepath)
         plot_learning_curves(clf, X, y, ifold, models_visu_dir)
         db = DBPlot(clf, dimensionality_reduction=PLSRegression(n_components=2))

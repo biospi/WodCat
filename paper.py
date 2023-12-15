@@ -30,21 +30,21 @@ def main(
     data_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
-    create_dataset: bool = False,
-    n_bootstrap: int = 100,
+    create_dataset: bool = True,
+    n_bootstrap: int = 1000,
     n_job: int = 6,
 ):
     """Script to reproduce paper results\n
     Args:\n
         data_dir: Directory containing the Cats data .csv.
     """
-    out_dir = data_dir / "output"
+    out_dir = data_dir / "data"
 
     if create_dataset:
         build_dataset.run(
-            w_size=[10, 20, 30, 120],
-            threshs=[10, 20],
-            n_peaks=[1, 2],
+            w_size=[10, 30, 60, 120],
+            threshs=[10, 20, 30],
+            n_peaks=[1, 2, 3, 4, 5, 6, 7, 8],
             data_dir=data_dir,
             out_dir=out_dir,
             n_job=n_job,
@@ -63,6 +63,7 @@ def main(
             out_dir=out_dir,
             preprocessing_steps=[],
             n_job=n_job,
+            export_hpc_string=True
         )
         res = boot_roc_curve.main(
             dataset.parent.parent, n_bootstrap=n_bootstrap, n_job=n_job
@@ -74,4 +75,4 @@ def main(
 if __name__ == "__main__":
     data_dir = Path("E:/Cats")
     main(data_dir)
-    # typer.run(main)
+    #typer.run(main)

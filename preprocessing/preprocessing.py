@@ -14,18 +14,6 @@ from utils._normalisation import CenterScaler, QuotientNormalizer
 from utils.resampling import resample_s
 
 
-def setup_graph_output_path(output_dir):
-    graph_outputdir = output_dir / "input_graphs"
-    # if os.path.exists(graph_outputdir):
-    #     print("purge %s ..." % graph_outputdir)
-    #     try:
-    #         shutil.rmtree(graph_outputdir)
-    #     except IOError:
-    #         print("file not found.")
-    graph_outputdir.mkdir(parents=True, exist_ok=True)
-    return graph_outputdir
-
-
 def apply_preprocessing_steps(
     meta_columns,
     sfft_window,
@@ -51,7 +39,10 @@ def apply_preprocessing_steps(
     N_META = len(meta_columns)
     step_slug = "_".join(steps)
     step_slug = farm_name + "_" + step_slug
-    graph_outputdir = setup_graph_output_path(output_dir) / clf_name / step_slug
+
+    graph_outputdir = output_dir / "input_graphs" / clf_name / step_slug
+    if output_qn_graph:
+        graph_outputdir.mkdir(parents=True, exist_ok=True)
 
     print("BEFORE STEP ->", df)
     # plotDistribution(df.iloc[:, :-N_META].values, graph_outputdir, "data_distribution_before_%s" % step_slug)

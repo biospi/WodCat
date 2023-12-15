@@ -56,12 +56,12 @@ def build_hpc_string(
     gamma
 ):
 
-    #output_dir = f"/user/work/fo18103{str(output_dir).split(':')[1]}".replace("\\", '/')
-    #data_dir = f"/user/work/fo18103{str(dataset_folder).split(':')[1]}".replace("\\", '/')
-    data_dir = str(dataset_folder).replace("\\", '/')
-    output_dir = str(output_dir).replace("\\", '/')
+    output_dir = Path("/user/work/fo18103") / output_dir.as_posix().split(':')[1]
+    data_dir = Path("/user/work/fo18103") / dataset_folder.as_posix().split(':')[1]
+    # data_dir = str(dataset_folder).replace("\\", '/')
+    # output_dir = str(output_dir).replace("\\", '/')
 
-    hpc_s = f"ml.py --study-id {study_id} --output-dir {output_dir} --dataset-folder {data_dir} --n-imputed-days {n_imputed_days} --n-activity-days {n_activity_days} --n-job {n_job} --cv {cv} "
+    hpc_s = f"ml.py --study-id {study_id} --output-dir {output_dir} --dataset-folder {data_dir} --n-job {n_job} --cv {cv} "
     for item in preprocessing_steps:
         hpc_s += f"--preprocessing-steps {item} "
     for item in class_healthy_label:
@@ -85,9 +85,9 @@ def build_hpc_string(
         hpc_s += "--skip"
 
     print(hpc_s)
-    with open("thesis_hpc_ln.txt", "a") as f:
+    with open("hpc_ln.txt", "a") as f:
         f.write(f"'{hpc_s}'" + "\n")
-    with open("thesis_hpc.txt", "a") as f:
+    with open("hpc.txt", "a") as f:
         f.write(f"'{hpc_s}'" + " ")
 
 
@@ -263,29 +263,29 @@ def main(
             output_dir,
             title="Percentage of zeros in activity per sample before normalisation",
         )
-        plot_mean_groups(
-            sub_sample_scales,
-            n_scales,
-            sfft_window,
-            wavelet_f0,
-            dwt_window,
-            df_norm,
-            label_series,
-            N_META,
-            output_dir / "groups_after_qn",
-        )
-
-        plot_mean_groups(
-            sub_sample_scales,
-            n_scales,
-            sfft_window,
-            wavelet_f0,
-            dwt_window,
-            data_frame,
-            label_series,
-            N_META,
-            output_dir / "groups_before_qn",
-        )
+        # plot_mean_groups(
+        #     sub_sample_scales,
+        #     n_scales,
+        #     sfft_window,
+        #     wavelet_f0,
+        #     dwt_window,
+        #     df_norm,
+        #     label_series,
+        #     N_META,
+        #     output_dir / "groups_after_qn",
+        # )
+        #
+        # plot_mean_groups(
+        #     sub_sample_scales,
+        #     n_scales,
+        #     sfft_window,
+        #     wavelet_f0,
+        #     dwt_window,
+        #     data_frame,
+        #     label_series,
+        #     N_META,
+        #     output_dir / "groups_before_qn",
+        # )
 
         plot_umap(
             meta_columns,
