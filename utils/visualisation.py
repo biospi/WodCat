@@ -76,23 +76,41 @@ def plot_crepuscular(out_dir, df, filename="median_peak", ylabel="Activity count
     df['hour'] = df["peak0_datetime"].dt.hour
     df['time_of_day'] = df['hour'].apply(time_of_day)
 
-    for item in np.unique(df["time_of_day"]):
+    colors = ['#FFD700', '#FFA07A', '#98FB98', '#FFB6C1', '#ADD8E6']
+    unique_times = ['Early Morning', 'Morning', 'Noon', 'Eve', 'Night/Late Night']
+    fig, axs = plt.subplots(1, len(unique_times), figsize=(10, 4), sharey=True)  # Adjust figsize as needed
+    for idx, (item, color) in enumerate(zip(unique_times, colors)):
         df_ = df[df["time_of_day"] == item]
         df_activity = df_[[c for c in df_.columns if c.isdigit()]]
         median_curve = df_activity.median(axis=0)
-        lower_bound = df_activity.quantile(0.25, axis=0)
-        upper_bound = df_activity.quantile(0.75, axis=0)
-        fig, ax = plt.subplots()
+        lower_bound = df_activity.quantile(0.025, axis=0)
+        upper_bound = df_activity.quantile(0.975, axis=0)
+        ax = axs[idx]
         ax.plot(median_curve, label='Median peak', color='black')
-        ax.fill_between(df_activity.columns.astype(int), lower_bound, upper_bound, alpha=0.3, label='Spread(75th percentile)')
+        ax.fill_between(df_activity.columns.astype(int), lower_bound, upper_bound, alpha=0.6, color=color,
+                        label='Spread (95th percentile)')
         ax.set_xlabel('Time in seconds')
         ax.set_ylabel(ylabel)
-        ax.set_title(f'Median peak ({len(df_activity)}) with spread(75th percentile ) at {item}')
-        ax.legend()
+        ax.set_title(f'{item}({len(df_)})')
+        if idx == 0:
+            ax.legend()
         ax.grid(True)
-        filepath = out / f'{filename}_{item}.png'
-        fig.savefig(filepath, bbox_inches='tight')
-        plt.show()
+
+        fig_, ax_ = plt.subplots()
+        ax_.plot(median_curve, label='Median peak', color='black')
+        ax_.fill_between(df_activity.columns.astype(int), lower_bound, upper_bound, alpha=0.3, color=color, label='Spread(95th percentile)')
+        ax_.set_xlabel('Time in seconds')
+        ax_.set_ylabel(ylabel)
+        ax_.set_title(f'Median peak ({len(df_activity)}) with spread(95th percentile ) at {item}')
+        ax_.legend()
+        ax_.grid(True)
+        filepath = out / f'{filename}_{item}.png'.replace('/', '_')
+        fig_.savefig(filepath, bbox_inches='tight')
+
+    fig.tight_layout()
+    filepath = out / f'{filename}.png'
+    print(filepath)
+    fig.savefig(filepath, bbox_inches='tight')
 
 
 def plot_groups(
@@ -245,6 +263,7 @@ def plot_groups(
         ax2.legend()
 
     # plt.show()
+    fig.tight_layout()
     filename = "%d_%s.png" % (stepid, title.replace(" ", "_"))
     filepath = "%s/%s" % (graph_outputdir, filename)
     # print('saving fig...')

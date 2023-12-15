@@ -131,16 +131,14 @@ def purge_hpc_file(filename):
 def time_of_day(x):
     if (x > 4) and (x <= 8):
         return 'Early Morning'
-    elif (x > 8) and (x <= 12 ):
+    elif (x > 8) and (x <= 12):
         return 'Morning'
     elif (x > 12) and (x <= 16):
-        return'Noon'
-    elif (x > 16) and (x <= 20) :
+        return 'Noon'
+    elif (x > 16) and (x <= 20):
         return 'Eve'
-    elif (x > 20) and (x <= 24):
-        return'Night'
-    elif (x <= 4):
-        return'Late Night'
+    elif (x > 20) or (x <= 4):  # Merge Night and Late Night
+        return 'Night/Late Night'
 
 
 if __name__ == "__main__":

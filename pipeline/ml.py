@@ -377,8 +377,8 @@ def main(
             ntraces=ntraces,
         )
 
-        plot_crepuscular(output_dir, data_frame, filename="raw_median_peak", ylabel="Activity count")
-        plot_crepuscular(output_dir, df_norm, filename="qn_median_peak", ylabel="Activity count")
+        plot_crepuscular(output_dir, data_frame.copy(), filename="raw_median_peak", ylabel="Activity count")
+        plot_crepuscular(output_dir, df_norm.copy(), filename="qn_median_peak", ylabel="Activity count")
         ################################################################################################################
 
     step_slug = "_".join(preprocessing_steps)
