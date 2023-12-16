@@ -1,6 +1,9 @@
 # Early disease detection classifiers for wearables on domestic cat
 This repository contains the source code that accompanies our paper "Early disease detection classifiers for wearables on domestic cat" - available at xxx
-![One of the cat that took part in the study.](study_cat.jpg "One of the cat that took part in the study.")
+
+<div style="text-align:center">
+  <img src="study_cat.jpg" alt="One of the cats that took part in the study." title="One of the cats that took part in the study." />
+</div>
 
 ## How To Use
 
