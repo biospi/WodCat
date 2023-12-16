@@ -317,6 +317,10 @@ def bootstrap_roc():
 
 
 def boostrap_auc_peak(results, out_dir):
+    if len(results) == 0:
+        print("None value in results!")
+        return
+
     df = pd.DataFrame(
         results,
         columns=[

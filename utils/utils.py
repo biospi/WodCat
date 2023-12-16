@@ -128,6 +128,58 @@ def purge_hpc_file(filename):
         os.remove(filename)
 
 
+def create_batch_script(account, commands, num_commands):
+    file_content = '''#!/bin/env bash
+#SBATCH --account={account}
+#SBATCH --job-name=cats_paper
+#SBATCH --output=cats_paper
+#SBATCH --error=cats_paper
+#SBATCH --partition=cpu
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=28
+#SBATCH --time=1-00:00:00
+#SBATCH --mem=100000M
+#SBATCH --array=1-{num_commands}
+
+# Load the modules/environment
+module purge
+module load languages/anaconda3/3.7
+conda init
+source ~/.bashrc
+
+
+# Define working directory
+export WORK_DIR=/user/work/fo18103/wodcat
+
+# Change into working directory
+cd ${{WORK_DIR}}
+conda activate /user/work/fo18103/wodcat/venv
+
+# Do some stuff
+echo JOB ID: ${{SLURM_JOBID}}
+echo PBS ARRAY ID: ${{SLURM_ARRAY_TASK_ID}}
+echo Working Directory: $(pwd)
+
+cmds=({commands})
+# Execute code
+echo ${{cmds[${{SLURM_ARRAY_TASK_ID}}]}}
+python ${{cmds[${{SLURM_ARRAY_TASK_ID}}]}} > /user/work/fo18103/logs/cats_thesis_${{SLURM_ARRAY_TASK_ID}}.log
+'''
+    # Format the content with provided commands and number of commands
+    formatted_content = file_content.format(
+        account=account,
+        commands=' '.join(f"{cmd}" for cmd in commands),
+        num_commands=num_commands
+    )
+
+    filepath = Path(os.path.abspath(__file__)).parent / "bc4_cats_cpu.sh"
+    print(f"File ready at: {filepath}")
+    # Write the content to the file
+    with open(filepath, "w") as file:
+        file.write(formatted_content)
+
+
 def time_of_day(x):
     if (x > 4) and (x <= 8):
         return 'Early Morning'
@@ -142,9 +194,14 @@ def time_of_day(x):
 
 
 if __name__ == "__main__":
-    # Example usage with input list [1, 2, 3, ..., 1000000] and k = 10
-    input_list = list(range(1, 1000001))
-    k = 10
-    selected_permutations = [random_permutations(input_list, 3) for _ in range(k)]
+    # Example usage:
+    command_list = ['command1', 'command2', 'command3']
+    num_of_commands = len(command_list)
+    create_batch_script('sscm012844', command_list, num_of_commands)
 
-    print(selected_permutations)
+    # # Example usage with input list [1, 2, 3, ..., 1000000] and k = 10
+    # input_list = list(range(1, 1000001))
+    # k = 10
+    # selected_permutations = [random_permutations(input_list, 3) for _ in range(k)]
+    #
+    # print(selected_permutations)

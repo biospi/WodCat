@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with seaMass.  If not, see <http://www.gnu.org/licenses/>.
 #
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import List
 
 import matplotlib.pyplot as plt
@@ -56,12 +56,12 @@ def build_hpc_string(
     gamma
 ):
 
-    output_dir = Path("/user/work/fo18103") / output_dir.as_posix().split(':')[1]
-    data_dir = Path("/user/work/fo18103") / dataset_folder.as_posix().split(':')[1]
+    o_d = Path("/user/work/fo18103") / output_dir.as_posix().split(':')[1][1:]
+    d_d = Path("/user/work/fo18103") / dataset_folder.as_posix().split(':')[1][1:]
     # data_dir = str(dataset_folder).replace("\\", '/')
     # output_dir = str(output_dir).replace("\\", '/')
 
-    hpc_s = f"ml.py --study-id {study_id} --output-dir {output_dir} --dataset-folder {data_dir} --n-job {n_job} --cv {cv} "
+    hpc_s = f"ml.py --study-id {study_id} --output-dir {o_d.as_posix()} --dataset-folder {d_d.as_posix()} --n-job {n_job} --cv {cv} "
     for item in preprocessing_steps:
         hpc_s += f"--preprocessing-steps {item} "
     for item in class_healthy_label:
@@ -84,7 +84,7 @@ def build_hpc_string(
     if skip:
         hpc_s += "--skip"
 
-    print(hpc_s)
+    #print(hpc_s)
     with open("hpc_ln.txt", "a") as f:
         f.write(f"'{hpc_s}'" + "\n")
     with open("hpc.txt", "a") as f:
