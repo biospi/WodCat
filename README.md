@@ -25,6 +25,7 @@ source venv/bin/activate
 ```
 5) Install dependencies 
 ```bash
+pip install --upgrade pip==21.3.1
 make environment
 ```
 
