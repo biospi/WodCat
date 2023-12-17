@@ -101,6 +101,6 @@ def main(
 
 
 if __name__ == "__main__":
-    data_dir = Path("E:/Cats")
-    main(data_dir)
-    #typer.run(main)
+    # data_dir = Path("E:/Cats")
+    # main(data_dir)
+    typer.run(main)

@@ -3,7 +3,7 @@ from typing import List
 
 import typer
 
-from pipeline import ml
+import ml
 
 
 def run(
