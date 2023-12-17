@@ -128,7 +128,7 @@ def purge_hpc_file(filename):
         os.remove(filename)
 
 
-def create_batch_script(account, commands, num_commands):
+def create_batch_script(uob_username, account, commands, num_commands):
     file_content = '''#!/bin/env bash
 #SBATCH --account={account}
 #SBATCH --job-name=cats_paper
@@ -150,11 +150,11 @@ source ~/.bashrc
 
 
 # Define working directory
-export WORK_DIR=/user/work/fo18103/wodcat
+export WORK_DIR=/user/work/{uob_username}/WodCat
 
 # Change into working directory
 cd ${{WORK_DIR}}
-conda activate /user/work/fo18103/wodcat/venv
+source /user/work/{uob_username}/WodCat/venv/bin/activate
 
 # Do some stuff
 echo JOB ID: ${{SLURM_JOBID}}
@@ -164,10 +164,11 @@ echo Working Directory: $(pwd)
 cmds=({commands})
 # Execute code
 echo ${{cmds[${{SLURM_ARRAY_TASK_ID}}]}}
-python ${{cmds[${{SLURM_ARRAY_TASK_ID}}]}} > /user/work/fo18103/logs/cats_thesis_${{SLURM_ARRAY_TASK_ID}}.log
+python ${{cmds[${{SLURM_ARRAY_TASK_ID}}]}} > /user/work/{uob_username}/logs/cats_thesis_${{SLURM_ARRAY_TASK_ID}}.log
 '''
     # Format the content with provided commands and number of commands
     formatted_content = file_content.format(
+        uob_username=uob_username,
         account=account,
         commands=' '.join(f"{cmd}" for cmd in commands),
         num_commands=num_commands
@@ -197,7 +198,7 @@ if __name__ == "__main__":
     # Example usage:
     command_list = ['command1', 'command2', 'command3']
     num_of_commands = len(command_list)
-    create_batch_script('sscm012844', command_list, num_of_commands)
+    create_batch_script('fo18103', 'sscm012844', command_list, num_of_commands)
 
     # # Example usage with input list [1, 2, 3, ..., 1000000] and k = 10
     # input_list = list(range(1, 1000001))

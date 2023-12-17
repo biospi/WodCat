@@ -35,6 +35,7 @@ def main(
     create_dataset: bool = False,
     export_hpc_string: bool = True,
     bc_username: str = 'sscm012844',
+    uob_username: str = 'fo18103',
     n_bootstrap: int = 1000,
     n_job: int = 6,
 ):
@@ -93,7 +94,7 @@ def main(
     if export_hpc_string:
         with open('hpc_ln.txt') as file:
             command_list = [line.rstrip() for line in file]
-        create_batch_script(bc_username, command_list, len(command_list))
+        create_batch_script(uob_username, bc_username, command_list, len(command_list))
         return
 
     boot_roc_curve.boostrap_auc_peak(results, out_dir)

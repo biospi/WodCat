@@ -17,11 +17,11 @@ cd WodCat/
 ```
 3) Create python virtual environment 
 ```bash
-python3 -m venv cats
+python3 -m venv venv
 ```
 4) Activate the environment
 ```bash
-source cats/bin/activate
+source venv/bin/activate
 ```
 5) Install dependencies 
 ```bash
