@@ -61,7 +61,7 @@ def build_hpc_string(
     # data_dir = str(dataset_folder).replace("\\", '/')
     # output_dir = str(output_dir).replace("\\", '/')
 
-    hpc_s = f"ml.py --study-id {study_id} --output-dir {o_d.as_posix()} --dataset-folder {d_d.as_posix()} --n-job {n_job} --cv {cv} "
+    hpc_s = f"ml.py --study-id {study_id} --output-dir {o_d.as_posix()} --dataset-filepath {d_d.as_posix()} --n-job {n_job} --cv {cv} "
     for item in preprocessing_steps:
         hpc_s += f"--preprocessing-steps {item} "
     for item in class_healthy_label:
