@@ -37,7 +37,7 @@ def main(
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
     n_bootstrap: int = 1000,
-    n_job: int = 6,
+    n_job: int = 28,
 ):
     """Script to reproduce paper results\n
     Args:\n
