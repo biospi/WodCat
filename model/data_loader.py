@@ -47,6 +47,7 @@ def load_activity_data(
 ):
     print(f"load activity from datasets...{filepath}")
     data_frame = pd.read_csv(filepath, sep=",", header=None, low_memory=False)
+    data_frame = data_frame.drop_duplicates()
     data_frame = data_frame.astype(
         dtype=np.float16, errors="ignore"
     )  # cast numeric values as float

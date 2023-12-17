@@ -32,7 +32,7 @@ def main(
     data_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
-    create_dataset: bool = True,
+    create_dataset: bool = False,
     export_hpc_string: bool = True,
     bc_username: str = 'sscm012844',
     n_bootstrap: int = 1000,
@@ -43,13 +43,13 @@ def main(
         data_dir: Directory containing the Cats data .csv.
         export_hpc_string: Create .sh submission file for Blue Crystal/Blue Pebble. Please ignore if running locally.
     """
-    out_dir = data_dir / "data4"
+    out_dir = data_dir / "data"
 
     if create_dataset:
         build_dataset.run(
             w_size=[10],
             threshs=[10],
-            n_peaks=[1, 2],
+            n_peaks=[1, 2, 3],
             data_dir=data_dir,
             out_dir=out_dir,
             n_job=n_job,
@@ -66,13 +66,14 @@ def main(
 
     results = []
     for meta_columns, dataset in zip(meta_columns, datasets):
-        for preprocessing_steps in [[],
+        for preprocessing_steps in [
                                     ["QN"],
                                     ["STDS"],
                                     ["QN", "ANSCOMBE", "LOG"],
-                                    ["QN", "ANSCOMBE", "LOG", "STDS"]
+                                    ["QN", "ANSCOMBE", "LOG", "STDS"],
+                                    []
                                     ]:
-            run_ml.run(
+            out_ml_dir = run_ml.run(
                 preprocessing_steps=preprocessing_steps,
                 export_hpc_string=export_hpc_string,
                 meta_columns=meta_columns,
@@ -84,7 +85,7 @@ def main(
                 continue
 
             res = boot_roc_curve.main(
-                dataset.parent.parent, n_bootstrap=n_bootstrap, n_job=n_job
+                out_ml_dir, n_bootstrap=n_bootstrap, n_job=n_job
             )
             results.append(res)
 

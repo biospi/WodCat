@@ -449,17 +449,6 @@ def main(
         title=f"PLS after {step_slug}",
     )
 
-    if len(add_feature) > 0:
-        df_meta[add_feature]
-        df_data = df_processed[
-            df_processed.columns[~df_processed.columns.isin(["target", "health"])]
-        ]
-        df_ = pd.concat([df_data, df_meta], axis=1)
-        # df_ = pd.concat([df_meta], axis=1)
-        # df_ = pd.DataFrame(StandardScaler().fit_transform(df_))
-        df_processed = pd.concat([df_, df_processed[["target", "health"]]], axis=1)
-        step_slug = f"{step_slug}_{'_'.join(add_feature).upper()}_STDS"
-
     process_ml(
         classifiers,
         add_feature,

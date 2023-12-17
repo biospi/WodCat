@@ -27,8 +27,9 @@ def run(
     """
 
     slug = "_".join(preprocessing_steps)
+    output_dir = out_dir / dataset_filepath.parent.parent.stem / clf / f"{slug}_{cv}"
     ml.main(
-        output_dir=out_dir / dataset_filepath.parent.parent.stem / clf / f"{slug}_{cv}",
+        output_dir=output_dir,
         dataset_filepath=dataset_filepath,
         preprocessing_steps=preprocessing_steps,
         meta_columns=meta_columns,
@@ -48,6 +49,7 @@ def run(
         plot_2d_space=False,
         export_hpc_string=export_hpc_string
     )
+    return output_dir
 
 
 if __name__ == "__main__":
