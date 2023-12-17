@@ -29,7 +29,7 @@ make environment
 ```
 
 ## Dataset
-Download dataset her xxx 
+Download dataset here xxx 
 ```bash
 curl xxx
 ```
