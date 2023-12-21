@@ -33,24 +33,24 @@ def main(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
     create_dataset: bool = False,
-    export_hpc_string: bool = True,
+    export_hpc_string: bool = False,
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
-    n_bootstrap: int = 1000,
-    n_job: int = 28,
+    n_bootstrap: int = 100,
+    n_job: int = 6,
 ):
     """Script to reproduce paper results\n
     Args:\n
         data_dir: Directory containing the Cats data .csv.
         export_hpc_string: Create .sh submission file for Blue Crystal/Blue Pebble. Please ignore if running locally.
     """
-    out_dir = data_dir / "data"
+    out_dir = data_dir / "data_test"
 
     if create_dataset:
         build_dataset.run(
-            w_size=[10],
+            w_size=[120, 60],
             threshs=[10],
-            n_peaks=[1, 2, 3],
+            n_peaks=[1, 2],
             data_dir=data_dir,
             out_dir=out_dir,
             n_job=n_job,
@@ -68,11 +68,7 @@ def main(
     results = []
     for meta_columns, dataset in zip(meta_columns, datasets):
         for preprocessing_steps in [
-                                    ["QN"],
-                                    ["STDS"],
-                                    ["QN", "ANSCOMBE", "LOG"],
-                                    ["QN", "ANSCOMBE", "LOG", "STDS"],
-                                    []
+                                    ["QN"]
                                     ]:
             out_ml_dir = run_ml.run(
                 preprocessing_steps=preprocessing_steps,

@@ -63,7 +63,7 @@ def add_separator(df_):
     return df_
 
 
-def plot_crepuscular(out_dir, df, filename="median_peak", ylabel="Activity count"):
+def plot_crepuscular(out_dir, df, filename="median_peak", ylabel="Activity count", n_xtick=6):
     out = out_dir / "crepuscular"
     out.mkdir(parents=True, exist_ok=True)
 
@@ -93,14 +93,21 @@ def plot_crepuscular(out_dir, df, filename="median_peak", ylabel="Activity count
             ax.legend()
         ax.grid(True)
 
+        x_ticks = np.linspace(0, len(median_curve) - 1, n_xtick, dtype=int)
+        ax.set_xticks(x_ticks)
+        ax.set_xticklabels([str(int(median_curve.index[i])) for i in x_ticks])
+
         fig_, ax_ = plt.subplots()
         ax_.plot(median_curve, label='Median peak', color='black')
-        ax_.fill_between(df_activity.columns.astype(int), lower_bound, upper_bound, alpha=0.3, color=color, label='Spread(95th percentile)')
+        ax_.fill_between(df_activity.columns.astype(int), lower_bound, upper_bound, alpha=0.6, color=color, label='Spread(95th percentile)')
         ax_.set_xlabel('Time in seconds')
         ax_.set_ylabel(ylabel)
         ax_.set_title(f'Median peak ({len(df_activity)}) with spread(95th percentile ) at {item}')
         ax_.legend()
         ax_.grid(True)
+        x_ticks = np.linspace(0, len(median_curve) - 1, n_xtick, dtype=int)
+        ax_.set_xticks(x_ticks)
+        ax_.set_xticklabels([str(int(median_curve.index[i])) for i in x_ticks])
         filepath = out / f'{filename}_{item}.png'.replace('/', '_')
         fig_.savefig(filepath, bbox_inches='tight')
 

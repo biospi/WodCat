@@ -45,7 +45,7 @@ def run(
         study_id="cat",
         cv=cv,
         output_qn_graph=False,
-        pre_visu=False,
+        pre_visu=True,
         plot_2d_space=False,
         export_hpc_string=export_hpc_string
     )

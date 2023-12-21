@@ -114,7 +114,7 @@ def main(
     dwt_window: str = "coif1",
     study_id: str = "study",
     sampling: str = "T",
-    pre_visu: bool = True,
+    pre_visu: bool = False,
     output_qn_graph: bool = False,
     enable_qn_peak_filter: bool = False,
     enable_downsample_df: bool = False,
