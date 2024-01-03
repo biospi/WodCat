@@ -408,7 +408,14 @@ def get_cat_data(data_dir, bin):
         print(f"reading file: {file}")
         df = pd.read_csv(file, sep=",", skiprows=range(0, 23), header=None)
         cat_id = int(file.stem.split("_")[0])
+        cat_name = file.stem.split("_")[1]
+        individual_to_ignore = ["MrDudley", "Oliver_F", "Lucy"]
+        if cat_name in individual_to_ignore:
+            continue
         df = format_raw_data(df, bin)
+        cat_meta = get_cat_meta(None, cat_id)
+        df["health"] = cat_meta["health"]
+        df["age"] = cat_meta["age"]
         dfs.append((cat_id, df))
     return dfs
 

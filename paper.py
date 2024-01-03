@@ -32,25 +32,26 @@ def main(
     data_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
-    create_dataset: bool = False,
+    create_dataset: bool = True,
     export_hpc_string: bool = False,
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
     n_bootstrap: int = 100,
-    n_job: int = 6,
+    ml_exist: bool = False,
+    n_job: int = 16,
 ):
     """Script to reproduce paper results\n
     Args:\n
         data_dir: Directory containing the Cats data .csv.
         export_hpc_string: Create .sh submission file for Blue Crystal/Blue Pebble. Please ignore if running locally.
     """
-    out_dir = data_dir / "data_test"
+    out_dir = data_dir / "data"
 
     if create_dataset:
         build_dataset.run(
-            w_size=[120, 60],
+            w_size=[60],
             threshs=[10],
-            n_peaks=[1, 2],
+            n_peaks=[1, 2, 3, 4, 5, 6, 7, 8],
             data_dir=data_dir,
             out_dir=out_dir,
             n_job=n_job,
@@ -67,24 +68,40 @@ def main(
 
     results = []
     for meta_columns, dataset in zip(meta_columns, datasets):
-        for preprocessing_steps in [
-                                    ["QN"]
-                                    ]:
-            out_ml_dir = run_ml.run(
-                preprocessing_steps=preprocessing_steps,
-                export_hpc_string=export_hpc_string,
-                meta_columns=meta_columns,
-                dataset_filepath=dataset,
-                out_dir=out_dir,
-                n_job=n_job,
-            )
-            if export_hpc_string:
-                continue
+        if ml_exist: #if you already ran the classification pipeline on hpc
+            print("Parsing existing results...")
+            ml_out = [x.parent for x in dataset.parent.parent.glob("**/fold_data")]
+            for out_ml_dir in ml_out:
+                print(out_ml_dir)
+                res = boot_roc_curve.main(
+                    out_ml_dir, n_bootstrap=n_bootstrap, n_job=n_job
+                )
+                results.append(res)
+        else:
+            print("Running machine learning pipeline...")
+            for preprocessing_steps in [
+                #[],
+                ["QN"]
+                # ["STDS"],
+                # ["QN", "ANSCOMBE", "LOG"],
+                # ["QN", "ANSCOMBE", "LOG", "STDS"]
 
-            res = boot_roc_curve.main(
-                out_ml_dir, n_bootstrap=n_bootstrap, n_job=n_job
-            )
-            results.append(res)
+            ]:
+                out_ml_dir = run_ml.run(
+                    preprocessing_steps=preprocessing_steps,
+                    export_hpc_string=export_hpc_string,
+                    meta_columns=meta_columns,
+                    dataset_filepath=dataset,
+                    out_dir=out_dir,
+                    n_job=n_job,
+                )
+                if export_hpc_string:
+                    continue
+
+                res = boot_roc_curve.main(
+                    out_ml_dir, n_bootstrap=n_bootstrap, n_job=n_job
+                )
+                results.append(res)
 
     #create submission file for Blue Crystal(UoB), please ignore if running on local computer
     if export_hpc_string:
@@ -93,10 +110,11 @@ def main(
         create_batch_script(uob_username, bc_username, command_list, len(command_list))
         return
 
+    print("Create n peak comparison ROC curve...")
     boot_roc_curve.boostrap_auc_peak(results, out_dir)
 
 
 if __name__ == "__main__":
-    data_dir = Path("E:/Cats")
+    data_dir = Path("/mnt/storage/scratch/axel/cats")
     main(data_dir)
     #typer.run(main)

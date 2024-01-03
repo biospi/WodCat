@@ -164,7 +164,7 @@ echo Working Directory: $(pwd)
 cmds=({commands})
 # Execute code
 echo ${{cmds[${{SLURM_ARRAY_TASK_ID}}]}}
-python ${{cmds[${{SLURM_ARRAY_TASK_ID}}]}} > /user/work/{uob_username}/logs/cats_thesis_${{SLURM_ARRAY_TASK_ID}}.log
+python ${{cmds[${{SLURM_ARRAY_TASK_ID}}]}} > /user/work/{uob_username}/logs/cat_paper_${{SLURM_ARRAY_TASK_ID}}.log
 '''
     # Format the content with provided commands and number of commands
     formatted_content = file_content.format(

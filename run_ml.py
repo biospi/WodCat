@@ -18,7 +18,8 @@ def run(
     meta_columns: List[str] = [],
     cv: str = "LeaveOneOut",
     export_hpc_string: bool = False,
-    n_job: int = 4,
+    pre_visu: bool = False,
+    n_job: int = 6,
 ):
     """Thesis script runs the cats study
     Args:\n
@@ -45,7 +46,7 @@ def run(
         study_id="cat",
         cv=cv,
         output_qn_graph=False,
-        pre_visu=True,
+        pre_visu=pre_visu,
         plot_2d_space=False,
         export_hpc_string=export_hpc_string
     )

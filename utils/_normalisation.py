@@ -138,7 +138,7 @@ def normalize(X, out_dir, output_graph, enable_qn_peak_filter, animal_ids, label
         # qnorm_samples = []
         # for l in labels:
         #     qnorm_samples.append([l])
-        animal_mask = (animal_ids[:-1] != animal_ids[1:])
+        animal_mask = (np.array(animal_ids[:-1]) != np.array(animal_ids[1:]))
         animal_mask = np.append(animal_mask, False)
         qnorm_samples_mask = []
         for i, sample in enumerate(qnorm_samples):
@@ -146,7 +146,10 @@ def normalize(X, out_dir, output_graph, enable_qn_peak_filter, animal_ids, label
                 for _ in range(5):
                     qnorm_samples_mask.append([np.nan] * (len(sample)+1))
             # sample[::] = np.nan
-            sample = np.append(sample, labels[i])
+            if labels is None:
+                sample = np.append(sample, "none")
+            else:
+                sample = np.append(sample, labels[i])
             qnorm_samples_mask.append(sample)
         qnorm_samples_mask = np.vstack(qnorm_samples_mask)
         traces.append(
