@@ -109,9 +109,9 @@ def create_training_sets(run_id, activity, timestamp, metadata, max_sample, n_pe
     training_str_flatten = (
         str(training_set).strip("[]").replace(" ", "").replace("None", "NaN")
     )
-    print(
-        f"[{run_id}] sample size is {len(training_set)}: {training_str_flatten[0:50]}.....{training_str_flatten[-50:]}"
-    )
+    # print(
+    #     f"[{run_id}] sample size is {len(training_set)}: {training_str_flatten[0:50]}.....{training_str_flatten[-50:]}"
+    # )
     with open(filepath, "a") as outfile:
         outfile.write(training_str_flatten)
         outfile.write("\n")
