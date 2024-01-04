@@ -32,13 +32,13 @@ def main(
     data_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
-    create_dataset: bool = False,
+    create_dataset: bool = True,
     export_hpc_string: bool = False,
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
     n_bootstrap: int = 100,
     ml_exist: bool = False,
-    n_job: int = 16,
+    n_job: int = 22,
 ):
     """Script to reproduce paper results\n
     Args:\n
@@ -49,7 +49,7 @@ def main(
 
     if create_dataset:
         build_dataset.run(
-            w_size=[60],
+            w_size=[30],
             threshs=[10],
             n_peaks=[1, 2, 3, 4, 5, 6, 7, 8],
             data_dir=data_dir,
@@ -68,8 +68,8 @@ def main(
 
     results = []
     for meta_columns, dataset in zip(meta_columns, datasets):
-        if "10000_10_060_005" not in dataset.as_posix():
-            continue
+        # if "10000_10_060_005" not in dataset.as_posix():
+        #     continue
         print(dataset)
 
         if ml_exist: #if you already ran the classification pipeline on hpc
