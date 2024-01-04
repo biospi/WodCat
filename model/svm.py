@@ -591,9 +591,10 @@ def cross_validate_svm_fast(
         X: samples
         y: targets
     """
-
+    print("cross_validate_svm_fast...")
     meta_data_short = df_meta["name"].values
     if plot_2d_space:
+        print("plot 2d space...")
         for kernel in svc_kernel:
             try:
                 if C is None or gamma is None:
@@ -654,6 +655,7 @@ def cross_validate_svm_fast(
         mean_fpr_test = np.linspace(0, 1, 100)
         mean_fpr_train = np.linspace(0, 1, 100)
         meta = df_meta.values
+        print("start ml...")
         with Manager() as manager:
             # create result holders
             tprs_test = manager.list()
