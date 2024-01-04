@@ -68,7 +68,7 @@ def main(
 
     results = []
     for meta_columns, dataset in zip(meta_columns, datasets):
-        if "10000_10_060_005" not in dataset:
+        if "10000_10_060_005" not in dataset.as_posix():
             continue
         print(dataset)
 
