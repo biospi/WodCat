@@ -654,7 +654,7 @@ def cross_validate_svm_fast(
             all_probs_test = []
             for item in fold_results:
                 all_y_test.extend(item['y_test'])
-                y_pred_proba_test = np.array(item['y_pred_test'])
+                y_pred_proba_test = np.array(item['y_pred_proba_test'])
                 # if len(y_pred_proba_test) > 1:
                 #     y_pred_proba_test = y_pred_proba_test[:, 1]
                 all_probs_test.extend(y_pred_proba_test)
