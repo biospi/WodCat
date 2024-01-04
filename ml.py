@@ -33,7 +33,6 @@ from utils.visualisation import (
     plot_mean_groups,
     plot_time_pca,
     plot_time_lda,
-    plot_umap,
     plot_time_pls, plot_zeros_distrib, plot_groups, plot_crepuscular,
 )
 

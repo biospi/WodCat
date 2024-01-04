@@ -57,7 +57,8 @@ def main(
             n_job=n_job,
         )
 
-    datasets = [x for x in Path(out_dir).glob("**/*/samples.csv")]
+    datasets = sorted([x for x in Path(out_dir).glob("**/*/samples.csv")])
+    print(f"datasets={datasets}")
     meta_columns = [pd.read_csv(x).values.flatten().tolist() for x in Path(out_dir).glob("**/*/meta_columns.csv")]
 
     assert len(datasets) > 0, f"There is no dataset in {out_dir}."
@@ -68,15 +69,12 @@ def main(
 
     results = []
     for meta_columns, dataset in zip(meta_columns, datasets):
-        # if "10000_10_060_005" not in dataset.as_posix():
-        #     continue
-        print(dataset)
-
+        print(f"dataset={dataset}")
         if ml_exist: #if you already ran the classification pipeline on hpc
             print("Parsing existing results...")
             ml_out = [x.parent for x in dataset.parent.parent.glob("**/fold_data")]
             for out_ml_dir in ml_out:
-                print(out_ml_dir)
+                print(f"out_ml_dir={out_ml_dir}")
                 res = boot_roc_curve.main(
                     out_ml_dir, n_bootstrap=n_bootstrap, n_job=n_job
                 )

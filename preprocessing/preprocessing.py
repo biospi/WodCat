@@ -3,7 +3,7 @@ import warnings
 
 import numpy as np
 import pandas as pd
-import umap
+# import umap
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, Normalizer
@@ -63,7 +63,6 @@ def apply_preprocessing_steps(
             "STANDARDSCALER",
             "TSNE",
             "UPSAMP",
-            "UMAP",
             "STDSCALE"
         ]:
             warnings.warn("processing step %s does not exist!" % step)
@@ -210,15 +209,15 @@ def apply_preprocessing_steps(
             df = pd.concat([data_frame_pca, df_meta], axis=1)
             del data_frame_pca
 
-        if "UMAP" in step:
-            df_before_reduction = df.iloc[:, :-N_META].values
-            data_frame_umap = pd.DataFrame(
-                umap.UMAP().fit_transform(df_before_reduction)
-            )
-            data_frame_umap.index = df.index  # need to keep original sample index!!!!
-            df_meta = df.iloc[:, -N_META:]
-            df = pd.concat([data_frame_umap, df_meta], axis=1)
-            del data_frame_umap
+        # if "UMAP" in step:
+        #     df_before_reduction = df.iloc[:, :-N_META].values
+        #     data_frame_umap = pd.DataFrame(
+        #         umap.UMAP().fit_transform(df_before_reduction)
+        #     )
+        #     data_frame_umap.index = df.index  # need to keep original sample index!!!!
+        #     df_meta = df.iloc[:, -N_META:]
+        #     df = pd.concat([data_frame_umap, df_meta], axis=1)
+        #     del data_frame_umap
 
         if "UPSAMP" in step:
             resolution = 0.7

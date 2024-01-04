@@ -12,8 +12,8 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
-import umap
-import umap.plot
+# import umap
+# import umap.plot
 from matplotlib.lines import Line2D
 from plotly.subplots import make_subplots
 from plotnine import ggplot, aes, geom_jitter, stat_summary, theme, element_text
@@ -389,35 +389,35 @@ def plot_2d_space(
     plt.clf()
 
 
-def plot_umap(meta_columns, df, output_dir, label_series, title="title", y_col="label"):
-    pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
-    df_before_reduction = df.iloc[:, : -len(meta_columns)].values
-    embedding = umap.UMAP().fit(df_before_reduction)
-
-    ids = df["id"].values
-    labels = df[y_col].values
-    seasons = (
-        pd.to_datetime(df["date"], format="%d/%m/%Y").dt.month % 12 // 3 + 1
-    ).map({1: "winter", 2: "spring", 3: "summer", 4: "fall"})
-    filename = f"{title.replace(' ', '_')}.png"
-
-    fig, ax = plt.subplots(figsize=(9.00, 9.00))
-    umap.plot.points(embedding, labels=labels, ax=ax, background="black")
-    filepath = output_dir / f"umap_plot_labels_{filename}"
-    fig.savefig(filepath)
-    print(filepath)
-
-    fig, ax = plt.subplots(figsize=(9.00, 9.00))
-    umap.plot.points(embedding, labels=ids, ax=ax, background="black")
-    filepath = output_dir / f"umap_plot_ids_{filename}"
-    fig.savefig(filepath)
-    print(filepath)
-
-    fig, ax = plt.subplots(figsize=(9.00, 9.00))
-    umap.plot.points(embedding, labels=seasons, ax=ax, background="black")
-    filepath = output_dir / f"umap_plot_seasons_{filename}"
-    fig.savefig(filepath)
-    print(filepath)
+# def plot_umap(meta_columns, df, output_dir, label_series, title="title", y_col="label"):
+#     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
+#     df_before_reduction = df.iloc[:, : -len(meta_columns)].values
+#     embedding = umap.UMAP().fit(df_before_reduction)
+#
+#     ids = df["id"].values
+#     labels = df[y_col].values
+#     seasons = (
+#         pd.to_datetime(df["date"], format="%d/%m/%Y").dt.month % 12 // 3 + 1
+#     ).map({1: "winter", 2: "spring", 3: "summer", 4: "fall"})
+#     filename = f"{title.replace(' ', '_')}.png"
+#
+#     fig, ax = plt.subplots(figsize=(9.00, 9.00))
+#     umap.plot.points(embedding, labels=labels, ax=ax, background="black")
+#     filepath = output_dir / f"umap_plot_labels_{filename}"
+#     fig.savefig(filepath)
+#     print(filepath)
+#
+#     fig, ax = plt.subplots(figsize=(9.00, 9.00))
+#     umap.plot.points(embedding, labels=ids, ax=ax, background="black")
+#     filepath = output_dir / f"umap_plot_ids_{filename}"
+#     fig.savefig(filepath)
+#     print(filepath)
+#
+#     fig, ax = plt.subplots(figsize=(9.00, 9.00))
+#     umap.plot.points(embedding, labels=seasons, ax=ax, background="black")
+#     filepath = output_dir / f"umap_plot_seasons_{filename}"
+#     fig.savefig(filepath)
+#     print(filepath)
 
 
 def plot_time_pca(
