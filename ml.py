@@ -188,6 +188,7 @@ def main(
             print("output directory already exist. skip run.")
             return
 
+    output_dir.mkdir(parents=True, exist_ok=True)
     print(f"loading dataset file {dataset_filepath} ...")
     (
         data_frame,

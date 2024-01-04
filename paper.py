@@ -32,7 +32,7 @@ def main(
     data_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
-    create_dataset: bool = True,
+    create_dataset: bool = False,
     export_hpc_string: bool = False,
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
