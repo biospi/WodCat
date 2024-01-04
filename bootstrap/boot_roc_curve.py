@@ -240,11 +240,6 @@ def main(path=None, n_bootstrap=100, n_job=6):
     ax_roc_merge.plot(
         mean_fpr_test, mean_tpr_test, color="black", label=label, lw=2, alpha=1
     )
-    ax_roc_merge.set(
-        xlim=[-0.05, 1.05],
-        ylim=[-0.05, 1.05],
-        title=f"(Training/Testing data) Receiver operating characteristic",
-    )
     ax_roc_merge.set_xlabel("False positive rate")
     ax_roc_merge.set_ylabel("True positive rate")
     ax_roc_merge.legend(loc="lower right")
@@ -261,7 +256,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
     ax_roc_merge.set(
         xlim=[-0.05, 1.05],
         ylim=[-0.05, 1.05],
-        title=f"Receiver operating characteristic (Training and Testing data)",
+        title=f"Receiver operating characteristic (n_bootstrap={n_bootstrap})",
     )
     ax_roc_merge.legend(loc="lower right")
 
