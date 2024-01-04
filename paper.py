@@ -38,7 +38,7 @@ def main(
     uob_username: str = 'fo18103',
     n_bootstrap: int = 100,
     ml_exist: bool = False,
-    n_job: int = 22,
+    n_job: int = 16,
 ):
     """Script to reproduce paper results\n
     Args:\n
