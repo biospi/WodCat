@@ -1,6 +1,5 @@
 import json
 import os
-import pathlib
 import pickle
 import time
 from multiprocessing import Manager, Pool
@@ -12,12 +11,8 @@ from sklearn import tree
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     balanced_accuracy_score,
-    precision_score,
-    plot_roc_curve,
     auc,
     roc_curve,
-    precision_recall_curve,
-    classification_report,
 )
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.model_selection import (
@@ -28,10 +23,9 @@ from sklearn.svm import SVC
 
 from utils._custom_split import LeaveNOut, BootstrapCustom_
 from utils.visualisation import (
-    plot_roc_range,
     build_proba_hist,
     build_individual_animal_pred,
-    plot_high_dimension_db, plot_learning_curves, plot_fold_details, mean_confidence_interval)
+    plot_high_dimension_db, plot_learning_curves, plot_fold_details)
 
 
 def downsample_df(data_frame, class_healthy, class_unhealthy):
@@ -266,22 +260,14 @@ def fold_worker(
     meta_data_short,
     sample_dates,
     steps,
-    tprs_test,
-    tprs_train,
-    aucs_roc_test,
-    aucs_roc_train,
     fold_results,
     fold_probas,
     label_series,
-    mean_fpr_test,
-    mean_fpr_train,
     clf,
     X,
     y,
     train_index,
     test_index,
-    axis_test,
-    axis_train,
     ifold,
     nfold,
     export_fig_as_pdf,
@@ -361,47 +347,7 @@ def fold_worker(
         y_pred_proba_test = clf.predict_proba(X_test)[:, 1]
         y_pred_proba_test_df = y_pred_proba_test
 
-    # prep for roc curve
-    alpha = 0.3
-    lw= 1
-    viz_roc_test = plot_roc_curve(
-        clf,
-        X_test,
-        y_test,
-        label=None,
-        alpha=alpha,
-        lw=lw,
-        ax=None,
-        c="tab:blue"
-    )
-    axis_test.append(viz_roc_test)
-
-    interp_tpr_test = np.interp(mean_fpr_test, viz_roc_test.fpr, viz_roc_test.tpr)
-    interp_tpr_test[0] = 0.0
-    tprs_test.append(interp_tpr_test)
-    auc_value_test = viz_roc_test.roc_auc
-    print("auc test=", auc_value_test)
-
-    aucs_roc_test.append(auc_value_test)
-
-    viz_roc_train = plot_roc_curve(
-        clf,
-        X_train,
-        y_train,
-        label=None,
-        alpha=0.3,
-        lw=1,
-        ax=None,
-        c="tab:blue",
-    )
-    axis_train.append(viz_roc_train)
-
-    interp_tpr_train = np.interp(mean_fpr_train, viz_roc_train.fpr, viz_roc_train.tpr)
-    interp_tpr_train[0] = 0.0
-    tprs_train.append(interp_tpr_train)
-    auc_value_train = viz_roc_train.roc_auc
-    print("auc train=", auc_value_train)
-    aucs_roc_train.append(auc_value_train)
+    #todo clean up no test roc curve if loocv. ROC curve will be created later with bootstrap
 
     if plot_2d_space and ifold == 0:
         plot_high_dimension_db(
@@ -460,8 +406,6 @@ def fold_worker(
         "training_shape": X_train.shape,
         "testing_shape": X_test.shape,
         "target": int(y_test.tolist()[0]),
-        "auc": auc_value_test,
-        "auc_train": auc_value_train,
         "accuracy": float(accuracy),
         "accuracy_train": float(accuracy_train),
         "class_healthy": int(class_healthy),
@@ -530,14 +474,6 @@ def fold_worker(
             y_pred_proba_test = clf.decision_function(X_test)
         else:
             y_pred_proba_test = clf.predict_proba(X_test)[:, 1]
-        # if len(np.array(y_pred_proba_test).shape) > 1:
-        #     test_y_pred_proba_0 = y_pred_proba_test[:, 0]
-        #     test_y_pred_proba_1 = y_pred_proba_test[:, 1]
-        #     fold_proba = {
-        #         "test_y_pred_proba_0": test_y_pred_proba_0.tolist(),
-        #         "test_y_pred_proba_1": test_y_pred_proba_1.tolist(),
-        #     }
-        # else:
         fold_proba = {
             "test_y_pred_proba_0": y_pred_proba_test.tolist(),
             "test_y_pred_proba_1": y_pred_proba_test.tolist(),
@@ -658,12 +594,6 @@ def cross_validate_svm_fast(
         print("start ml...")
         with Manager() as manager:
             # create result holders
-            tprs_test = manager.list()
-            tprs_train = manager.list()
-            axis_test = manager.list()
-            axis_train = manager.list()
-            aucs_roc_test = manager.list()
-            aucs_roc_train = manager.list()
             fold_results = manager.list()
             fold_probas = manager.dict()
             for k in label_series.values():
@@ -691,22 +621,14 @@ def cross_validate_svm_fast(
                         meta_data_short,
                         sample_dates,
                         steps,
-                        tprs_test,
-                        tprs_train,
-                        aucs_roc_test,
-                        aucs_roc_train,
                         fold_results,
                         fold_probas,
                         label_series,
-                        mean_fpr_test,
-                        mean_fpr_train,
                         clf,
                         X,
                         y,
                         train_index,
                         test_index,
-                        axis_test,
-                        axis_train,
                         ifold,
                         cross_validation_method.get_n_splits(),
                         export_fig_as_pdf,
@@ -720,12 +642,6 @@ def cross_validate_svm_fast(
             pool.join()
             end = time.time()
             fold_results = list(fold_results)
-            axis_test = list(axis_test)
-            tprs_test = list(tprs_test)
-            aucs_roc_test = list(aucs_roc_test)
-            axis_train = list(axis_train)
-            tprs_train = list(tprs_train)
-            aucs_roc_train = list(aucs_roc_train)
             fold_probas = dict(fold_probas)
             fold_probas = dict([a, list(x)] for a, x in fold_probas.items())
             print("total time (s)= " + str(end - start))
@@ -734,138 +650,6 @@ def cross_validate_svm_fast(
 
         info = f"X shape:{str(X.shape)} healthy:{fold_results[0]['n_healthy']} unhealthy:{fold_results[0]['n_unhealthy']} \n" \
                f" training_shape:{fold_results[0]['training_shape']} testing_shape:{fold_results[0]['testing_shape']}"
-        if kernel == "transformer":
-            for a in axis_test:
-                xdata = a["fpr"]
-                ydata = a["tpr"]
-                ax_roc[1].plot(xdata, ydata, color="tab:blue", alpha=0.3, linewidth=1)
-                ax_roc_merge.plot(xdata, ydata, color="tab:blue", alpha=0.3, linewidth=1)
-
-            for a in axis_train:
-                xdata = a["fpr"]
-                ydata = a["tpr"]
-                ax_roc[0].plot(xdata, ydata, color="tab:blue", alpha=0.3, linewidth=1)
-                ax_roc_merge.plot(xdata, ydata, color="tab:purple", alpha=0.3, linewidth=1)
-        else:
-            for n, a in enumerate(axis_test):
-                f, ax = a.figure_, a.ax_
-                xdata = ax.lines[0].get_xdata()
-                ydata = ax.lines[0].get_ydata()
-                alpha = 0.3
-                lw = 1
-                # testing_shape = fold_results[n]["testing_shape"][0]
-                # if testing_shape < 150:
-                #     alpha = testing_shape / 100 / 5
-                #     lw = testing_shape / 100 / 5
-                ax_roc[1].plot(xdata, ydata, color="tab:blue", alpha=alpha, linewidth=lw)
-                ax_roc_merge.plot(xdata, ydata, color="tab:blue", alpha=lw, linewidth=lw)
-
-            for idx, a in enumerate(axis_train):
-                f, ax = a.figure_, a.ax_
-                if len(ax.lines) == 0:
-                    continue
-                xdata = ax.lines[0].get_xdata()
-                ydata = ax.lines[0].get_ydata()
-                ax_roc[0].plot(xdata, ydata, color="tab:blue", alpha=0.3, linewidth=1)
-                ax_roc_merge.plot(xdata, ydata, color="tab:purple", alpha=0.3, linewidth=1)
-
-        if cv_name == "Bootstrap":
-            tprs_test, fpr_test = [], []
-            tprs_train, fpr_train = [], []
-            aucs_train, aucs_test = [], []
-            for k in range(0, len(fold_results), len(ids)):
-                start = k
-                end = k + len(ids)
-                print(start, end)
-                all_y_test = []
-                all_probs_test = []
-                for item in fold_results[start: end]:
-                    all_y_test.extend(item['y_test'])
-                    y_pred_proba_test = np.array(item['y_pred_proba_test'])
-                    all_probs_test.extend(y_pred_proba_test)
-                all_y_test = np.array(all_y_test)
-                all_probs_test = np.array(all_probs_test)
-                fpr, tpr, thresholds = roc_curve(all_y_test, all_probs_test.astype(int))
-                tprs_test.append(tpr)
-                fpr_test.append(fpr)
-                roc_auc_test = auc(fpr, tpr)
-                aucs_test.append(roc_auc_test)
-                print(f"LOO AUC TEST={roc_auc_test}")
-                ax_roc_merge.plot(fpr, tpr, lw=2, alpha=0.5, color="tab:blue", label=None)
-
-                all_y_train = []
-                all_probs_train = []
-                for item in fold_results[start: end]:
-                    all_y_train.extend(item['y_train'])
-                    y_pred_proba_train = np.array(item['y_pred_proba_train'])
-                    # if len(y_pred_proba_train) > 1:
-                    #     y_pred_proba_train = y_pred_proba_train[:, 1]
-                    all_probs_train.extend(y_pred_proba_train)
-                all_y_train = np.array(all_y_train)
-                all_probs_train = np.array(all_probs_train)
-                fpr, tpr, thresholds = roc_curve(all_y_train, all_probs_train)
-                tprs_train.append(tpr)
-                fpr_train.append(fpr)
-                roc_auc_train = auc(fpr, tpr)
-                aucs_train.append(roc_auc_train)
-                print(f"LOO AUC TRAIN={roc_auc_train}")
-                ax_roc_merge.plot(fpr, tpr, lw=2, alpha=0.5, color="tab:purple", label=None)
-            #cli
-            mean_tpr_test = np.mean(tprs_test, axis=0)
-            mean_fpr_test = np.mean(fpr_test, axis=0)
-            mean_tpr_test[-1] = 1.0
-            #mean_auc_test = auc(mean_fpr_test, mean_tpr_test)
-            # std_auc = np.std(aucs)
-            lo, hi = mean_confidence_interval(aucs_test)
-
-            label = f"Mean ROC Test (Median AUC = {np.median(aucs_test):.2f}, 95% CI [{lo:.4f}, {hi:.4f}] )"
-            # if len(aucs_test) <= 2:
-            #     label = r"Mean ROC (Median AUC = %0.2f)" % np.median(aucs_test)
-            ax_roc_merge.plot(mean_fpr_test, mean_tpr_test, label=label, lw=2, alpha=1, color="black")
-
-            mean_tpr_train = np.mean(tprs_train, axis=0)
-            mean_fpr_train = np.mean(fpr_train, axis=0)
-
-            mean_tpr_train[-1] = 1.0
-            #mean_auc_train = auc(mean_fpr_train, mean_tpr_train)
-            # std_auc = np.std(aucs)
-            lo, hi = mean_confidence_interval(aucs_train)
-
-            label = f"Mean ROC Training (Median AUC = {np.median(aucs_train):.2f}, 95% CI [{lo:.4f}, {hi:.4f}] )"
-            # if len(aucs_train) <= 2:
-            #     label = r"Mean ROC (Median AUC = %0.2f)" % np.median(aucs_train)
-            ax_roc_merge.plot(
-                mean_fpr_train, mean_tpr_train, label=label, lw=2, alpha=1, color="red"
-            )
-
-            ax_roc_merge.plot([0, 1], [0, 1], linestyle='--', lw=2, color='orange', label='Chance', alpha=1)
-            ax_roc_merge.set_xlim([-0.05, 1.05])
-            ax_roc_merge.set_ylim([-0.05, 1.05])
-            ax_roc_merge.set_xlabel('False Positive Rate')
-            ax_roc_merge.set_ylabel('True Positive Rate')
-            ax_roc_merge.set_title('Receiver operating characteristic')
-            ax_roc_merge.legend(loc="lower right")
-            ax_roc_merge.grid()
-            fig_roc.tight_layout()
-            path = out_dir / "roc_curve" / cv_name
-            path.mkdir(parents=True, exist_ok=True)
-            tag = f"{type(clf).__name__}_{clf_kernel}"
-            final_path = path / f"{tag}_roc_{steps}.png"
-            print(final_path)
-            # fig_roc.savefig(final_path)
-
-            final_path = path / f"{tag}_roc_{steps}_merge.png"
-            print(final_path)
-            fig_roc_merge.savefig(final_path)
-
-            if export_fig_as_pdf:
-                final_path = path / f"{tag}_roc_{steps}.pdf"
-                print(final_path)
-                fig_roc.savefig(final_path)
-
-                final_path = path / f"{tag}_roc_{steps}_merge.pdf"
-                print(final_path)
-                fig_roc_merge.savefig(final_path)
 
         if cv_name == "LeaveOneOut":
             all_y_test = []
@@ -878,7 +662,7 @@ def cross_validate_svm_fast(
                 all_probs_test.extend(y_pred_proba_test)
             all_y_test = np.array(all_y_test)
             all_probs_test = np.array(all_probs_test)
-            fpr, tpr, thresholds = roc_curve(all_y_test, all_probs_test.astype(int))
+            fpr, tpr, thresholds = roc_curve(all_y_test, all_probs_test.astype(float))
             roc_auc_test = auc(fpr, tpr)
             print(f"LOO AUC TEST={roc_auc_test}")
             ax_roc_merge.plot(fpr, tpr, lw=3, alpha=0.9, label='LOOCV ROC (TEST AUC = %0.2f)' % (roc_auc_test))
@@ -927,26 +711,6 @@ def cross_validate_svm_fast(
                 print(final_path)
                 fig_roc_merge.savefig(final_path)
 
-        if cv_name not in ["LeaveOneOut", "Bootstrap"]:
-            mean_auc = plot_roc_range(
-                ax_roc_merge,
-                ax_roc,
-                tprs_test,
-                mean_fpr_test,
-                aucs_roc_test,
-                tprs_train,
-                mean_fpr_train,
-                aucs_roc_train,
-                out_dir,
-                steps,
-                fig_roc,
-                fig_roc_merge,
-                cv_name,
-                info=info,
-                tag=f"{type(clf).__name__}_{clf_kernel}",
-                export_fig_as_pdf=export_fig_as_pdf,
-            )
-
         scores[f"{type(clf).__name__}_{clf_kernel}_results"] = fold_results
         scores_proba[f"{type(clf).__name__}_{clf_kernel}_probas"] = fold_probas
 
@@ -961,86 +725,6 @@ def cross_validate_svm_fast(
         json.dump(scores_proba, fp)
 
     return scores, scores_proba
-
-
-def loo_roc(clf, X, y, out_dir, cv_name, classifier_name, animal_ids, cv, days):
-    all_y = []
-    all_probs = []
-    i = 0
-    y_binary = (y.copy() != 1).astype(int)
-    n = cv.get_n_splits(X, y_binary)
-    for train, test in cv.split(X, y_binary):
-        animal_ids = np.array(animal_ids)
-        print("make_roc_curve fold %d/%d" % (i, n))
-        # print(
-        #     "FOLD %d --> \nSAMPLE TRAIN IDX:" % i,
-        #     train,
-        #     "\nSAMPLE TEST IDX:",
-        #     test,
-        #     "\nTEST TARGET:",
-        #     np.unique(y_binary[test]),
-        #     "\nTRAIN TARGET:",
-        #     np.unique(y_binary[train]),
-        #     "\nTEST ANIMAL ID:",
-        #     np.unique(animal_ids[test]),
-        #     "\nTRAIN ANIMAL ID:",
-        #     np.unique(animal_ids[train]),
-        # )
-        i += 1
-        all_y.append(y_binary[test])
-
-        y_predict_proba = clf.fit(X[train], y_binary[train]).predict_proba(X[test])[
-            :, 1
-        ]
-        all_probs.append(y_predict_proba)
-
-    all_y = np.array(all_y)
-    all_probs = np.array(all_probs)
-
-    fpr, tpr, thresholds = roc_curve(all_y, all_probs)
-    roc_auc = auc(fpr, tpr)
-    fig, ax = plt.subplots(figsize=(12.80, 7.20))
-    ax.plot(fpr, tpr, lw=2, alpha=0.5, label="LOOCV ROC (AUC = %0.2f)" % (roc_auc))
-    ax.plot(
-        [0, 1], [0, 1], linestyle="--", lw=2, color="k", label="Chance level", alpha=0.8
-    )
-    ax.set_xlim([-0.05, 1.05])
-    ax.set_ylim([-0.05, 1.05])
-    ax.set_xlabel("False Positive Rate")
-    ax.set_ylabel("True Positive Rate")
-    ax.set_title(
-        "Receiver operating characteristic LOOCV (at sample level) days=%d" % days
-    )
-    ax.legend(loc="lower right")
-    ax.grid()
-    path = out_dir / "roc_curve" / cv_name
-    final_path = path / f"roc_{classifier_name}.png"
-    print(final_path)
-    fig.savefig(final_path)
-    plt.close(fig)
-    plt.clf()
-
-    precision, recall, thresholds = precision_recall_curve(all_y, all_probs)
-    pr_auc = auc(recall, precision)
-    fig, ax = plt.subplots(figsize=(12.80, 7.20))
-    ax.plot(
-        recall, precision, lw=2, alpha=0.5, label="LOOCV PR (AUC = %0.2f)" % (pr_auc)
-    )
-    # ax.plot([0, 1], [0, 1], linestyle='--', lw=2, color='k', label='Chance level', alpha=.8)
-    ax.set_xlim([-0.05, 1.05])
-    ax.set_ylim([-0.05, 1.05])
-    ax.set_xlabel("Recall")
-    ax.set_ylabel("Precision")
-    ax.set_title("Precision Recall LOOCV (at sample level)")
-    ax.legend(loc="lower right")
-    ax.grid()
-    path = out_dir / "pr_curve" / cv_name
-    final_path = path / f"pr_{classifier_name}.png"
-    print(final_path)
-    fig.savefig(final_path)
-    plt.close(fig)
-    plt.clf()
-    return roc_auc
 
 
 def make_y_hist(data0, data1, out_dir, cv_name, steps, auc, info="", tag=""):
@@ -1064,279 +748,3 @@ def make_y_hist(data0, data1, out_dir, cv_name, steps, auc, info="", tag=""):
     plt.savefig(filename)
     plt.clf()
 
-
-def process_clf_(
-    steps,
-    X_test,
-    y_test,
-    model_path,
-    output_dir
-):
-    """Test data with previously saved model
-    Args:
-    """
-    pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
-
-    plt.clf()
-    fig_roc, ax_roc = plt.subplots(figsize=(19.20, 10.80))
-    fig_roc_merge, ax_roc_merge = plt.subplots(figsize=(12.80, 7.20))
-    mean_fpr = np.linspace(0, 1, 100)
-    tprs = []
-    aucs_roc = []
-
-    models = list(model_path.glob('*.pkl'))
-    for i, model_file in enumerate(models):
-        with open(str(model_file), 'rb') as f:
-            clf = pickle.load(f)
-            y_pred = clf.predict(X_test.copy())
-            print(classification_report(y_test, y_pred))
-            print(f"precision_score: {precision_score(y_test, y_pred, average='weighted')}")
-
-            pathlib.Path(output_dir / "reports").mkdir(parents=True, exist_ok=True)
-            df = pd.DataFrame(classification_report(y_test, y_pred, output_dict=True))
-
-            filename = f"{output_dir / 'reports'}/report_{i}.csv"
-            print(filename)
-            df.to_csv(filename)
-
-            viz_roc = plot_roc_curve(
-                clf,
-                X_test,
-                y_test,
-                label=None,
-                alpha=0.3,
-                lw=1,
-                ax=ax_roc,
-                c="tab:blue",
-            )
-            interp_tpr = np.interp(mean_fpr, viz_roc.fpr, viz_roc.tpr)
-            interp_tpr[0] = 0.0
-            print("auc=", viz_roc.roc_auc)
-            tprs.append(interp_tpr)
-            aucs_roc.append(viz_roc.roc_auc)
-
-    info = (
-        f"X_test shape:{str(X_test.shape)} healthy:{np.sum(y_test == 0)} unhealthy:{np.sum(y_test == 1)}"
-    )
-    mean_auc = plot_roc_range(
-        ax_roc,
-        tprs,
-        mean_fpr,
-        aucs_roc,
-        output_dir,
-        steps,
-        fig_roc,
-        f"nfold={len(models)}",
-        7,
-        info=info,
-        tag=f"{type(clf).__name__}",
-    )
-
-
-def process_clf(
-    n_activity_days,
-    train_size,
-    label_series_f1,
-    label_series_f2,
-    info_,
-    steps,
-    n_fold,
-    X_train,
-    X_test,
-    y_train,
-    y_test,
-    output_dir,
-    n_job=None,
-    export_fig_as_pdf=None,
-    plot_2d_space=False
-):
-    """Trains multiple model with n 90% samples
-    Args:
-        label_series_f1: famacha/target dict for famr1
-        label_series_f2: famacha/target dict for famr2
-        info_: meta on healthy/unhealthy target
-        steps: preprocessing steps
-        n_fold: number of 90% chunks
-        X_train: all samples in farm 1
-        X_test: all samples in farm 2
-        y_train: all targets in farm 1
-        y_test: all targets in farm 2
-        output_dir: figure output directory
-    """
-    pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
-    label_series_f1_r = {v: k for k, v in label_series_f1.items()}
-    label_series_f2_r = {v: k for k, v in label_series_f2.items()}
-    # prep the data
-    mask = np.isin(y_train, [0, 1])
-    X_train = X_train[mask]
-    y_train = y_train[mask]
-
-    mask = np.isin(y_test, [0, 1])
-    X_test = X_test[mask]
-    y_test = y_test[mask]
-
-    # build 90% folds
-    folds = []
-    cpt_fold = 0
-    while True:
-        df = pd.DataFrame(X_train)
-        df["target"] = y_train
-        fold = df.sample(frac=train_size, random_state=cpt_fold)
-        y = fold["target"].values
-        fold = fold.drop("target", 1)
-        X = fold.values
-        if len(np.unique(y)) == 1:
-            print("Only one class present in y_true. skip.")
-            continue
-        folds.append([X, y])
-        # print(y)
-        cpt_fold += 1
-        if cpt_fold >= n_fold:
-            print(f"found {n_fold} 90% folds.")
-            break
-
-    # results = []
-    plt.clf()
-    fig_roc, ax_roc = plt.subplots(1, 2, figsize=(8.0, 8.0))
-    fig_roc_merge, ax_roc_merge = plt.subplots(figsize=(8.0, 8.0))
-    mean_fpr_test = np.linspace(0, 1, 100)
-    tprs_test = []
-    aucs_roc_test = []
-
-    mean_fpr_train = np.linspace(0, 1, 100)
-    tprs_train = []
-    aucs_roc_train = []
-    for i, (X_train, y_train) in enumerate(folds):
-        print(f"progress {i}/{n_fold} ...")
-        # y_t = binarize(y_t.copy())
-        # y_test = binarize(y_test)
-        clf = SVC(kernel="linear", probability=True, class_weight="balanced")
-        # tuned_parameters = [
-        #     {
-        #         "kernel": ["rbf"],
-        #         "gamma": ["scale", 1e-1, 1e-3, 1e-4],
-        #         "class_weight": [None, "balanced"],
-        #         "C": [0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000],
-        #     },
-        #     {"kernel": ["linear"], "C": [1, 10, 100, 1000]},
-        # ]
-
-        # clf = GridSearchCV(
-        #     clf_svc,
-        #     tuned_parameters,
-        #     scoring=["roc_auc", "accuracy", "precision"],
-        #     refit="accuracy",
-        #     n_jobs=-1,
-        # )
-        clf.fit(X_train.copy(), y_train.copy())
-
-
-        clf_best = clf
-        print("Best estimator from gridsearch=")
-        print(clf_best)
-        y_pred_test = clf.predict(X_test.copy())
-        y_pred_train = clf.predict(X_train.copy())
-        print(classification_report(y_test, y_pred_test))
-        print(f"precision_score: {precision_score(y_test, y_pred_test, average='weighted')}")
-
-        pathlib.Path(output_dir / "reports").mkdir(parents=True, exist_ok=True)
-        df = pd.DataFrame(classification_report(y_test, y_pred_test, output_dict=True))
-
-        filename = f"{output_dir / 'reports'}/report_{i}.csv"
-        print(filename)
-        df.to_csv(filename)
-
-        if plot_2d_space and i == 0:
-            plot_high_dimension_db(
-                output_dir / "testing",
-                np.concatenate((X_train, X_test), axis=0),
-                np.concatenate((y_train, y_test), axis=0),
-                list(np.arange(len(X_train))),
-                [],
-                clf,
-                n_activity_days,
-                steps,
-                i,
-                export_fig_as_pdf
-            )
-
-        # X = np.array(X_train.tolist() + X_test.tolist())
-        # y = np.array(y_train.tolist() + y_test.tolist())
-        # results.append([clf_best, X, y])
-
-        viz_roc_test = plot_roc_curve(
-            clf,
-            X_test,
-            y_test,
-            label=None,
-            alpha=0.3,
-            lw=1,
-            ax=ax_roc[1],
-            c="tab:blue",
-        )
-        _ = plot_roc_curve(
-            clf,
-            X_test,
-            y_test,
-            label=None,
-            alpha=0.3,
-            lw=1,
-            ax=ax_roc_merge,
-            c="tab:blue",
-        )
-        interp_tpr_test = np.interp(mean_fpr_test, viz_roc_test.fpr, viz_roc_test.tpr)
-        interp_tpr_test[0] = 0.0
-        print("auc=", viz_roc_test.roc_auc)
-        tprs_test.append(interp_tpr_test)
-        aucs_roc_test.append(viz_roc_test.roc_auc)
-
-        viz_roc_train = plot_roc_curve(
-            clf,
-            X_train,
-            y_train,
-            label=None,
-            alpha=0.3,
-            lw=1,
-            ax=ax_roc[0],
-            c="tab:blue",
-        )
-        _ = plot_roc_curve(
-            clf,
-            X_train,
-            y_train,
-            label=None,
-            alpha=0.3,
-            lw=1,
-            ax=ax_roc_merge,
-            c="tab:purple",
-        )
-        interp_tpr_train = np.interp(mean_fpr_train, viz_roc_train.fpr, viz_roc_train.tpr)
-        interp_tpr_train[0] = 0.0
-        print("auc train=", viz_roc_train.roc_auc)
-        tprs_train.append(interp_tpr_train)
-        aucs_roc_train.append(viz_roc_train.roc_auc)
-
-    info = (
-        f"X_train shape:{str(X_train.shape)} healthy:{np.sum(y_train == 0)} unhealthy:{np.sum(y_train == 1)} \n "
-        f"X_test shape:{str(X_test.shape)} healthy:{np.sum(y_test == 0)} unhealthy:{np.sum(y_test == 1)} \n {info_}"
-    )
-    mean_auc = plot_roc_range(
-        ax_roc_merge,
-        ax_roc,
-        tprs_test,
-        mean_fpr_test,
-        aucs_roc_test,
-        tprs_train,
-        mean_fpr_train,
-        aucs_roc_train,
-        output_dir,
-        steps,
-        fig_roc,
-        fig_roc_merge,
-        f"90% fold {n_fold}",
-        n_activity_days,
-        info=info,
-        tag=f"{type(clf).__name__}",
-    )
-
-    # return results
