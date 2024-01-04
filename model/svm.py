@@ -586,10 +586,6 @@ def cross_validate_svm_fast(
         clf_kernel = kernel
 
         plt.clf()
-        fig_roc, ax_roc = plt.subplots(1, 2, figsize=(8, 8))
-        fig_roc_merge, ax_roc_merge = plt.subplots(figsize=(8, 8))
-        mean_fpr_test = np.linspace(0, 1, 100)
-        mean_fpr_train = np.linspace(0, 1, 100)
         meta = df_meta.values
         print("start ml...")
         with Manager() as manager:
@@ -651,6 +647,8 @@ def cross_validate_svm_fast(
         info = f"X shape:{str(X.shape)} healthy:{fold_results[0]['n_healthy']} unhealthy:{fold_results[0]['n_unhealthy']} \n" \
                f" training_shape:{fold_results[0]['training_shape']} testing_shape:{fold_results[0]['testing_shape']}"
 
+        plt.clf()
+        fig_roc_merge, ax_roc_merge = plt.subplots(figsize=(8, 8))
         if cv_name == "LeaveOneOut":
             all_y_test = []
             all_probs_test = []
@@ -690,24 +688,20 @@ def cross_validate_svm_fast(
             ax_roc_merge.set_title('Receiver operating characteristic')
             ax_roc_merge.legend(loc="lower right")
             ax_roc_merge.grid()
-            fig_roc.tight_layout()
+            ax_roc_merge.set_title(info)
+            fig_roc_merge.tight_layout()
             path = out_dir / "roc_curve" / cv_name
             path.mkdir(parents=True, exist_ok=True)
             tag = f"{type(clf).__name__}_{clf_kernel}"
             final_path = path / f"{tag}_roc_{steps}.png"
             print(final_path)
-            # fig_roc.savefig(final_path)
 
-            final_path = path / f"{tag}_roc_{steps}_merge.png"
+            final_path = path / f"{tag}_roc_{steps}.png"
             print(final_path)
             fig_roc_merge.savefig(final_path)
 
             if export_fig_as_pdf:
                 final_path = path / f"{tag}_roc_{steps}.pdf"
-                print(final_path)
-                fig_roc.savefig(final_path)
-
-                final_path = path / f"{tag}_roc_{steps}_merge.pdf"
                 print(final_path)
                 fig_roc_merge.savefig(final_path)
 
