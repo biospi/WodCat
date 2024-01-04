@@ -42,7 +42,7 @@ def load_activity_data(
     sampling='T',
     individual_to_ignore=[],
     individual_to_keep=[],
-    plot_s_distribution=True,
+    plot_s_distribution=False,
     sample_date_filter = None
 ):
     print(f"load activity from datasets...{filepath}")
@@ -172,10 +172,11 @@ def parse_param_from_filename(file):
 
 
 def plot_samples_distribution(out_dir, samples_, filename):
+    print("plot_samples_distribution...")
     out_dir.mkdir(parents=True, exist_ok=True)
     sample_data = samples_.copy()
 
-    print(sample_data)
+    #print(sample_data)
     # bar plot
     d = []
     for key, value in sample_data.items():
