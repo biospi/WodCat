@@ -287,21 +287,21 @@ def main(
         #     output_dir / "groups_before_qn",
         # )
 
-        plot_umap(
-            meta_columns,
-            data_frame.copy(),
-            output_dir / "umap",
-            label_series,
-            title="UMAP time domain before normalisation",
-        )
-
-        plot_umap(
-            meta_columns,
-            df_norm.copy(),
-            output_dir / "umap",
-            label_series,
-            title="UMAP time domain after normalisation",
-        )
+        # plot_umap(
+        #     meta_columns,
+        #     data_frame.copy(),
+        #     output_dir / "umap",
+        #     label_series,
+        #     title="UMAP time domain before normalisation",
+        # )
+        #
+        # plot_umap(
+        #     meta_columns,
+        #     df_norm.copy(),
+        #     output_dir / "umap",
+        #     label_series,
+        #     title="UMAP time domain after normalisation",
+        # )
 
         plot_time_pca(
             N_META,
@@ -425,13 +425,13 @@ def main(
     health = df.pop("health")
     df_processed = pd.concat([df, target, health], 1)
 
-    plot_umap(
-        meta_columns,
-        df_processed_meta.copy(),
-        output_dir / f"umap_{step_slug}",
-        label_series,
-        title=f"UMAP after {step_slug}",
-    )
+    # plot_umap(
+    #     meta_columns,
+    #     df_processed_meta.copy(),
+    #     output_dir / f"umap_{step_slug}",
+    #     label_series,
+    #     title=f"UMAP after {step_slug}",
+    # )
 
     plot_time_pca(
         N_META,
