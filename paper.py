@@ -33,12 +33,12 @@ def main(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
     create_dataset: bool = False,
-    export_hpc_string: bool = False,
+    export_hpc_string: bool = True,
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
     n_bootstrap: int = 100,
     ml_exist: bool = False,
-    n_job: int = 16,
+    n_job: int = 28,
 ):
     """Script to reproduce paper results\n
     Args:\n
@@ -82,11 +82,11 @@ def main(
         else:
             print("Running machine learning pipeline...")
             for preprocessing_steps in [
-                #[],
+                [],
                 ["QN"]
-                # ["STDS"],
-                # ["QN", "ANSCOMBE", "LOG"],
-                # ["QN", "ANSCOMBE", "LOG", "STDS"]
+                ["STDS"],
+                ["QN", "ANSCOMBE", "LOG"],
+                ["QN", "ANSCOMBE", "LOG", "STDS"]
 
             ]:
                 out_ml_dir = run_ml.run(
@@ -117,6 +117,7 @@ def main(
 
 
 if __name__ == "__main__":
-    data_dir = Path("/mnt/storage/scratch/axel/cats")
-    main(data_dir)
-    #typer.run(main)
+    #data_dir = Path("/mnt/storage/scratch/axel/cats")
+    #data_dir = Path("E:\Cats")
+    #main(data_dir)
+    typer.run(main)
