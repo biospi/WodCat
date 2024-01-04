@@ -117,7 +117,8 @@ def load_activity_data(
 
     for i, flabel in enumerate(flabels):
         data_frame_labeled[flabel] = data_frame_labeled[flabel] * (i + 1)
-        data_frame.loc[:, "target"] = data_frame["target"] + data_frame_labeled[flabel]
+        #data_frame.loc[:, "target"] = data_frame["target"] + data_frame_labeled[flabel]
+        data_frame["target"] += data_frame_labeled[flabel]
 
     # store all samples for later testing after binary fitting
     labels = data_frame["label"].drop_duplicates().values
