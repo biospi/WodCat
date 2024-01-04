@@ -49,13 +49,13 @@ def add_separator(df_):
     df_.index = [str(x).zfill(5) for x in df_.index]
     df_ = df_.sort_index()
     ni = (
-        pd.Series(df_["animal_ids"].astype(np.float).values)
+        pd.Series(df_["animal_ids"].astype(float).values)
         .interpolate(method="nearest")
         .values
     )
     df_["animal_ids"] = ni.tolist()
     nt = (
-        pd.Series(df_["target"].astype(np.float).values)
+        pd.Series(df_["target"].astype(float).values)
         .interpolate(method="nearest")
         .values
     )

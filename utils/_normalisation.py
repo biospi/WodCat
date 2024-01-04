@@ -15,7 +15,7 @@ np.random.seed(0)
 def normalize(X, out_dir, output_graph, enable_qn_peak_filter, animal_ids, labels):
     out_dir_ = out_dir / "_normalisation"
     traces = []
-    X = X.astype(np.float)
+    X = X.astype(float)
     X_o = X.copy()
 
     if enable_qn_peak_filter:
