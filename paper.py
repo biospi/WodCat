@@ -68,6 +68,10 @@ def main(
 
     results = []
     for meta_columns, dataset in zip(meta_columns, datasets):
+        if "10000_10_060_005" not in dataset:
+            continue
+        print(dataset)
+
         if ml_exist: #if you already ran the classification pipeline on hpc
             print("Parsing existing results...")
             ml_out = [x.parent for x in dataset.parent.parent.glob("**/fold_data")]
