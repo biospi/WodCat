@@ -69,6 +69,8 @@ def main(
 
     results = []
     for meta_columns, dataset in zip(meta_columns, datasets):
+        # if int(dataset.parent.parent.name.split('_')[-1]) < 4: #todo remove
+        #     continue
         print(f"dataset={dataset}")
         if ml_exist: #if you already ran the classification pipeline on hpc
             print("Parsing existing results...")
@@ -83,7 +85,7 @@ def main(
             print("Running machine learning pipeline...")
             for preprocessing_steps in [
                 [],
-                ["QN"]
+                ["QN"],
                 ["STDS"],
                 ["QN", "ANSCOMBE", "LOG"],
                 ["QN", "ANSCOMBE", "LOG", "STDS"]
