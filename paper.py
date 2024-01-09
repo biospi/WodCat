@@ -33,7 +33,7 @@ def main(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
     create_dataset: bool = False,
-    export_hpc_string: bool = True,
+    export_hpc_string: bool = False,
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
     n_bootstrap: int = 100,
@@ -84,11 +84,11 @@ def main(
         else:
             print("Running machine learning pipeline...")
             for preprocessing_steps in [
-                [],
-                ["QN"],
-                ["STDS"],
-                ["QN", "ANSCOMBE", "LOG"],
-                ["QN", "ANSCOMBE", "LOG", "STDS"]
+                # [],
+                ["QN"]
+                # ["STDS"],
+                # ["QN", "ANSCOMBE", "LOG"],
+                # ["QN", "ANSCOMBE", "LOG", "STDS"]
 
             ]:
                 out_ml_dir = run_ml.run(
@@ -97,6 +97,7 @@ def main(
                     meta_columns=meta_columns,
                     dataset_filepath=dataset,
                     out_dir=out_dir,
+                    skip=True,
                     n_job=n_job,
                 )
                 if export_hpc_string:
@@ -119,7 +120,7 @@ def main(
 
 
 if __name__ == "__main__":
-    #data_dir = Path("/mnt/storage/scratch/axel/cats")
+    data_dir = Path("/mnt/storage/scratch/axel/cats")
     #data_dir = Path("E:\Cats")
-    #main(data_dir)
-    typer.run(main)
+    main(data_dir)
+    # typer.run(main)

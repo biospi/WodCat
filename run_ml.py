@@ -19,6 +19,7 @@ def run(
     cv: str = "LeaveOneOut",
     export_hpc_string: bool = False,
     pre_visu: bool = False,
+    skip: bool = False,
     n_job: int = 6,
 ):
     """Thesis script runs the cats study
@@ -48,6 +49,7 @@ def run(
         output_qn_graph=False,
         pre_visu=pre_visu,
         plot_2d_space=False,
+        skip=skip,
         export_hpc_string=export_hpc_string
     )
     return output_dir
