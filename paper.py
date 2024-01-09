@@ -72,7 +72,8 @@ def main(
     for dataset in datasets:
         # if int(dataset.parent.parent.name.split('_')[-1]) < 4: #todo remove
         #     continue
-        meta_columns = dataset.parent / "meta_columns.csv"
+        meta_columns_file = dataset.parent / "meta_columns.csv"
+        meta_columns = pd.read_csv(meta_columns_file).values.flatten().tolist()
         print(f"dataset={dataset}")
         print(f"meta_columns={meta_columns}")
         if ml_exist: #if you already ran the classification pipeline on hpc
