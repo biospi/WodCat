@@ -59,7 +59,7 @@ def main(
 
     datasets = sorted([x for x in Path(out_dir).glob("**/*/samples.csv")])
     print(f"datasets={datasets}")
-    meta_columns = [pd.read_csv(x).values.flatten().tolist() for x in Path(out_dir).glob("**/*/meta_columns.csv")]
+    meta_columns = sorted([pd.read_csv(x).values.flatten().tolist() for x in Path(out_dir).glob("**/*/meta_columns.csv")])
 
     assert len(datasets) > 0, f"There is no dataset in {out_dir}."
 
@@ -72,6 +72,7 @@ def main(
         # if int(dataset.parent.parent.name.split('_')[-1]) < 4: #todo remove
         #     continue
         print(f"dataset={dataset}")
+        print(f"meta_columns={meta_columns}")
         if ml_exist: #if you already ran the classification pipeline on hpc
             print("Parsing existing results...")
             ml_out = [x.parent for x in dataset.parent.parent.glob("**/fold_data")]
