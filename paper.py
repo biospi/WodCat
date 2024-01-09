@@ -59,8 +59,8 @@ def main(
 
     datasets = sorted([x for x in Path(out_dir).glob("**/*/samples.csv")])
     print(f"datasets={datasets}")
-    meta_columns = sorted([pd.read_csv(x).values.flatten().tolist() for x in Path(out_dir).glob("**/*/meta_columns.csv")])
-    print(f"meta_columns={meta_columns}")
+    # meta_columns = sorted([pd.read_csv(x).values.flatten().tolist() for x in Path(out_dir).glob("**/*/meta_columns.csv")])
+    # print(f"meta_columns={meta_columns}")
 
     assert len(datasets) > 0, f"There is no dataset in {out_dir}."
 
@@ -69,9 +69,10 @@ def main(
         purge_hpc_file("hpc_ln.txt")
 
     results = []
-    for meta_columns, dataset in zip(meta_columns, datasets):
+    for dataset in datasets:
         # if int(dataset.parent.parent.name.split('_')[-1]) < 4: #todo remove
         #     continue
+        meta_columns = dataset.parent / "meta_columns.csv"
         print(f"dataset={dataset}")
         print(f"meta_columns={meta_columns}")
         if ml_exist: #if you already ran the classification pipeline on hpc
