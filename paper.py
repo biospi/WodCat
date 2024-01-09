@@ -60,6 +60,7 @@ def main(
     datasets = sorted([x for x in Path(out_dir).glob("**/*/samples.csv")])
     print(f"datasets={datasets}")
     meta_columns = sorted([pd.read_csv(x).values.flatten().tolist() for x in Path(out_dir).glob("**/*/meta_columns.csv")])
+    print(f"meta_columns={meta_columns}")
 
     assert len(datasets) > 0, f"There is no dataset in {out_dir}."
 
