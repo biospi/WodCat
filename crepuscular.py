@@ -9,13 +9,58 @@ from utils._anscombe import anscombe
 from utils._normalisation import QuotientNormalizer
 from utils.utils import time_of_day
 
+
+def build_crepuscular_dataset(df, out_dir, filename="samples.csv"):
+    dfs = [group for _, group in df.groupby(["day"])]
+    data = []
+    for d in dfs:
+        dfs_ = [g for _, g in d.groupby(["time_of_day"])]
+        sample = []
+        for d_ in dfs_:
+            a_sum = d_["activity_counts"].sum()
+            a_median = d_["activity_counts"].median()
+            a_mean = d_["activity_counts"].mean()
+            time_of_day = d_["time_of_day"].values[0]
+            datetime = str(d_.index.values[0])
+            health = d_["health"].values[0]
+            cat_id = d_["cat_id"].values[0]
+            sample.append(a_sum)
+            sample.append(a_median)
+            sample.append(a_mean)
+        sample.append(cat_id)
+        sample.append(datetime)
+        sample.append(health)
+        sample.append(health)
+
+        if len(sample) != 19:#keep sample where all time of days are available
+            continue
+        data.append(sample)
+
+        file_path = out_dir / filename
+        file_path = file_path.as_posix()
+        training_str_flatten = str(sample).strip("[]").replace(" ", "")
+
+        with open(file_path, "a") as outfile:
+            outfile.write(training_str_flatten)
+            outfile.write("\n")
+    meta_cols = ["cat_id", "datetime", "health", "target"]
+    return meta_cols
+
+
 if __name__ == "__main__":
     data_dir = Path("E:/Cats")
-    out = Path("E:/Cats")
+    out = Path("E:/Cats/crepuscular")
     filename = "crepuscular_sec_ansc"
-    cat_data = get_cat_data(data_dir, "S")
+    cat_data = get_cat_data(data_dir, "T")
     num_ticks = 6
     p = 0.95
+
+    samples_dir = out / "dataset"
+    samples_dir.mkdir(parents=True, exist_ok=True)
+    samples_file = samples_dir / "samples.csv"
+    if samples_file.exists():
+        print(f"deleting {samples_file}")
+        samples_file.unlink()
 
     cats_time_group = []
     for i, data in enumerate(cat_data):
@@ -26,7 +71,9 @@ if __name__ == "__main__":
         df["cat_id"] = cat_id
         df['time_of_day'] = df['hour'].apply(time_of_day)
         cats_time_group.append(df)
+        meta_names = build_crepuscular_dataset(df, samples_dir)
 
+    pd.DataFrame(meta_names).to_csv(samples_dir / "meta_columns.csv", index=False)
     df_all_ = pd.concat(cats_time_group)
 
     for h in [0, 1]:

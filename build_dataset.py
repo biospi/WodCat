@@ -295,6 +295,7 @@ def format_raw_data(df, bin):
     df["day"] = df["day"].astype(np.int8)
     df["elapsed_seconds"] = df["elapsed_seconds"].astype(np.int32)
     df["activity_counts"] = df["activity_counts"].astype(np.int32)
+    df["day"] = df.index.day
     return df
 
 

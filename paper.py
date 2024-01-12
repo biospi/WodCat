@@ -33,7 +33,7 @@ def main(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
     create_dataset: bool = False,
-    export_hpc_string: bool = False,
+    export_hpc_string: bool = True,
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
     n_bootstrap: int = 100,
@@ -125,6 +125,6 @@ def main(
 
 if __name__ == "__main__":
     data_dir = Path("/mnt/storage/scratch/axel/cats")
-    #data_dir = Path("E:\Cats")
+    data_dir = Path("E:\Cats")
     main(data_dir)
     # typer.run(main)
