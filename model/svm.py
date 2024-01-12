@@ -604,6 +604,7 @@ def cross_validate_svm_fast(
                         'n_peak': int(meta[0][meta_columns.index('n_peak')]),
                         'w_size': int(meta[0][meta_columns.index('w_size')]),
                         'n_top': int(meta[0][meta_columns.index('n_top')])}
+
                 pool.apply_async(
                     fold_worker,
                     (

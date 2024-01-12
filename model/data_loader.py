@@ -49,7 +49,7 @@ def load_activity_data(
     data_frame = pd.read_csv(filepath, sep=",", header=None, low_memory=False)
     data_frame = data_frame.drop_duplicates()
     data_frame = data_frame.astype(
-        dtype=np.float16, errors="ignore"
+        dtype=float, errors="ignore"
     )  # cast numeric values as float
     data_point_count = data_frame.shape[1]
     hearder = [str(n) for n in range(0, data_point_count)]
@@ -95,7 +95,7 @@ def load_activity_data(
     # clip negative values
     data_frame[data_frame.columns.values[: -len(meta_columns)]] = data_frame[
         data_frame.columns.values[: -len(meta_columns)]
-    ].astype(np.float16).clip(lower=0)
+    ].astype(float).clip(lower=0)
 
     data_frame["target"] = data_frame["target"].astype(int)
     data_frame["label"] = data_frame["label"].astype(str)

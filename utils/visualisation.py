@@ -74,7 +74,7 @@ def plot_crepuscular(out_dir, df, filename="median_peak", ylabel="Activity count
     df['time_of_day'] = df['hour'].apply(time_of_day)
 
     colors = ['#FFD700', '#FFA07A', '#98FB98', '#FFB6C1', '#ADD8E6']
-    unique_times = ['Early Morning', 'Morning', 'Noon', 'Eve', 'Night/Late Night']
+    unique_times = ['Early Morning', 'Morning', 'Afternoon', 'Night']
     fig, axs = plt.subplots(1, len(unique_times), figsize=(10, 4), sharey=True)  # Adjust figsize as needed
     for idx, (item, color) in enumerate(zip(unique_times, colors)):
         df_ = df[df["time_of_day"] == item]

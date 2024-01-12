@@ -182,16 +182,16 @@ python ${{cmds[${{SLURM_ARRAY_TASK_ID}}]}} > /user/work/{uob_username}/logs/cat_
 
 
 def time_of_day(x):
-    if (x > 4) and (x <= 8):
+    # Ensure x is within the 24-hour range
+    x = x % 24
+    if 4 <= x < 10:
         return 'Early Morning'
-    elif (x > 8) and (x <= 12):
+    elif 10 <= x < 16:
         return 'Morning'
-    elif (x > 12) and (x <= 16):
-        return 'Noon'
-    elif (x > 16) and (x <= 20):
-        return 'Eve'
-    elif (x > 20) or (x <= 4):  # Merge Night and Late Night
-        return 'Night/Late Night'
+    elif 16 <= x < 22:
+        return 'Afternoon'
+    else:
+        return 'Night'
 
 
 if __name__ == "__main__":

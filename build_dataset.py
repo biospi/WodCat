@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import typer
+from plotnine import ggplot, aes, geom_jitter, stat_summary, theme, element_text
 from utils._anscombe import anscombe
 
 
@@ -118,50 +119,41 @@ def create_training_sets(run_id, activity, timestamp, metadata, max_sample, n_pe
     return filepath, meta_names
 
 
-def get_cat_meta(output_dir, cat_id, output_fig=False):
+def get_cat_meta(output_dir, cat_id, output_fig=True):
     # print("getting health classification for cat id=%d" % cat_id)
     file = Path(os.getcwd()) / "metadata.csv"
     df = pd.read_csv(file, sep=",", nrows=55)
+    df_ = df.copy()
 
     if output_fig:
-        df_heathy = df[df["Status"] == 0]
-        df_unheathy = df[df["Status"] == 1]
+        for col in ["Age", "Mobility_Score"]:
+            df_["Status"] = df_["Status"].replace(0, "No DJD")
+            df_["Status"] = df_["Status"].replace(1, "DJD")
 
-        df_data = pd.concat([df_unheathy["Age"], df_heathy["Age"]], axis=1)
-        df_data.columns = ["Age Unhealthy", "Age Healthy"]
-        plt.clf()
-        plt.cla()
-        boxplot = df_data.boxplot(column=["Age Unhealthy", "Age Healthy"])
-        fig_box = boxplot.get_figure()
-        ax = fig_box.gca()
-        ax.set_title(f"Mean age of healthy vs unhealthy cats")
-        ax.set_ylabel("Age(years)")
-        filename = "age.png"
-        filepath = output_dir / filename
-        print(filepath)
-        fig_box.set_size_inches(4, 4)
-        fig_box.tight_layout()
-        fig_box.savefig(filepath)
+            g = (
+                    ggplot(df_)  # defining what data to use
+                    + aes(
+                x="Status", y=col, color="Status"
+            )  # defining what variable to use
+                    + geom_jitter()  # defining the type of plot to use
+                    + stat_summary(geom="crossbar", color="black", width=0.2)
+                    + theme(
+                subplots_adjust={"right": 0.82}, axis_text_x=element_text(angle=45, hjust=1), legend_position='none'
+            )
+            )
 
-        plt.clf()
-        plt.cla()
-        df_data_ = pd.concat(
-            [df_unheathy["Mobility_Score"], df_heathy["Mobility_Score"]], axis=1
-        )
-        df_data_.columns = ["Mobility_Score Unhealthy ", "Mobility_Score Healthy"]
-        boxplot_ = df_data_.boxplot(
-            column=["Mobility_Score Unhealthy ", "Mobility_Score Healthy"]
-        )
-        fig_box_ = boxplot_.get_figure()
-        ax_ = fig_box_.gca()
-        ax_.set_title(f"Mean Mobility Score of healthy vs unhealthy cats")
-        ax_.set_ylabel("Mobility Score")
-        filename = "mob_score.png"
-        filepath = output_dir / filename
-        print(filepath)
-        fig_box_.set_size_inches(4, 4)
-        fig_box_.tight_layout()
-        fig_box_.savefig(filepath)
+            fig = g.draw()
+            ax = fig.gca()
+            ax.set_title(f"Cat {col}")
+            ax.set_ylabel("Mobility Score")
+            if col == "Age":
+                ax.set_ylabel("Age(years)")
+            filename = f"{col}.png"
+            filepath = output_dir / filename
+            print(filepath)
+            fig.set_size_inches(3, 4)
+            fig.tight_layout()
+            fig.savefig(filepath)
 
     df = df[pd.notnull(df["DJD_ID"])]
     df["DJD_ID"] = df["DJD_ID"].astype(int)
@@ -213,7 +205,7 @@ def build_n_peak_samples(run_id, n_peak, rois, rois_timestamp, max_sample):
     return n_peak_samples
 
 
-def find_region_of_interest(run_id, timestamp, activity, w_size, thresh):
+def find_region_of_interest(timestamp, activity, w_size, thresh):
     #print(f"[{run_id}] find_region_of_interest...")
     rois = []
     rois_timestamp = []
@@ -236,7 +228,8 @@ def find_region_of_interest(run_id, timestamp, activity, w_size, thresh):
             continue
         roi = activity[w_idx]
         rois.append(roi)
-        rois_timestamp.append(timestamp[i])
+        if timestamp is not None:
+            rois_timestamp.append(timestamp[i])
     rois = np.array(rois).astype(np.int32)
     return rois, rois_timestamp
 
@@ -403,6 +396,15 @@ def get_cat_data(data_dir, bin):
     if bin not in ["S", "T"]:
         print(f"bin value must be 'S' or 'T'. {bin} is not supported!")
     files = sorted(data_dir.glob("*.csv"))
+
+    # new = []
+    # for f in files:
+    #     if 11 == int(f.name.split('_')[0]) or 13 == int(f.name.split('_')[0]):
+    #         new.append(f)
+    #     if 36 == int(f.name.split('_')[0]) or 75 == int(f.name.split('_')[0]):
+    #         new.append(f)
+    # files = new
+
     dfs = []
     for i, file in enumerate(files):
         print(f"progress[{i}/{len(files)}]...")
@@ -414,7 +416,7 @@ def get_cat_data(data_dir, bin):
         if cat_name in individual_to_ignore:
             continue
         df = format_raw_data(df, bin)
-        cat_meta = get_cat_meta(None, cat_id)
+        cat_meta = get_cat_meta(data_dir, cat_id)
         df["health"] = cat_meta["health"]
         df["age"] = cat_meta["age"]
         dfs.append((cat_id, df))

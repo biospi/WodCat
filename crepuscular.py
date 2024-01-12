@@ -4,84 +4,133 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from build_dataset import get_cat_data
+import run_ml
+from bootstrap import boot_roc_curve
+from build_dataset import get_cat_data, find_region_of_interest
 from utils._anscombe import anscombe
 from utils._normalisation import QuotientNormalizer
 from utils.utils import time_of_day
 
 
-def build_crepuscular_dataset(df, out_dir, filename="samples.csv"):
+def build_crepuscular_dataset(df, out_dir, filename="samples.csv", w_size=30, n_top=10):
     dfs = [group for _, group in df.groupby(["day"])]
     data = []
     for d in dfs:
         dfs_ = [g for _, g in d.groupby(["time_of_day"])]
-        sample = []
+
         for d_ in dfs_:
-            a_sum = d_["activity_counts"].sum()
-            a_median = d_["activity_counts"].median()
-            a_mean = d_["activity_counts"].mean()
+            activity = d_["activity_counts"].values
+            rois, _ = find_region_of_interest(None, activity, w_size, n_top)
             time_of_day = d_["time_of_day"].values[0]
-            datetime = str(d_.index.values[0])
             health = d_["health"].values[0]
             cat_id = d_["cat_id"].values[0]
-            sample.append(a_sum)
-            sample.append(a_median)
-            sample.append(a_mean)
-        sample.append(cat_id)
-        sample.append(datetime)
-        sample.append(health)
-        sample.append(health)
+            label = health #ml pipeline need this col need to represent the health status!
+            name = cat_id #ml pipeline need this col
+            target = health #ml pipeline need this col
+            for r in rois:
+                sample = r.tolist()
+                date = d.index.strftime("%d/%m/%Y").values[0]
+                sample.append(cat_id)
+                sample.append(date)
+                sample.append(name)
+                sample.append(label)
+                max_sample = -1
+                sample.append(max_sample)#ml pipeline need this col
+                n_peak = 1
+                sample.append(n_peak)#ml pipeline need this col
+                sample.append(w_size)#ml pipeline need this col
+                sample.append(n_top)#ml pipeline need this col
+                sample.append(time_of_day)
+                sample.append(health)
+                sample.append(target)
+                data.append(sample)
 
-        if len(sample) != 19:#keep sample where all time of days are available
-            continue
-        data.append(sample)
+                file_path = out_dir / filename
+                file_path = file_path.as_posix()
+                training_str_flatten = str(sample).strip("[]").replace(" ", "")
 
-        file_path = out_dir / filename
-        file_path = file_path.as_posix()
-        training_str_flatten = str(sample).strip("[]").replace(" ", "")
+                with open(file_path, "a") as outfile:
+                    outfile.write(training_str_flatten)
+                    outfile.write("\n")
+    meta_cols = ["id", "date", "name", "label", "max_sample", "n_peak", "w_size", "n_top", "time_of_day", "health", "target"]
+    cols = np.arange(0, len(data[0])-len(meta_cols)).tolist() + meta_cols
+    data = pd.DataFrame(data, columns=cols)
+    return meta_cols, data
 
-        with open(file_path, "a") as outfile:
-            outfile.write(training_str_flatten)
-            outfile.write("\n")
-    meta_cols = ["cat_id", "datetime", "health", "target"]
-    return meta_cols
+
+def ml(samples_dir, n_bootstrap=100, n_job=6):
+    dataset = samples_dir / "samples.csv"
+    meta_columns_file = samples_dir / "meta_columns.csv"
+    meta_columns = pd.read_csv(meta_columns_file).values.flatten().tolist()
+    print(f"dataset={dataset}")
+    print(f"meta_columns={meta_columns}")
+
+    out_dir = samples_dir.parent / "ml"
+    print("Running machine learning pipeline...")
+    for preprocessing_steps in [
+        [],
+        ["QN"],
+        ["STDS"],
+        ["QN", "ANSCOMBE", "LOG"],
+        ["QN", "ANSCOMBE", "LOG", "STDS"]
+
+    ]:
+        out_ml_dir = run_ml.run(
+            preprocessing_steps=preprocessing_steps,
+            meta_columns=meta_columns,
+            dataset_filepath=dataset,
+            pre_visu=True,
+            out_dir=out_dir,
+            n_job=n_job,
+        )
+
+        boot_roc_curve.main(
+            out_ml_dir, n_bootstrap=n_bootstrap, n_job=n_job
+        )
 
 
 if __name__ == "__main__":
+    #init
     data_dir = Path("E:/Cats")
     out = Path("E:/Cats/crepuscular")
     filename = "crepuscular_sec_ansc"
-    cat_data = get_cat_data(data_dir, "T")
-    num_ticks = 6
-    p = 0.95
-
     samples_dir = out / "dataset"
     samples_dir.mkdir(parents=True, exist_ok=True)
     samples_file = samples_dir / "samples.csv"
     if samples_file.exists():
         print(f"deleting {samples_file}")
         samples_file.unlink()
+    num_ticks = 6
+    p = 0.95
+    w_size = 30
+    n_top = 10
 
+    #Get data from raw csv
+    cat_data = get_cat_data(data_dir, "T")
+
+    #Start analysis
     cats_time_group = []
     for i, data in enumerate(cat_data):
-        print(f"{i}/{len(cat_data)}...")
         df = data[1]
         cat_id = data[0]
+        print(f"cat_id={cat_id} {i}/{len(cat_data)}...")
         df['hour'] = df.index.hour
         df["cat_id"] = cat_id
         df['time_of_day'] = df['hour'].apply(time_of_day)
         cats_time_group.append(df)
-        meta_names = build_crepuscular_dataset(df, samples_dir)
+        meta_columns, _ = build_crepuscular_dataset(df, samples_dir, w_size=w_size, n_top=n_top)
 
-    pd.DataFrame(meta_names).to_csv(samples_dir / "meta_columns.csv", index=False)
+    pd.DataFrame(meta_columns).to_csv(samples_dir / "meta_columns.csv", index=False)
+
+    ml(samples_dir)
+
     df_all_ = pd.concat(cats_time_group)
-
     for h in [0, 1]:
         df_all = df_all_[df_all_["health"] == h]
         dfs = [(group["time_of_day"].values[0], group) for _, group in df_all.groupby(["time_of_day"])]
         cat_activity_pertime = []
         colors = ['#FFD700', '#FFA07A', '#98FB98', '#FFB6C1', '#ADD8E6']
-        unique_times = ['Early Morning', 'Morning', 'Noon', 'Eve', 'Night/Late Night']
+        unique_times = ['Early Morning', 'Morning', 'Afternoon', 'Night']
         y_label = "Activity count (Anscombe)"
         fig, axs = plt.subplots(1, len(unique_times), figsize=(12, 4), sharey=True)
         interval = 1000
@@ -142,7 +191,7 @@ if __name__ == "__main__":
             ax_.xaxis.set_major_locator(plt.FixedLocator(tick_positions))
             ax_.set_xticklabels([timestamp[i].strftime('%H:%M') for i in tick_positions])
             fig_.autofmt_xdate()
-            filepath = out / f'{filename}_{time_of_day}_{h}.png'.replace('/', '_').replace(' ',"_") # prevent / in 'Night/Late Night' to interfere
+            filepath = out / f'{filename}_{time_of_day}_{h}.png'
             print(filepath)
             fig_.savefig(filepath, bbox_inches='tight')
 

@@ -84,6 +84,7 @@ def worker(
     tprs_test.append(tpr)
     fprs_test.append(fpr)
     roc_auc = auc(fpr, tpr)
+    #print(roc_auc, all_test_y, all_test_proba)#todo check that all_test_y in bootstrap fold has 2 distinct values for roc
     auc_list_test.append(roc_auc)
     xaxis_test.append([fpr, tpr])
     # ax_roc_merge.plot(fpr, tpr, color="tab:blue", alpha=0.3, linewidth=1)
@@ -199,25 +200,25 @@ def main(path=None, n_bootstrap=100, n_job=6):
     prec_list_train = pd.read_pickle(out_dir / "prec_list_train.pkl").values
 
     print("building roc...")
-    median_auc_test = np.median(auc_list_test)
+    median_auc_test = np.nanmedian(auc_list_test)
     lo_test_auc, hi_test_auc = ninefive_confidence_interval(auc_list_test)
     print(
         f"median Test AUC = {median_auc_test:.2f}, 95% CI [{lo_test_auc:.2f}, {hi_test_auc:.2f}] )"
     )
 
-    median_auc_train = np.median(auc_list_train)
+    median_auc_train = np.nanmedian(auc_list_train)
     lo_train_auc, hi_train_auc = ninefive_confidence_interval(auc_list_train)
     print(
         f"median Train AUC = {median_auc_train:.2f}, 95% CI [{lo_train_auc:.2f}, {hi_train_auc:.2f}] )"
     )
 
-    median_prec_test = np.median(prec_list_test)
+    median_prec_test = np.nanmedian(prec_list_test)
     lo_test_prec, hi_test_prec = ninefive_confidence_interval(prec_list_test)
     print(
         f"median Test prec = {median_prec_test:.2f}, 95% CI [{lo_test_prec:.2f}, {hi_test_prec:.2f}] )"
     )
 
-    median_prec_train = np.median(prec_list_train)
+    median_prec_train = np.nanmedian(prec_list_train)
     lo_train_prec, hi_train_prec = ninefive_confidence_interval(prec_list_train)
     print(
         f"median Train prec = {median_prec_train:.2f}, 95% CI [{lo_train_prec:.2f}, {hi_train_prec:.2f}] )"
@@ -303,7 +304,7 @@ def bootstrap_roc():
         # if "1000__005__0_00100__030\cats_LeaveOneOut_-1_-1_QN_rbf" not in str(item):
         #     continue
         print(item)
-        print(f"{i}/{len(folders)}...")
+        print(f"bootstrap_roc {i}/{len(folders)}...")
 
         res = main(item, n_bootstrap=10)
         if res is not None:
