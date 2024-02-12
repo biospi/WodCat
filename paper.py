@@ -27,6 +27,12 @@ from pathlib import Path
 
 from utils.utils import purge_hpc_file, create_batch_script
 
+import platform
+import os
+
+if platform.system() == 'Linux':
+    os.environ["DISPLAY"] = ":0"  # disable display backend since we run this on a server
+
 
 def main(
     data_dir: Path = typer.Option(
