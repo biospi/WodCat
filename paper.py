@@ -20,6 +20,8 @@
 #
 import pandas as pd
 import typer
+import matplotlib
+matplotlib.use('Agg')
 import build_dataset
 import run_ml
 from bootstrap import boot_roc_curve
@@ -29,9 +31,6 @@ from utils.utils import purge_hpc_file, create_batch_script
 
 import platform
 import os
-
-if platform.system() == 'Linux':
-    os.environ["DISPLAY"] = ":0"  # disable display backend since we run this on a server
 
 
 def main(
