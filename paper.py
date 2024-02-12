@@ -37,12 +37,12 @@ def main(
     data_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
-    create_dataset: bool = False,
+    create_dataset: bool = True,
     export_hpc_string: bool = False,
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
     n_bootstrap: int = 100,
-    ml_exist: bool = True,
+    ml_exist: bool = False,
     n_job: int = 4,
 ):
     """Script to reproduce paper results\n
