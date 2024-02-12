@@ -7,7 +7,7 @@ import numpy as np
 import json
 from tqdm import tqdm
 
-from utils.utils import ninefive_confidence_interval
+from utils.utils import ninefive_confidence_interval, get_time_of_day
 from sklearn.metrics import precision_score
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -293,6 +293,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
         auc_list_test,
         auc_list_train,
         paths,
+        get_time_of_day(path)
     ]
 
 
@@ -337,6 +338,7 @@ def boostrap_auc_peak(results, out_dir):
             "median_auc_test_bootstrap",
             "median_auc_train_bootstrap",
             "path",
+            "time_of_day"
         ],
     )
     df = df[~pd.isna(df["median_auc_test"])]
@@ -349,16 +351,23 @@ def boostrap_auc_peak(results, out_dir):
     df["pipeline"] = df["Pre-processing"] + "->" + df["Classifier"]
 
     print(df)
-    dfs_ntop = [group for _, group in df.groupby(["N top"])]
+
+    dfs_ntop = [group for _, group in df.groupby(["N top", "time_of_day", "Max sample count per indiv"])]
     for df in dfs_ntop:
         ntop = int(df["N top"].values[0])
         fig, ax1 = plt.subplots(figsize=(9.80, 9.80))
         ax2 = ax1.twinx()
         dfs = [group for _, group in df.groupby(["pipeline"])]
 
+        x_ticks = sorted(df["N peaks"].unique())
+        y_ticks = []
+        for x_t in x_ticks:
+            y_ = df[df["N peaks"] == x_t][["N training samples", "N testing samples"]].values[0].sum()
+            y_ticks.append(y_)
+
         ax2.bar(
-            [1, 2, 3, 4, 5, 6],
-            [520, 4680, 37440, 52000, 52000, 52000],
+            x_ticks,
+            y_ticks,
             color="grey",
             label="n samples",
             alpha=0.4,
@@ -437,7 +446,9 @@ def boostrap_auc_peak(results, out_dir):
         ax1.grid()
 
         fig.tight_layout()
-        filename = f"auc_per_npeak_bootstrap_{ntop}.png"
+        time_of_day = df["time_of_day"].values[0]
+        max_scount = df["Max sample count per indiv"].values[0]
+        filename = f"{time_of_day}_{ntop}_{max_scount}_auc_per_npeak_bootstrap.png"
         out_dir.mkdir(parents=True, exist_ok=True)
         filepath = out_dir / filename
         print(filepath)

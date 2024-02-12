@@ -147,7 +147,7 @@ def process_ml(
         os.makedirs(output_dir)
 
     print("************************************************")
-    print("downsample on= " + str(downsample_false_class))
+    print(f"downsample on {downsample_false_class}")
     class0_count = str(y_h[y_h == 0].size)
     class1_count = str(y_h[y_h == 1].size)
     print("X-> class0=" + class0_count + " class1=" + class1_count)

@@ -181,17 +181,20 @@ python ${{cmds[${{SLURM_ARRAY_TASK_ID}}]}} > /user/work/{uob_username}/logs/cat_
         file.write(formatted_content)
 
 
-def time_of_day(x):
-    # Ensure x is within the 24-hour range
-    x = x % 24
-    if 4 <= x < 10:
-        return 'Early Morning'
-    elif 10 <= x < 16:
-        return 'Morning'
-    elif 16 <= x < 22:
-        return 'Afternoon'
+def time_of_day_(x):
+    if 6 <= x < 18:
+        return 'Day'
     else:
         return 'Night'
+
+
+def get_time_of_day(path):
+    dataset_name = path.parent.parent.name
+    split = dataset_name.split('_')
+    time_of_day = 'All'
+    if not split[0].isdigit():
+        time_of_day = split[0]
+    return time_of_day
 
 
 if __name__ == "__main__":

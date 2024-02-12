@@ -14,6 +14,7 @@ import plotly.graph_objects as go
 import typer
 from plotnine import ggplot, aes, geom_jitter, stat_summary, theme, element_text
 from utils._anscombe import anscombe
+from utils.utils import time_of_day_
 
 
 def plot_heatmap(out_dir, datetime_xaxis, matrix, y_axis, filename, title="title"):
@@ -149,11 +150,13 @@ def get_cat_meta(output_dir, cat_id, output_fig=True):
             if col == "Age":
                 ax.set_ylabel("Age(years)")
             filename = f"{col}.png"
+            output_dir.mkdir(parents=True, exist_ok=True)
             filepath = output_dir / filename
-            print(filepath)
-            fig.set_size_inches(3, 4)
-            fig.tight_layout()
-            fig.savefig(filepath)
+            if not filepath.exists():
+                print(filepath)
+                fig.set_size_inches(3, 4)
+                fig.tight_layout()
+                fig.savefig(filepath)
 
     df = df[pd.notnull(df["DJD_ID"])]
     df["DJD_ID"] = df["DJD_ID"].astype(int)
@@ -171,8 +174,8 @@ def get_cat_meta(output_dir, cat_id, output_fig=True):
     }
 
 
-def build_n_peak_samples(run_id, n_peak, rois, rois_timestamp, max_sample):
-    print(f"[{run_id}] number of peaks is {n_peak}, sample shape is{rois.shape}")
+def build_n_peak_samples(run_id, tot, n_peak, rois, rois_timestamp, max_sample):
+    print(f"[{run_id}/{tot}] number of peaks is 1, sample shape is{rois.shape}")
     idxs_peaks = np.arange(rois.shape[0])
     permutation = list(permutations(idxs_peaks, n_peak))
     try:
@@ -181,12 +184,6 @@ def build_n_peak_samples(run_id, n_peak, rois, rois_timestamp, max_sample):
         print(e)
         print(f"There are less samples than max_sample={max_sample}")
         rois_idxs = permutation
-    # if len(permutation) > max_sample:
-    #     rois_idxs = random.sample(permutation, k=max_sample)
-    # else:
-    #     rois_idxs = random.sample(permutation)
-    # del permutation
-    # rois_idxs = efficient_permutation(idxs_peaks, max_sample, n_peak)
 
     #build augmented sample by concatenating permutations of peaks
     n_peak_samples = []
@@ -202,11 +199,12 @@ def build_n_peak_samples(run_id, n_peak, rois, rois_timestamp, max_sample):
         s = activity.tolist() + timestamps
         n_peak_samples.append(s)
     n_peak_samples = np.array(n_peak_samples)
+    print(f"[{run_id}/{tot}] number of peaks is {n_peak}, sample shape is{n_peak_samples.shape}")
     return n_peak_samples
 
 
-def find_region_of_interest(timestamp, activity, w_size, thresh):
-    #print(f"[{run_id}] find_region_of_interest...")
+def find_region_of_interest(run_id, tot, timestamp, activity, w_size, thresh):
+    print(f"[{run_id}/{tot}] find_region_of_interest...")
     rois = []
     rois_timestamp = []
     df = pd.DataFrame(activity, columns=["count"])
@@ -289,25 +287,32 @@ def format_raw_data(df, bin):
     df["elapsed_seconds"] = df["elapsed_seconds"].astype(np.int32)
     df["activity_counts"] = df["activity_counts"].astype(np.int32)
     df["day"] = df.index.day
+    df['hour'] = df.index.hour
+    df['time_of_day'] = df['hour'].apply(time_of_day_)
     return df
 
 
-def main(cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatmap, max_sample, run_id, tot):
+def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatmap, max_sample, run_id, tot):
     print(f"[{run_id}] progress[{run_id}/{tot}]...")
 
     datetime_list, datetime_list_w = [], []
     activity_list, activity_list_w = [], []
     individual_list, individual_list_w = [], []
     cpt, total = 0, 0
-    for i, (cat_id, df) in enumerate(cat_data):
-        print(f"[{run_id}] progress[{i}/{len(cat_data)}]...")
+    for i, df in enumerate(cat_data):
+        print(f"[{run_id}/{tot}] progress[{i}/{len(cat_data)}]...")
+
+        if time_of_day is not 'All':
+            df = df[df["time_of_day"] == time_of_day]
+
+        cat_id = df["cat_id"].values[0]
         activity = df["activity_counts"].values
         timestamp = df.index
 
         rois = []
         if w_size is not None:
-            rois, rois_timestamp = find_region_of_interest(run_id, timestamp, activity, w_size, thresh)
-            rois = build_n_peak_samples(run_id, n_peak, rois, rois_timestamp, max_sample)
+            rois, rois_timestamp = find_region_of_interest(run_id, tot, timestamp, activity, w_size, thresh)
+            rois = build_n_peak_samples(run_id, tot, n_peak, rois, rois_timestamp, max_sample)
             rois_timestamp = rois[:, -n_peak:]
             rois = rois[:, :-n_peak].astype(int)
 
@@ -391,11 +396,13 @@ def main(cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatmap, max_sample
     return meta_names
 
 
-def get_cat_data(data_dir, bin):
+def get_cat_data(data_dir, bin, subset=None):
     print("Loading cat data...")
     if bin not in ["S", "T"]:
         print(f"bin value must be 'S' or 'T'. {bin} is not supported!")
     files = sorted(data_dir.glob("*.csv"))
+    if subset is not None:
+        files = files[0:subset]
 
     # new = []
     # for f in files:
@@ -419,7 +426,8 @@ def get_cat_data(data_dir, bin):
         cat_meta = get_cat_meta(data_dir, cat_id)
         df["health"] = cat_meta["health"]
         df["age"] = cat_meta["age"]
-        dfs.append((cat_id, df))
+        df["cat_id"] = cat_id
+        dfs.append(df)
     return dfs
 
 
@@ -430,13 +438,14 @@ def run(
     out_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
+    dataset_path: Path = Path("E:\dataset.csv"),
     bin: str = "S",
     w_size: List[int] = [10, 30, 60, 90],
     threshs: List[int] = [10, 100, 1000],
     n_peaks: List[int] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     out_heatmap: bool = False,
-    max_sample: int = 10000,
-    n_job: int = 6,
+    max_sample: int = 100,
+    n_job: int = 2,
 ):
     """Script which builds dataset ready for ml
     Args:\n
@@ -450,38 +459,46 @@ def run(
         max_sample: Maximum number of samples per cats when using n_peaks > 1.\n
         n_job: Number of threads to use.
     """
-    pool = Pool(processes=n_job)
+    #pool = Pool(processes=n_job)
 
-    tot = len(w_size) * len(n_peaks) * len(threshs)
+    tot = len(w_size) * len(n_peaks) * len(threshs) * 3 # 3 is for len(['All', 'Day', 'Night'])
     cpt = 0
-    cat_data = get_cat_data(data_dir, bin)
+
+    if dataset_path.exists():
+        print(f"loading {dataset_path}")
+        df_data = pd.read_csv(dataset_path, index_col="date_time")
+        df_data.index = pd.to_datetime(df_data.index)
+        cat_data = [group for _, group in df_data.groupby(["cat_id"])]
+    else:
+        cat_data = get_cat_data(data_dir, bin)
+        print(f"saving {dataset_path}...")
+        pd.concat(cat_data).to_csv(dataset_path, index=True)
+        print("done.")
+
     datasets = []
     for t in threshs:
         for w in w_size:
             for n_peak in n_peaks:
+                for time_of_day in ['All', 'Day', 'Night']:
                     dirname = f"{max_sample}_{t}_{str(w).zfill(3)}_{str(n_peak).zfill(3)}"
+                    if time_of_day is not None:
+                        dirname = f"{time_of_day}_{max_sample}_{t}_{str(w).zfill(3)}_{str(n_peak).zfill(3)}"
+
                     out_dataset_dir = out_dir / dirname / "dataset"
                     datasets.append(out_dataset_dir / "samples.csv")
                     if out_dataset_dir.exists():
                         shutil.rmtree(out_dataset_dir)  # purge dataset if already created
-                    pool.apply_async(
-                        main,
-                        (cat_data, out_dataset_dir, bin, w, t, n_peak, out_heatmap, max_sample, cpt, tot),
-                    ),
-                    #main(cat_data, out_dataset_dir, bin, w, t, n_peak, out_heatmap, max_sample, cpt, tot)
+                    # pool.apply_async(
+                    #     main,
+                    #     (cat_data, out_dataset_dir, bin, w, t, n_peak, out_heatmap, max_sample, cpt, tot),
+                    # ), #TODO Fix multiprocessing doesn't work for large amount of data (dataset ids ~3GB)
+                    main(time_of_day, cat_data, out_dataset_dir, bin, w, t, n_peak, out_heatmap, max_sample, cpt, tot)
                     cpt += 1
-    pool.close()
-    pool.join()
+    # pool.close()
+    # pool.join()
     return datasets
 
 
 if __name__ == "__main__":
-    #run(data_dir=Path("E:/Cats"), out_dir=Path("E:/Cats/output"), n_job=6)
     typer.run(run)
-    # local_run_now()
-    # local_run()
-    # run(
-    #     data_dir=Path("/mnt/storage/scratch/axel/cats"),
-    #     out_dir=Path("/mnt/storage/scratch/axel/cats/output"),
-    #     n_job=28,
-    # )
+

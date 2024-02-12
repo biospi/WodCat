@@ -33,36 +33,38 @@ def main(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
     create_dataset: bool = False,
-    export_hpc_string: bool = True,
+    export_hpc_string: bool = False,
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
     n_bootstrap: int = 100,
-    ml_exist: bool = False,
-    n_job: int = 28,
+    ml_exist: bool = True,
+    n_job: int = 4,
 ):
     """Script to reproduce paper results\n
     Args:\n
         data_dir: Directory containing the Cats data .csv.
         export_hpc_string: Create .sh submission file for Blue Crystal/Blue Pebble. Please ignore if running locally.
     """
-    out_dir = data_dir / "data"
+    out_dir = data_dir / "paper_13"
 
     if create_dataset:
-        build_dataset.run(
-            w_size=[30],
-            threshs=[10],
-            n_peaks=[1, 2, 3, 4, 5, 6, 7, 8],
-            data_dir=data_dir,
-            out_dir=out_dir,
-            n_job=n_job,
-        )
+        for max_sample in [100]:
+            build_dataset.run(
+                w_size=[30, 60, 120],
+                threshs=[10],
+                n_peaks=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                data_dir=data_dir,
+                out_dir=out_dir,
+                max_sample=max_sample,
+                n_job=n_job,
+            )
 
     datasets = sorted([x for x in Path(out_dir).glob("**/*/samples.csv")])
     print(f"datasets={datasets}")
     # meta_columns = sorted([pd.read_csv(x).values.flatten().tolist() for x in Path(out_dir).glob("**/*/meta_columns.csv")])
     # print(f"meta_columns={meta_columns}")
 
-    assert len(datasets) > 0, f"There is no dataset in {out_dir}."
+    assert len(datasets) > 0, f"There is no dataset in {out_dir}. create_dataset={create_dataset}"
 
     if export_hpc_string: #ignore this if you do not use Blue Crystal(UoB)
         purge_hpc_file("hpc.txt")
@@ -88,11 +90,9 @@ def main(
         else:
             print("Running machine learning pipeline...")
             for preprocessing_steps in [
-                # [],
-                ["QN"]
-                # ["STDS"],
-                # ["QN", "ANSCOMBE", "LOG"],
-                # ["QN", "ANSCOMBE", "LOG", "STDS"]
+                [""],
+                ["QN"],
+                ["QN", "ANSCOMBE", "LOG"]
 
             ]:
                 out_ml_dir = run_ml.run(
@@ -101,7 +101,7 @@ def main(
                     meta_columns=meta_columns,
                     dataset_filepath=dataset,
                     out_dir=out_dir,
-                    skip=True,
+                    skip=False,
                     n_job=n_job,
                 )
                 if export_hpc_string:
@@ -124,7 +124,5 @@ def main(
 
 
 if __name__ == "__main__":
-    data_dir = Path("/mnt/storage/scratch/axel/cats")
-    data_dir = Path("E:\Cats")
-    main(data_dir)
-    # typer.run(main)
+    #data_dir = Path("/mnt/storage/scratch/axel/cats")
+    typer.run(main)
