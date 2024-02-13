@@ -43,6 +43,7 @@ def main(
     uob_username: str = 'fo18103',
     n_bootstrap: int = 100,
     ml_exist: bool = False,
+    skip_ml: bool = False,
     n_job: int = 4,
 ):
     """Script to reproduce paper results\n
@@ -106,7 +107,7 @@ def main(
                     meta_columns=meta_columns,
                     dataset_filepath=dataset,
                     out_dir=out_dir,
-                    skip=False,
+                    skip=skip_ml,
                     n_job=n_job,
                 )
                 if export_hpc_string:
