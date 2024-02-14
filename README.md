@@ -102,3 +102,6 @@ Options:
   --n-job INTEGER                 [default: 4]
   --help                          Show this message and exit.
 ```
+
+## Collaborators
+[![Bristol Veterinary School](http://www.bristol.ac.uk/media-library/protected/images/uob-logo-full-colour-largest-2.png)](http://www.bristol.ac.uk/vetscience/)

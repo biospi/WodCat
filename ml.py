@@ -185,7 +185,7 @@ def main(
     if skip:
         if output_dir.is_dir():
             print("output directory already exist. skip run.")
-            return
+            return 2
 
     output_dir.mkdir(parents=True, exist_ok=True)
     print(f"loading dataset file {dataset_filepath} ...")

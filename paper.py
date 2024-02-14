@@ -101,7 +101,7 @@ def main(
                 ["QN", "ANSCOMBE", "LOG"]
 
             ]:
-                out_ml_dir = run_ml.run(
+                out_ml_dir, status = run_ml.run(
                     preprocessing_steps=preprocessing_steps,
                     export_hpc_string=export_hpc_string,
                     meta_columns=meta_columns,
