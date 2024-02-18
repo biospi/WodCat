@@ -665,7 +665,7 @@ def cross_validate_svm_fast(
                         10e3,
                     ],
                 }
-                clf = GridSearchCV(svc, parameters, refit=True, verbose=3)
+                clf = GridSearchCV(svc, parameters, refit=True, return_train_score=True)
             else:
                 clf = SVC(kernel=kernel, probability=True, C=C, gamma=gamma)
             # clf = GridSearchCV(clf, tuned_parameters_rbf, refit=True, verbose=3)
@@ -870,7 +870,7 @@ if __name__ == "__main__":
     iris = datasets.load_iris()
     parameters = {'kernel': ('linear', 'rbf'), 'C': [1, 10]}
     svc = svm.SVC()
-    clf = GridSearchCV(svc, parameters)
+    clf = GridSearchCV(svc, parameters, return_train_score=True)
     clf.fit(iris.data, iris.target)
     df = pd.DataFrame(clf.cv_results_)
     sorted(clf.cv_results_.keys())
