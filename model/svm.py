@@ -4,6 +4,7 @@ import pickle
 import time
 from sklearn import svm, datasets
 from sklearn.model_selection import GridSearchCV
+from eval_regularisation import regularisation_heatmap
 from multiprocessing import Manager, Pool
 
 import matplotlib.pyplot as plt
@@ -372,6 +373,7 @@ def fold_worker(
         filename = models_dir / f"regularisation_{ifold}.csv"
         print(filename)
         df.to_csv(filename, index=False)
+        regularisation_heatmap(models_dir, out_dir / "regularisation")
 
     fit_time = time.time() - start_time
 

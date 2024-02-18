@@ -52,7 +52,7 @@ def plot_fig(df, col, out_dir, title=""):
     fig.savefig(filepath)
 
 
-def main(data_dir, out_dir):
+def regularisation_heatmap(data_dir, out_dir):
     files = list(data_dir.glob("*.csv"))
     print(files)
     dfs = []
@@ -87,4 +87,4 @@ def main(data_dir, out_dir):
 if __name__ == "__main__":
     input_folder = Path("E:/Cats/paper_14/All_50_10_030_001/rbf/QN_LeaveOneOut/models/GridSearchCV_rbf_QN")
     out_dir = Path("E:/Cats/paper_14/regularisation")
-    main(input_folder, out_dir)
+    regularisation_heatmap(input_folder, out_dir)

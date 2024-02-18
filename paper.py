@@ -113,7 +113,6 @@ def main(
                 )
                 if export_hpc_string:
                     continue
-
                 res = boot_roc_curve.main(
                     out_ml_dir, n_bootstrap=n_bootstrap, n_job=n_job
                 )
