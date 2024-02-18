@@ -31,6 +31,8 @@ from utils.visualisation import (
     plot_fold_details,
 )
 
+from var import parameters
+
 
 def downsample_df(data_frame, class_healthy, class_unhealthy):
     df_true = data_frame[data_frame["target"] == class_unhealthy]
@@ -371,9 +373,7 @@ def fold_worker(
     if hasattr(clf, "cv_results_"):
         df = pd.DataFrame(clf.cv_results_)
         filename = models_dir / f"regularisation_{ifold}.csv"
-        print(filename)
         df.to_csv(filename, index=False)
-        regularisation_heatmap(models_dir, out_dir / "regularisation")
 
     fit_time = time.time() - start_time
 
@@ -612,61 +612,11 @@ def cross_validate_svm_fast(
 
     scores, scores_proba = {}, {}
 
-    # tuned_parameters_rbf = { "gamma": [1e-10, 1], "C": [0.001, 0.1, 1]}
-    # tuned_parameters_rbf = {'C': [0.1, 1, 10, 100], 'gamma': [1, 0.1, 0.01, 0.001]}
-
-    # tuned_parameters_linear = [
-    #     {"kernel": ["linear"], "C": [0.0000000001, 0.000001, 0.001, 0.1, 1, 10, 100, 1000]},
-    # ]
     for kernel in svc_kernel:
         if kernel in ["linear", "rbf"]:
             if C is None or gamma is None:
                 svc = SVC(kernel=kernel, probability=True)
-                parameters = {
-                    "kernel": [kernel],
-                    "C": [
-                        1,
-                        10,
-                        100,
-                        1000,
-                        10000,
-                        100000,
-                        1000000,
-                        10000000,
-                        100000000,
-                    ],
-                    "gamma": [
-                        10e-25,
-                        10e-24,
-                        10e-23,
-                        10e-22,
-                        10e-21,
-                        10e-20,
-                        10e-19,
-                        10e-18,
-                        10e-17,
-                        10e-16,
-                        10e-15,
-                        10e-14,
-                        10e-13,
-                        10e-12,
-                        10e-11,
-                        10e-10,
-                        10e-9,
-                        10e-8,
-                        10e-7,
-                        10e-6,
-                        10e-5,
-                        10e-4,
-                        10e-3,
-                        10e-2,
-                        10e-1,
-                        10e-0,
-                        10e1,
-                        10e2,
-                        10e3,
-                    ],
-                }
+                parameters["kernel"] = [kernel]
                 clf = GridSearchCV(svc, parameters, refit=True, return_train_score=True)
             else:
                 clf = SVC(kernel=kernel, probability=True, C=C, gamma=gamma)
@@ -746,6 +696,9 @@ def cross_validate_svm_fast(
             print("total time (s)= " + str(end - start))
 
         plot_fold_details(fold_results, meta, meta_columns, out_dir)
+
+        models_dir = out_dir / "models" / f"{type(clf).__name__}_{clf_kernel}_{steps}"
+        regularisation_heatmap(models_dir, out_dir / "regularisation")
 
         info = (
             f"X shape:{str(X.shape)} healthy:{fold_results[0]['n_healthy']} unhealthy:{fold_results[0]['n_unhealthy']} \n"

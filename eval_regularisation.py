@@ -10,7 +10,7 @@ def plot_heatmap(df, col, out_dir, title=""):
     #plt.figure(figsize=(8, 6))
     #plt.subplots_adjust(left=.2, right=0.95, bottom=0.15, top=0.95)
     fig, ax = plt.subplots()
-    im = ax.imshow(scores[::-1,:], interpolation='nearest')
+    im = ax.imshow(scores[::-1, :], interpolation='nearest')
     # im = ax.imshow(scores, interpolation='nearest',
     #            norm=MidpointNormalize(vmin=-.2, midpoint=0.5))
     ax.set_xlabel('gamma')
@@ -42,7 +42,7 @@ def plot_fig(df, col, out_dir, title=""):
     ax.set_xscale('log')
     ax.legend()
     ax.set_xlabel("Gamma")
-    ax.set_ylabel("Median AUC")
+    ax.set_ylabel("Accuracy")
     fig.tight_layout()
     fig.show()
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -54,13 +54,12 @@ def plot_fig(df, col, out_dir, title=""):
 
 def regularisation_heatmap(data_dir, out_dir):
     files = list(data_dir.glob("*.csv"))
-    print(files)
     dfs = []
     mean_test_score_list = []
     for file in files:
         df = pd.read_csv(file)
         data = df[["param_gamma", "param_C", "mean_test_score"]]
-        data["fold"] = int(file.stem.split('_')[1])
+        data = data.assign(fold=int(file.stem.split('_')[1]))
         data = data.sort_values(["param_gamma", "param_C"])
         mean_test_score_list.append(data["mean_test_score"].values)
         dfs.append(data)
@@ -68,7 +67,6 @@ def regularisation_heatmap(data_dir, out_dir):
     df_data["gamma"] = df["param_gamma"]
     df_data["C"] = df["param_C"]
     df_data["mean_test_score"] = pd.DataFrame(mean_test_score_list).mean()
-    print(df_data)
     plot_heatmap(
         df_data,
         "mean_test_score",
