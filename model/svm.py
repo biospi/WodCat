@@ -2,6 +2,8 @@ import json
 import os
 import pickle
 import time
+from sklearn import svm, datasets
+from sklearn.model_selection import GridSearchCV
 from multiprocessing import Manager, Pool
 
 import matplotlib.pyplot as plt
@@ -15,9 +17,7 @@ from sklearn.metrics import (
     roc_curve,
 )
 from sklearn.metrics import precision_recall_fscore_support
-from sklearn.model_selection import (
-    RepeatedStratifiedKFold,
-    RepeatedKFold)
+from sklearn.model_selection import RepeatedStratifiedKFold, RepeatedKFold, GridSearchCV
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
 
@@ -25,7 +25,10 @@ from utils._custom_split import LeaveNOut, BootstrapCustom_
 from utils.visualisation import (
     build_proba_hist,
     build_individual_animal_pred,
-    plot_high_dimension_db, plot_learning_curves, plot_fold_details)
+    plot_high_dimension_db,
+    plot_learning_curves,
+    plot_fold_details,
+)
 
 
 def downsample_df(data_frame, class_healthy, class_unhealthy):
@@ -71,7 +74,7 @@ def process_ml(
     plot_2d_space=False,
     export_fig_as_pdf=False,
     C=None,
-    gamma=None
+    gamma=None,
 ):
     print("*******************************************************************")
 
@@ -80,8 +83,8 @@ def process_ml(
     if downsample_false_class:
         data_frame = downsample_df(data_frame, 0, 1)
 
-    #print("drop duplicates...")
-    #data_frame = data_frame.drop_duplicates()
+    # print("drop duplicates...")
+    # data_frame = data_frame.drop_duplicates()
     # animal_ids = data_frame["id"].tolist()
     sample_idxs = data_frame.index.tolist()
     if cv == "StratifiedLeaveTwoOut":
@@ -91,22 +94,42 @@ def process_ml(
 
     if cv == "LeaveTwoOut":
         cross_validation_method = LeaveNOut(
-            animal_ids, sample_idxs, stratified=False, verbose=True, max_comb=-1, leaven=2
+            animal_ids,
+            sample_idxs,
+            stratified=False,
+            verbose=True,
+            max_comb=-1,
+            leaven=2,
         )
 
     if cv == "StratifiedLeaveOneOut":
         cross_validation_method = LeaveNOut(
-            animal_ids, sample_idxs, stratified=True, verbose=True, max_comb=-1, leaven=1
+            animal_ids,
+            sample_idxs,
+            stratified=True,
+            verbose=True,
+            max_comb=-1,
+            leaven=1,
         )
 
     if cv == "LeaveOneOut":
         if len(individual_to_test) > 0:
             cross_validation_method = LeaveNOut(
-                animal_ids, sample_idxs, stratified=False, verbose=True, leaven=1, individual_to_test=individual_to_test
+                animal_ids,
+                sample_idxs,
+                stratified=False,
+                verbose=True,
+                leaven=1,
+                individual_to_test=individual_to_test,
             )
         else:
             cross_validation_method = LeaveNOut(
-                animal_ids, sample_idxs, stratified=False, verbose=True, max_comb=-1, leaven=1
+                animal_ids,
+                sample_idxs,
+                stratified=False,
+                verbose=True,
+                max_comb=-1,
+                leaven=1,
             )
 
     if cv == "RepeatedStratifiedKFold":
@@ -120,8 +143,9 @@ def process_ml(
         )
 
     if cv == "Bootstrap":
-        cross_validation_method = BootstrapCustom_(animal_ids, n_iterations=len(animal_ids) * 10,
-                                                   verbose=False)
+        cross_validation_method = BootstrapCustom_(
+            animal_ids, n_iterations=len(animal_ids) * 10, verbose=False
+        )
 
     # if cv == "LeaveOneOut":
     #     cross_validation_method = LeaveOneOut()
@@ -134,7 +158,10 @@ def process_ml(
 
     # remove meta columns
     print("creating X...")
-    X = data_frame.iloc[:, np.array([str(x).isnumeric() or x in add_feature for x in data_frame.columns])]
+    X = data_frame.iloc[
+        :,
+        np.array([str(x).isnumeric() or x in add_feature for x in data_frame.columns]),
+    ]
     X.columns = list(range(X.shape[1]))
     X = X.values
 
@@ -152,7 +179,7 @@ def process_ml(
     class1_count = str(y_h[y_h == 1].size)
     print("X-> class0=" + class0_count + " class1=" + class1_count)
 
-    if classifiers[0] in ["linear", "rbf", "dtree", "lreg", "knn"]:#todo reformat
+    if classifiers[0] in ["linear", "rbf", "dtree", "lreg", "knn"]:  # todo reformat
         scores, scores_proba = cross_validate_svm_fast(
             save_model,
             classifiers,
@@ -173,7 +200,7 @@ def process_ml(
             plot_2d_space,
             export_fig_as_pdf,
             C=C,
-            gamma=gamma
+            gamma=gamma,
         )
 
     if cv != "LeaveOneOut":
@@ -181,7 +208,13 @@ def process_ml(
             output_dir, steps, class_unhealthy_label, scores, ids, meta_columns
         )
         build_individual_animal_pred(
-            output_dir, steps, class_unhealthy_label, scores, ids, meta_columns, tt="train"
+            output_dir,
+            steps,
+            class_unhealthy_label,
+            scores,
+            ids,
+            meta_columns,
+            tt="train",
         )
         build_proba_hist(output_dir, steps, class_unhealthy_label, scores_proba)
 
@@ -189,7 +222,7 @@ def process_ml(
 def augment(df, n, ids, meta, meta_short, sample_dates):
     df_data = df.iloc[:, :-2]
     df_meta = df.iloc[:, -2:]
-    crop = int(n/2)
+    crop = int(n / 2)
     df_data_crop = df_data.iloc[:, crop:-crop]
     # print(df_data_crop)
     jittered_columns = []
@@ -214,17 +247,22 @@ def augment(df, n, ids, meta, meta_short, sample_dates):
 
 
 def augment_(X_train, y_train, n, sample_dates_train, ids_train, meta_train):
-    df = pd.concat([pd.DataFrame(X_train),
-                    pd.DataFrame(y_train, columns=["target"]),
-                    pd.DataFrame(sample_dates_train, columns=["dates"]),
-                    pd.DataFrame(ids_train, columns=["ids"]),
-                    pd.DataFrame(meta_train, columns=["meta"])], axis=1)
+    df = pd.concat(
+        [
+            pd.DataFrame(X_train),
+            pd.DataFrame(y_train, columns=["target"]),
+            pd.DataFrame(sample_dates_train, columns=["dates"]),
+            pd.DataFrame(ids_train, columns=["ids"]),
+            pd.DataFrame(meta_train, columns=["meta"]),
+        ],
+        axis=1,
+    )
     df_data = df.iloc[:, :-4]
     df_target = df.iloc[:, -4]
     df_date = df.iloc[:, -3]
     df_ids = df.iloc[:, -2]
     df_meta = df.iloc[:, -1]
-    crop = int(n/2)
+    crop = int(n / 2)
     df_data_crop = df_data.iloc[:, crop:-crop]
     # print(df_data_crop)
     jittered_columns = []
@@ -274,7 +312,7 @@ def fold_worker(
     plot_2d_space,
     clf_kernel,
     c,
-    gamma
+    gamma,
 ):
     print(f"process id={ifold}/{nfold}...")
     X_train, X_test = X[train_index], X[test_index]
@@ -325,13 +363,19 @@ def fold_worker(
 
     start_time = time.time()
     clf.fit(X_train, y_train)
+
+    models_dir = out_dir / "models" / f"{type(clf).__name__}_{clf_kernel}_{steps}"
+    models_dir.mkdir(parents=True, exist_ok=True)
+
+    if hasattr(clf, "cv_results_"):
+        df = pd.DataFrame(clf.cv_results_)
+        filename = models_dir / f"regularisation_{ifold}.csv"
+        print(filename)
+        df.to_csv(filename, index=False)
+
     fit_time = time.time() - start_time
 
     if save_model:
-        models_dir = (
-            out_dir / "models" / f"{type(clf).__name__}_{clf_kernel}_{steps}"
-        )
-        models_dir.mkdir(parents=True, exist_ok=True)
         filename = models_dir / f"model_{ifold}.pkl"
         print("saving classifier...")
         print(filename)
@@ -340,14 +384,14 @@ def fold_worker(
 
     # test healthy/unhealthy
     y_pred_test = clf.predict(X_test)
-    if hasattr(clf, 'decision_function'):
+    if hasattr(clf, "decision_function"):
         y_pred_proba_test_df = clf.decision_function(X_test)
         y_pred_proba_test = clf.predict_proba(X_test)[:, 1]
     else:
         y_pred_proba_test = clf.predict_proba(X_test)[:, 1]
         y_pred_proba_test_df = y_pred_proba_test
 
-    #todo clean up no test roc curve if loocv. ROC curve will be created later with bootstrap
+    # todo clean up no test roc curve if loocv. ROC curve will be created later with bootstrap
 
     if plot_2d_space and ifold == 0:
         plot_high_dimension_db(
@@ -364,7 +408,9 @@ def fold_worker(
         plot_learning_curves(clf, X, y, ifold, out_dir / "testing" / str(ifold))
 
     accuracy = balanced_accuracy_score(y_test, y_pred_test)
-    precision, recall, fscore, support = precision_recall_fscore_support(y_test, y_pred_test)
+    precision, recall, fscore, support = precision_recall_fscore_support(
+        y_test, y_pred_test
+    )
     if len(precision) == 1:
         precision = np.append(precision, precision[0])
         recall = np.append(recall, recall[0])
@@ -376,7 +422,7 @@ def fold_worker(
 
     # data for training
     y_pred_train = clf.predict(X_train)
-    if hasattr(clf, 'decision_function'):
+    if hasattr(clf, "decision_function"):
         y_pred_proba_train_df = clf.decision_function(X_train)
         y_pred_proba_train = clf.predict_proba(X_train)[:, 1]
     else:
@@ -393,8 +439,12 @@ def fold_worker(
     correct_predictions_train = (y_train == y_pred_train).astype(int)
     incorrect_predictions_train = (y_train != y_pred_train).astype(int)
 
-    n_healthy = np.sum(y_test == int(class_healthy)) + np.sum(y_train == int(class_healthy))
-    n_unhealthy = np.sum(y_test == int(class_unhealthy)) + np.sum(y_train == int(class_unhealthy))
+    n_healthy = np.sum(y_test == int(class_healthy)) + np.sum(
+        y_train == int(class_healthy)
+    )
+    n_unhealthy = np.sum(y_test == int(class_unhealthy)) + np.sum(
+        y_train == int(class_unhealthy)
+    )
 
     fold_result = {
         "clf": type(clf).__name__,
@@ -470,7 +520,7 @@ def fold_worker(
         label = label_series[y_f]
         X_test = X_fold[y_fold == y_f]
         y_test = y_fold[y_fold == y_f]
-        if hasattr(clf, 'decision_function'):
+        if hasattr(clf, "decision_function"):
             y_pred_proba_test = clf.decision_function(X_test)
         else:
             y_pred_proba_test = clf.predict_proba(X_test)[:, 1]
@@ -482,13 +532,15 @@ def fold_worker(
     print(f"process id={ifold}/{nfold} done!")
 
 
-def find_test_samples_with_full_synthetic(meta_columns, meta, meta_test, test_index, n_i=2):
-    if 'imputed_days' not in meta_columns:
+def find_test_samples_with_full_synthetic(
+    meta_columns, meta, meta_test, test_index, n_i=2
+):
+    if "imputed_days" not in meta_columns:
         return test_index
     else:
-        idx_i = meta_columns.index('imputed_days')
+        idx_i = meta_columns.index("imputed_days")
         new_test_index = test_index[meta_test[:, idx_i] < n_i]
-        #meta[new_test_index] metadata of new testing samples without imputed days in them
+        # meta[new_test_index] metadata of new testing samples without imputed days in them
         return new_test_index
 
 
@@ -512,7 +564,7 @@ def cross_validate_svm_fast(
     plot_2d_space=False,
     export_fig_as_pdf=False,
     C=None,
-    gamma=None
+    gamma=None,
 ):
     """Cross validate X,y data and plot roc curve with range
     Args:
@@ -550,7 +602,7 @@ def cross_validate_svm_fast(
                     clf,
                     steps,
                     0,
-                    export_fig_as_pdf
+                    export_fig_as_pdf,
                 )
                 plot_learning_curves(clf, X_, y_, 0, out_dir / "training")
             except Exception as e:
@@ -558,8 +610,8 @@ def cross_validate_svm_fast(
 
     scores, scores_proba = {}, {}
 
-    #tuned_parameters_rbf = { "gamma": [1e-10, 1], "C": [0.001, 0.1, 1]}
-    #tuned_parameters_rbf = {'C': [0.1, 1, 10, 100], 'gamma': [1, 0.1, 0.01, 0.001]}
+    # tuned_parameters_rbf = { "gamma": [1e-10, 1], "C": [0.001, 0.1, 1]}
+    # tuned_parameters_rbf = {'C': [0.1, 1, 10, 100], 'gamma': [1, 0.1, 0.01, 0.001]}
 
     # tuned_parameters_linear = [
     #     {"kernel": ["linear"], "C": [0.0000000001, 0.000001, 0.001, 0.1, 1, 10, 100, 1000]},
@@ -567,10 +619,56 @@ def cross_validate_svm_fast(
     for kernel in svc_kernel:
         if kernel in ["linear", "rbf"]:
             if C is None or gamma is None:
-                clf = SVC(kernel=kernel, probability=True)
+                svc = SVC(kernel=kernel, probability=True)
+                parameters = {
+                    "kernel": [kernel],
+                    "C": [
+                        1,
+                        10,
+                        100,
+                        1000,
+                        10000,
+                        100000,
+                        1000000,
+                        10000000,
+                        100000000,
+                    ],
+                    "gamma": [
+                        10e-25,
+                        10e-24,
+                        10e-23,
+                        10e-22,
+                        10e-21,
+                        10e-20,
+                        10e-19,
+                        10e-18,
+                        10e-17,
+                        10e-16,
+                        10e-15,
+                        10e-14,
+                        10e-13,
+                        10e-12,
+                        10e-11,
+                        10e-10,
+                        10e-9,
+                        10e-8,
+                        10e-7,
+                        10e-6,
+                        10e-5,
+                        10e-4,
+                        10e-3,
+                        10e-2,
+                        10e-1,
+                        10e-0,
+                        10e1,
+                        10e2,
+                        10e3,
+                    ],
+                }
+                clf = GridSearchCV(svc, parameters, refit=True, verbose=3)
             else:
                 clf = SVC(kernel=kernel, probability=True, C=C, gamma=gamma)
-            #clf = GridSearchCV(clf, tuned_parameters_rbf, refit=True, verbose=3)
+            # clf = GridSearchCV(clf, tuned_parameters_rbf, refit=True, verbose=3)
 
         if kernel in ["knn"]:
             n_neighbors = int(np.sqrt(len(y)))
@@ -600,10 +698,12 @@ def cross_validate_svm_fast(
             for ifold, (train_index, test_index) in enumerate(
                 cross_validation_method.split(X, y)
             ):
-                info = {'max_sample': int(meta[0][meta_columns.index('max_sample')]),
-                        'n_peak': int(meta[0][meta_columns.index('n_peak')]),
-                        'w_size': int(meta[0][meta_columns.index('w_size')]),
-                        'n_top': int(meta[0][meta_columns.index('n_top')])}
+                info = {
+                    "max_sample": int(meta[0][meta_columns.index("max_sample")]),
+                    "n_peak": int(meta[0][meta_columns.index("n_peak")]),
+                    "w_size": int(meta[0][meta_columns.index("w_size")]),
+                    "n_top": int(meta[0][meta_columns.index("n_top")]),
+                }
 
                 pool.apply_async(
                     fold_worker,
@@ -632,7 +732,7 @@ def cross_validate_svm_fast(
                         plot_2d_space,
                         clf_kernel,
                         C,
-                        gamma
+                        gamma,
                     ),
                 )
             pool.close()
@@ -645,8 +745,10 @@ def cross_validate_svm_fast(
 
         plot_fold_details(fold_results, meta, meta_columns, out_dir)
 
-        info = f"X shape:{str(X.shape)} healthy:{fold_results[0]['n_healthy']} unhealthy:{fold_results[0]['n_unhealthy']} \n" \
-               f" training_shape:{fold_results[0]['training_shape']} testing_shape:{fold_results[0]['testing_shape']}"
+        info = (
+            f"X shape:{str(X.shape)} healthy:{fold_results[0]['n_healthy']} unhealthy:{fold_results[0]['n_unhealthy']} \n"
+            f" training_shape:{fold_results[0]['training_shape']} testing_shape:{fold_results[0]['testing_shape']}"
+        )
 
         plt.clf()
         fig_roc_merge, ax_roc_merge = plt.subplots(figsize=(8, 8))
@@ -654,8 +756,8 @@ def cross_validate_svm_fast(
             all_y_test = []
             all_probs_test = []
             for item in fold_results:
-                all_y_test.extend(item['y_test'])
-                y_pred_proba_test = np.array(item['y_pred_proba_test'])
+                all_y_test.extend(item["y_test"])
+                y_pred_proba_test = np.array(item["y_pred_proba_test"])
                 # if len(y_pred_proba_test) > 1:
                 #     y_pred_proba_test = y_pred_proba_test[:, 1]
                 all_probs_test.extend(y_pred_proba_test)
@@ -664,13 +766,19 @@ def cross_validate_svm_fast(
             fpr, tpr, thresholds = roc_curve(all_y_test, all_probs_test.astype(float))
             roc_auc_test = auc(fpr, tpr)
             print(f"LOO AUC TEST={roc_auc_test}")
-            ax_roc_merge.plot(fpr, tpr, lw=3, alpha=0.9, label='LOOCV ROC (TEST AUC = %0.2f)' % (roc_auc_test))
+            ax_roc_merge.plot(
+                fpr,
+                tpr,
+                lw=3,
+                alpha=0.9,
+                label="LOOCV ROC (TEST AUC = %0.2f)" % (roc_auc_test),
+            )
 
             all_y_train = []
             all_probs_train = []
             for item in fold_results:
-                all_y_train.extend(item['y_train'])
-                y_pred_proba_train = np.array(item['y_pred_proba_train'])
+                all_y_train.extend(item["y_train"])
+                y_pred_proba_train = np.array(item["y_pred_proba_train"])
                 # if len(y_pred_proba_train) > 1:
                 #     y_pred_proba_train = y_pred_proba_train[:, 1]
                 all_probs_train.extend(y_pred_proba_train)
@@ -679,14 +787,28 @@ def cross_validate_svm_fast(
             fpr, tpr, thresholds = roc_curve(all_y_train, all_probs_train)
             roc_auc_train = auc(fpr, tpr)
             print(f"LOO AUC TRAIN={roc_auc_train}")
-            ax_roc_merge.plot(fpr, tpr, lw=2, alpha=0.5, label='LOOCV ROC (TRAIN AUC = %0.2f)' % (roc_auc_train))
+            ax_roc_merge.plot(
+                fpr,
+                tpr,
+                lw=2,
+                alpha=0.5,
+                label="LOOCV ROC (TRAIN AUC = %0.2f)" % (roc_auc_train),
+            )
 
-            ax_roc_merge.plot([0, 1], [0, 1], linestyle='--', lw=2, color='k', label='Chance level', alpha=.8)
+            ax_roc_merge.plot(
+                [0, 1],
+                [0, 1],
+                linestyle="--",
+                lw=2,
+                color="k",
+                label="Chance level",
+                alpha=0.8,
+            )
             ax_roc_merge.set_xlim([-0.05, 1.05])
             ax_roc_merge.set_ylim([-0.05, 1.05])
-            ax_roc_merge.set_xlabel('False Positive Rate')
-            ax_roc_merge.set_ylabel('True Positive Rate')
-            ax_roc_merge.set_title('Receiver operating characteristic')
+            ax_roc_merge.set_xlabel("False Positive Rate")
+            ax_roc_merge.set_ylabel("True Positive Rate")
+            ax_roc_merge.set_title("Receiver operating characteristic")
             ax_roc_merge.legend(loc="lower right")
             ax_roc_merge.grid()
             ax_roc_merge.set_title(info)
@@ -743,3 +865,12 @@ def make_y_hist(data0, data1, out_dir, cv_name, steps, auc, info="", tag=""):
     plt.savefig(filename)
     plt.clf()
 
+
+if __name__ == "__main__":
+    iris = datasets.load_iris()
+    parameters = {'kernel': ('linear', 'rbf'), 'C': [1, 10]}
+    svc = svm.SVC()
+    clf = GridSearchCV(svc, parameters)
+    clf.fit(iris.data, iris.target)
+    df = pd.DataFrame(clf.cv_results_)
+    sorted(clf.cv_results_.keys())

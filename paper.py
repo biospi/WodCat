@@ -41,6 +41,7 @@ def main(
     export_hpc_string: bool = False,
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
+    out_dirname: str = 'paper',
     n_bootstrap: int = 100,
     ml_exist: bool = False,
     skip_ml: bool = False,
@@ -51,14 +52,14 @@ def main(
         data_dir: Directory containing the Cats data .csv.
         export_hpc_string: Create .sh submission file for Blue Crystal/Blue Pebble. Please ignore if running locally.
     """
-    out_dir = data_dir / "paper_13"
+    out_dir = data_dir / out_dirname
 
     if create_dataset:
-        for max_sample in [100]:
+        for max_sample in [50]:
             build_dataset.run(
-                w_size=[30, 60, 120],
+                w_size=[30],
                 threshs=[10],
-                n_peaks=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                n_peaks=[1, 2, 3],
                 data_dir=data_dir,
                 out_dir=out_dir,
                 max_sample=max_sample,
