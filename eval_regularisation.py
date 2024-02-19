@@ -77,7 +77,6 @@ def regularisation_heatmap(data_dir, out_dir):
         out_dir,
         f"GridSearch Training model:{data_dir.parent.parent.name}",
     )
-
     plot_heatmap(
         df_data,
         "mean_test_score",

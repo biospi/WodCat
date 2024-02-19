@@ -38,14 +38,14 @@ def main(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
     create_dataset: bool = False,
-    export_hpc_string: bool = False,
+    export_hpc_string: bool = True,
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
     out_dirname: str = 'paper',
     n_bootstrap: int = 100,
     ml_exist: bool = False,
     skip_ml: bool = False,
-    n_job: int = 4,
+    n_job: int = 28,
 ):
     """Script to reproduce paper results\n
     Args:\n
