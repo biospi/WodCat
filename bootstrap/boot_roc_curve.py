@@ -110,7 +110,7 @@ def worker(
     pd.DataFrame(all_train_proba_list).to_pickle(out_dir / "all_train_proba_list.pkl")
     pd.DataFrame(prec_list_test).to_pickle(out_dir / "prec_list_test.pkl")
     pd.DataFrame(prec_list_train).to_pickle(out_dir / "prec_list_train.pkl")
-    print(f"{i}/{tot} done.")
+    #print(f"{i}/{tot} done.")
 
 
 def main(path=None, n_bootstrap=100, n_job=6):
@@ -186,7 +186,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
         pool.close()
         pool.join()
         pool.terminate()
-        print("pool done.")
+        #print("pool done.")
         xaxis_train = list(xaxis_train)
         xaxis_test = list(xaxis_test)
         auc_list_test = list(auc_list_test)

@@ -473,7 +473,7 @@ def run(
         cat_data = get_cat_data(data_dir, bin)
         print(f"saving {dataset_path}...")
         pd.concat(cat_data).to_csv(dataset_path, index=True)
-        print("done.")
+        #print("done.")
 
     datasets = []
     for t in threshs:
