@@ -31,7 +31,7 @@ from utils.visualisation import (
     plot_fold_details,
 )
 
-from var import parameters
+from var import parameters_rbf, parameters_linear
 
 
 def downsample_df(data_frame, class_healthy, class_unhealthy):
@@ -182,29 +182,29 @@ def process_ml(
     class1_count = str(y_h[y_h == 1].size)
     print("X-> class0=" + class0_count + " class1=" + class1_count)
 
-    if classifiers[0] in ["linear", "rbf", "dtree", "lreg", "knn"]:  # todo reformat
-        scores, scores_proba = cross_validate_svm_fast(
-            save_model,
-            classifiers,
-            output_dir,
-            steps,
-            cv,
-            label_series,
-            cross_validation_method,
-            X,
-            y,
-            y_h,
-            ids,
-            df_meta,
-            meta_columns,
-            sample_dates,
-            augment_training,
-            n_job,
-            plot_2d_space,
-            export_fig_as_pdf,
-            C=C,
-            gamma=gamma,
-        )
+    #if classifiers[0] in ["linear", "rbf", "dtree", "lreg", "knn"]:  # todo reformat
+    scores, scores_proba = cross_validate_svm_fast(
+        save_model,
+        classifiers,
+        output_dir,
+        steps,
+        cv,
+        label_series,
+        cross_validation_method,
+        X,
+        y,
+        y_h,
+        ids,
+        df_meta,
+        meta_columns,
+        sample_dates,
+        augment_training,
+        n_job,
+        plot_2d_space,
+        export_fig_as_pdf,
+        C=C,
+        gamma=gamma,
+    )
 
     if cv != "LeaveOneOut":
         build_individual_animal_pred(
@@ -616,8 +616,13 @@ def cross_validate_svm_fast(
         if kernel in ["linear", "rbf"]:
             if C is None or gamma is None:
                 svc = SVC(kernel=kernel, probability=True)
-                parameters["kernel"] = [kernel]
-                clf = GridSearchCV(svc, parameters, refit=True, return_train_score=True)
+
+                if kernel == "rbf":
+                    parameters_rbf["kernel"] = [kernel]
+                    clf = GridSearchCV(svc, parameters_rbf, refit=True, return_train_score=True)
+                if kernel == "linear":
+                    parameters_linear["kernel"] = [kernel]
+                    clf = GridSearchCV(svc, parameters_linear, refit=True, return_train_score=True)
             else:
                 clf = SVC(kernel=kernel, probability=True, C=C, gamma=gamma)
             # clf = GridSearchCV(clf, tuned_parameters_rbf, refit=True, verbose=3)
@@ -823,9 +828,9 @@ def make_y_hist(data0, data1, out_dir, cv_name, steps, auc, info="", tag=""):
 
 if __name__ == "__main__":
     iris = datasets.load_iris()
-    parameters = {'kernel': ('linear', 'rbf'), 'C': [1, 10]}
+    parameters_rbf = {'kernel': ('linear', 'rbf'), 'C': [1, 10]}
     svc = svm.SVC()
-    clf = GridSearchCV(svc, parameters, return_train_score=True)
+    clf = GridSearchCV(svc, parameters_rbf, return_train_score=True)
     clf.fit(iris.data, iris.target)
     df = pd.DataFrame(clf.cv_results_)
     sorted(clf.cv_results_.keys())

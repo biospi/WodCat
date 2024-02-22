@@ -59,6 +59,8 @@ def regularisation_heatmap(data_dir, out_dir):
     mean_train_score_list = []
     for file in files:
         df = pd.read_csv(file)
+        if "param_gamma" not in df.columns:
+            df["param_gamma"] = 0
         data = df[["param_gamma", "param_C", "mean_test_score", "mean_train_score"]]
         data = data.assign(fold=int(file.stem.split('_')[1]))
         data = data.sort_values(["param_gamma", "param_C"])

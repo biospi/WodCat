@@ -13,7 +13,7 @@ def run(
     out_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
-    clf: str = "rbf",
+    clf: str = "linear",
     preprocessing_steps: List[str] = ["QN"],
     meta_columns: List[str] = [],
     cv: str = "LeaveOneOut",

@@ -38,10 +38,11 @@ def main(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
     create_dataset: bool = False,
-    export_hpc_string: bool = True,
+    export_hpc_string: bool = False,
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
     out_dirname: str = 'paper',
+    clf: str = 'linear',
     n_bootstrap: int = 100,
     ml_exist: bool = False,
     skip_ml: bool = False,
@@ -110,6 +111,7 @@ def main(
                     out_dir=out_dir,
                     skip=skip_ml,
                     n_job=n_job,
+                    clf=clf
                 )
                 if export_hpc_string:
                     continue
