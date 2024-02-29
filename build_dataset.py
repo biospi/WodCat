@@ -443,6 +443,7 @@ def run(
     w_size: List[int] = [10, 30, 60, 90],
     threshs: List[int] = [10, 100, 1000],
     n_peaks: List[int] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    day_windows: List[str] = ['All', 'Day', 'Night'],
     out_heatmap: bool = False,
     max_sample: int = 100,
     n_job: int = 2,
@@ -479,7 +480,7 @@ def run(
     for t in threshs:
         for w in w_size:
             for n_peak in n_peaks:
-                for time_of_day in ['All', 'Day', 'Night']:
+                for time_of_day in day_windows:
                     dirname = f"{max_sample}_{t}_{str(w).zfill(3)}_{str(n_peak).zfill(3)}"
                     if time_of_day is not None:
                         dirname = f"{time_of_day}_{max_sample}_{t}_{str(w).zfill(3)}_{str(n_peak).zfill(3)}"

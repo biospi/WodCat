@@ -19,6 +19,7 @@ def run(
     cv: str = "LeaveOneOut",
     export_hpc_string: bool = False,
     pre_visu: bool = False,
+    regularisation: bool = False,
     skip: bool = False,
     n_job: int = 6,
 ):
@@ -49,7 +50,8 @@ def run(
         pre_visu=pre_visu,
         plot_2d_space=False,
         skip=skip,
-        export_hpc_string=export_hpc_string
+        export_hpc_string=export_hpc_string,
+        regularisation=regularisation
     )
     return output_dir, s
 

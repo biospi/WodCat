@@ -37,15 +37,16 @@ def main(
     data_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
-    create_dataset: bool = False,
+    create_dataset: bool = True,
     export_hpc_string: bool = False,
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
     out_dirname: str = 'paper',
-    clf: str = 'linear',
+    clf: str = 'rbf',
     n_bootstrap: int = 100,
     ml_exist: bool = False,
     skip_ml: bool = False,
+    regularisation: bool = False,
     n_job: int = 28,
 ):
     """Script to reproduce paper results\n
@@ -56,7 +57,7 @@ def main(
     out_dir = data_dir / out_dirname
 
     if create_dataset:
-        for max_sample in [50]:
+        for max_sample in [25]:
             build_dataset.run(
                 w_size=[30],
                 threshs=[10],
@@ -64,6 +65,7 @@ def main(
                 data_dir=data_dir,
                 out_dir=out_dir,
                 max_sample=max_sample,
+                day_windows=["All"],
                 n_job=n_job,
             )
 
@@ -106,6 +108,7 @@ def main(
                 out_ml_dir, status = run_ml.run(
                     preprocessing_steps=preprocessing_steps,
                     export_hpc_string=export_hpc_string,
+                    regularisation=regularisation,
                     meta_columns=meta_columns,
                     dataset_filepath=dataset,
                     out_dir=out_dir,

@@ -31,6 +31,13 @@ from utils.visualisation import (
     plot_fold_details,
 )
 
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score
+from sklearn.svm import SVC
+
+
 from var import parameters_rbf, parameters_linear
 
 
@@ -78,6 +85,7 @@ def process_ml(
     export_fig_as_pdf=False,
     C=None,
     gamma=None,
+    regularisation=False
 ):
     print("*******************************************************************")
 
@@ -86,9 +94,6 @@ def process_ml(
     if downsample_false_class:
         data_frame = downsample_df(data_frame, 0, 1)
 
-    # print("drop duplicates...")
-    # data_frame = data_frame.drop_duplicates()
-    # animal_ids = data_frame["id"].tolist()
     sample_idxs = data_frame.index.tolist()
     if cv == "StratifiedLeaveTwoOut":
         cross_validation_method = LeaveNOut(
@@ -150,9 +155,6 @@ def process_ml(
             animal_ids, n_iterations=len(animal_ids) * 10, verbose=False
         )
 
-    # if cv == "LeaveOneOut":
-    #     cross_validation_method = LeaveOneOut()
-
     ids = data_frame["id"].values
     y_h = data_frame["health"].values.flatten()
     y_h = y_h.astype(int)
@@ -170,19 +172,12 @@ def process_ml(
 
     print("release data_frame memory...")
     del data_frame
-    print("****************************")
-
-    if not os.path.exists(output_dir):
-        print("mkdir", output_dir)
-        os.makedirs(output_dir)
-
-    print("************************************************")
-    print(f"downsample on {downsample_false_class}")
+    print("*******************************************************************")
     class0_count = str(y_h[y_h == 0].size)
     class1_count = str(y_h[y_h == 1].size)
     print("X-> class0=" + class0_count + " class1=" + class1_count)
 
-    #if classifiers[0] in ["linear", "rbf", "dtree", "lreg", "knn"]:  # todo reformat
+    output_dir.mkdir(parents=True, exist_ok=True)
     scores, scores_proba = cross_validate_svm_fast(
         save_model,
         classifiers,
@@ -204,6 +199,7 @@ def process_ml(
         export_fig_as_pdf,
         C=C,
         gamma=gamma,
+        regularisation=regularisation
     )
 
     if cv != "LeaveOneOut":
@@ -220,74 +216,6 @@ def process_ml(
             tt="train",
         )
         build_proba_hist(output_dir, steps, class_unhealthy_label, scores_proba)
-
-
-def augment(df, n, ids, meta, meta_short, sample_dates):
-    df_data = df.iloc[:, :-2]
-    df_meta = df.iloc[:, -2:]
-    crop = int(n / 2)
-    df_data_crop = df_data.iloc[:, crop:-crop]
-    # print(df_data_crop)
-    jittered_columns = []
-    for i in np.arange(1, crop):
-        cols = df_data_crop.columns.values.astype(int)
-        left = cols - i
-        right = cols + i
-        jittered_columns.append(left)
-        jittered_columns.append(right)
-    dfs = []
-    for j_c in jittered_columns:
-        d = df[j_c]
-        d.columns = list(range(d.shape[1]))
-        d = pd.concat([d, df_meta], axis=1)
-        dfs.append(d)
-    df_augmented = pd.concat(dfs, ignore_index=True)
-    meta_aug = np.array(meta.tolist() * len(jittered_columns))
-    ids_aug = np.array(ids * len(jittered_columns))
-    meta_short_aug = np.array(meta_short.tolist() * len(jittered_columns))
-    sample_dates = np.array(sample_dates.tolist() * len(jittered_columns))
-    return df_augmented, ids_aug, sample_dates, meta_short_aug, meta_aug
-
-
-def augment_(X_train, y_train, n, sample_dates_train, ids_train, meta_train):
-    df = pd.concat(
-        [
-            pd.DataFrame(X_train),
-            pd.DataFrame(y_train, columns=["target"]),
-            pd.DataFrame(sample_dates_train, columns=["dates"]),
-            pd.DataFrame(ids_train, columns=["ids"]),
-            pd.DataFrame(meta_train, columns=["meta"]),
-        ],
-        axis=1,
-    )
-    df_data = df.iloc[:, :-4]
-    df_target = df.iloc[:, -4]
-    df_date = df.iloc[:, -3]
-    df_ids = df.iloc[:, -2]
-    df_meta = df.iloc[:, -1]
-    crop = int(n / 2)
-    df_data_crop = df_data.iloc[:, crop:-crop]
-    # print(df_data_crop)
-    jittered_columns = []
-    for i in np.arange(1, crop):
-        cols = df_data_crop.columns.values.astype(int)
-        left = cols - i
-        right = cols + i
-        jittered_columns.append(left)
-        jittered_columns.append(right)
-    dfs = []
-    for j_c in jittered_columns:
-        d = df[j_c]
-        d.columns = list(range(d.shape[1]))
-        d = pd.concat([d, df_target, df_date, df_ids, df_meta], axis=1)
-        dfs.append(d)
-    df_augmented = pd.concat(dfs, ignore_index=True)
-    X_train_aug = df_augmented.iloc[:, :-4].values
-    y_train_aug = df_augmented.iloc[:, -4].values.flatten()
-    y_date_aug = df_augmented.iloc[:, -3].values.flatten()
-    y_ids_aug = df_augmented.iloc[:, -2].values.flatten()
-    meta_aug = df_augmented.iloc[:, -1].values.flatten()
-    return X_train_aug, y_train_aug, y_date_aug, y_ids_aug, meta_aug
 
 
 def fold_worker(
@@ -364,6 +292,7 @@ def fold_worker(
         np.isin(y_h_train, [class_healthy, class_unhealthy])
     ]
 
+    #find_svc_max_iteration(out_dir, clf_kernel, X_train, y_train, X_test, y_test)
     start_time = time.time()
     clf.fit(X_train, y_train)
 
@@ -546,6 +475,28 @@ def find_test_samples_with_full_synthetic(
         return new_test_index
 
 
+def find_svc_max_iteration(out_dir, kernel, X_train, Y_train, X_test, Y_test):
+    acc = []
+    for i in np.logspace(0, 5, num=6):
+        print('Training model with iterations: ', i)
+        svc = SVC(kernel=kernel, max_iter=i)
+        svc.fit(X_train, Y_train)
+        acc.append(accuracy_score(Y_test, svc.predict(X_test)) * 100)
+
+    acc = pd.Series(acc, index=np.logspace(0, 5, num=6))
+    plt.figure(figsize=(15, 10))
+    title = 'Graph to show the accuracy of the SVC model as number of iterations increases\nfinal accuracy: ' + str(
+        acc.iloc[-1])
+    plt.title(title)
+    plt.xlabel('Number of iterations')
+    plt.ylabel('Accuracy score')
+    acc.plot.line()
+    plt.show()
+    filepath = out_dir / 'accuracy_vs_iterations.png'
+    print(filepath)
+    plt.savefig(filepath)
+
+
 def cross_validate_svm_fast(
     save_model,
     svc_kernel,
@@ -567,6 +518,8 @@ def cross_validate_svm_fast(
     export_fig_as_pdf=False,
     C=None,
     gamma=None,
+    regularisation=False,
+    max_iter=-1
 ):
     """Cross validate X,y data and plot roc curve with range
     Args:
@@ -614,18 +567,16 @@ def cross_validate_svm_fast(
 
     for kernel in svc_kernel:
         if kernel in ["linear", "rbf"]:
-            if C is None or gamma is None:
-                svc = SVC(kernel=kernel, probability=True)
-
+            if regularisation:
+                svc = SVC(kernel=kernel, probability=True, max_iter=max_iter)
                 if kernel == "rbf":
                     parameters_rbf["kernel"] = [kernel]
-                    clf = GridSearchCV(svc, parameters_rbf, refit=True, return_train_score=True)
+                    clf = GridSearchCV(svc, parameters_rbf, refit=True, return_train_score=True, cv=3)
                 if kernel == "linear":
                     parameters_linear["kernel"] = [kernel]
                     clf = GridSearchCV(svc, parameters_linear, refit=True, return_train_score=True)
             else:
-                clf = SVC(kernel=kernel, probability=True, C=C, gamma=gamma)
-            # clf = GridSearchCV(clf, tuned_parameters_rbf, refit=True, verbose=3)
+                clf = SVC(kernel=kernel, probability=True, C=C, gamma=gamma, max_iter=max_iter)
 
         if kernel in ["knn"]:
             n_neighbors = int(np.sqrt(len(y)))
@@ -702,8 +653,9 @@ def cross_validate_svm_fast(
 
         plot_fold_details(fold_results, meta, meta_columns, out_dir)
 
-        models_dir = out_dir / "models" / f"{type(clf).__name__}_{clf_kernel}_{steps}"
-        regularisation_heatmap(models_dir, out_dir / "regularisation")
+        if regularisation:
+            models_dir = out_dir / "models" / f"{type(clf).__name__}_{clf_kernel}_{steps}"
+            regularisation_heatmap(models_dir, out_dir / "regularisation")
 
         info = (
             f"X shape:{str(X.shape)} healthy:{fold_results[0]['n_healthy']} unhealthy:{fold_results[0]['n_unhealthy']} \n"
@@ -828,9 +780,9 @@ def make_y_hist(data0, data1, out_dir, cv_name, steps, auc, info="", tag=""):
 
 if __name__ == "__main__":
     iris = datasets.load_iris()
-    parameters_rbf = {'kernel': ('linear', 'rbf'), 'C': [1, 10]}
+    parameters = {'kernel': ('linear', 'rbf'), 'C': [1, 10]}
     svc = svm.SVC()
-    clf = GridSearchCV(svc, parameters_rbf, return_train_score=True)
+    clf = GridSearchCV(svc, parameters, return_train_score=True)
     clf.fit(iris.data, iris.target)
     df = pd.DataFrame(clf.cv_results_)
     sorted(clf.cv_results_.keys())

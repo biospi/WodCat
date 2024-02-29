@@ -18,8 +18,8 @@
 # You should have received a copy of the GNU General Public License
 # along with seaMass.  If not, see <http://www.gnu.org/licenses/>.
 #
-from pathlib import Path, PurePath
-from typing import List
+from pathlib import Path
+from typing import List, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -126,8 +126,9 @@ def main(
     export_fig_as_pdf: bool = False,
     skip: bool = False,
     export_hpc_string: bool = False,
-    c: float = None,
-    gamma: float = None
+    c: float = 1.0,
+    gamma: Union[float, str] = "scale",
+    regularisation: bool = False
 ):
     """ML Main machine learning script\n
     Args:\n
@@ -263,90 +264,6 @@ def main(
             output_dir,
             title="Percentage of zeros in activity per sample before normalisation",
         )
-        # plot_mean_groups(
-        #     sub_sample_scales,
-        #     n_scales,
-        #     sfft_window,
-        #     wavelet_f0,
-        #     dwt_window,
-        #     df_norm,
-        #     label_series,
-        #     N_META,
-        #     output_dir / "groups_after_qn",
-        # )
-        #
-        # plot_mean_groups(
-        #     sub_sample_scales,
-        #     n_scales,
-        #     sfft_window,
-        #     wavelet_f0,
-        #     dwt_window,
-        #     data_frame,
-        #     label_series,
-        #     N_META,
-        #     output_dir / "groups_before_qn",
-        # )
-
-        # plot_umap(
-        #     meta_columns,
-        #     data_frame.copy(),
-        #     output_dir / "umap",
-        #     label_series,
-        #     title="UMAP time domain before normalisation",
-        # )
-        #
-        # plot_umap(
-        #     meta_columns,
-        #     df_norm.copy(),
-        #     output_dir / "umap",
-        #     label_series,
-        #     title="UMAP time domain after normalisation",
-        # )
-
-        plot_time_pca(
-            N_META,
-            data_frame.copy(),
-            output_dir / "pca",
-            label_series,
-            title="PCA time domain before normalisation",
-        )
-        plot_time_pca(
-            N_META,
-            df_norm,
-            output_dir / "pca",
-            label_series,
-            title="PCA time domain after normalisation",
-        )
-
-        plot_time_pls(
-            N_META,
-            data_frame.copy(),
-            output_dir / "pls",
-            label_series,
-            title="PLS time domain before normalisation",
-        )
-        plot_time_pls(
-            N_META,
-            df_norm,
-            output_dir / "pls",
-            label_series,
-            title="PLS time domain after normalisation",
-        )
-
-        plot_time_lda(
-            N_META,
-            data_frame.copy(),
-            output_dir / "lda",
-            label_series,
-            title="LDA time domain before normalisation",
-        )
-        plot_time_lda(
-            N_META,
-            data_frame.copy(),
-            output_dir / "lda",
-            label_series,
-            title="LDA time domain after normalisation",
-        )
 
         ntraces = 2
         idx_healthy, idx_unhealthy = plot_groups(
@@ -425,30 +342,6 @@ def main(
     health = df.pop("health")
     df_processed = pd.concat([df, target, health], 1)
 
-    # plot_umap(
-    #     meta_columns,
-    #     df_processed_meta.copy(),
-    #     output_dir / f"umap_{step_slug}",
-    #     label_series,
-    #     title=f"UMAP after {step_slug}",
-    # )
-
-    plot_time_pca(
-        N_META,
-        df_processed_meta,
-        output_dir / f"pca_{step_slug}",
-        label_series,
-        title=f"PCA after {step_slug}",
-    )
-
-    plot_time_pls(
-        N_META,
-        df_processed_meta.copy(),
-        output_dir / f"pls_{step_slug}",
-        label_series,
-        title=f"PLS after {step_slug}",
-    )
-
     process_ml(
         classifiers,
         add_feature,
@@ -474,7 +367,8 @@ def main(
         plot_2d_space=plot_2d_space,
         export_fig_as_pdf=export_fig_as_pdf,
         C=c,
-        gamma=gamma
+        gamma=gamma,
+        regularisation=regularisation
     )
 
 
