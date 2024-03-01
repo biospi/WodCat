@@ -4,6 +4,8 @@ import pickle
 import time
 from sklearn import svm, datasets
 from sklearn.model_selection import GridSearchCV
+
+from eval_recall import eval_recall
 from eval_regularisation import regularisation_heatmap
 from multiprocessing import Manager, Pool
 
@@ -651,6 +653,7 @@ def cross_validate_svm_fast(
             fold_probas = dict([a, list(x)] for a, x in fold_probas.items())
             print("total time (s)= " + str(end - start))
 
+        eval_recall(out_dir / "fold_data")
         plot_fold_details(fold_results, meta, meta_columns, out_dir)
 
         if regularisation:

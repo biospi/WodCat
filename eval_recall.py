@@ -3,13 +3,15 @@ import typer
 import json
 import numpy as np
 from sklearn.metrics import roc_curve, roc_auc_score
+import pandas as pd
 
 
-def main(
+def eval_recall(
     input_folder: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     )
 ):
+    print("Find optimal Sensitivity/Specificity...")
     print(input_folder)
     fold_data_files = list(input_folder.glob("*.json"))
     y_true_list = []
@@ -41,8 +43,16 @@ def main(
 
     auc = roc_auc_score(y_true_list, y_score_list)
     print("AUC:", auc)
+    df = pd.DataFrame()
+    df["auc"] = [auc]
+    df["optimal_threshold"] = [optimal_threshold]
+    df["optimal_sensitivity"] = [optimal_sensitivity]
+    df["optimal_specificity"] = [optimal_specificity]
+    filepath = input_folder.parent / "recall_data.csv"
+    print(filepath)
+    df.to_csv(filepath, index=False)
 
 
 if __name__ == "__main__":
     #"E:\Cats\paper_13\All_100_10_030_008\rbf\_LeaveOneOut\fold_data"
-    typer.run(main)
+    typer.run(eval_recall)
