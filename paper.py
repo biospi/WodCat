@@ -103,9 +103,10 @@ def main(
             print("Running machine learning pipeline...")
             for preprocessing_steps in [
                 [""],
-                ["QN"],
-                ["QN", "ANSCOMBE", "LOG"]
-
+                ["STDS"],
+                ["MINMAX"],
+                ["STDS", "ANSCOMBE"],
+                ["STDS", "ANSCOMBE", "LOG"],
             ]:
                 out_ml_dir, status = run_ml.run(
                     preprocessing_steps=preprocessing_steps,
