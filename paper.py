@@ -43,6 +43,7 @@ def main(
     uob_username: str = 'fo18103',
     out_dirname: str = 'paper',
     clf: str = 'rbf',
+    dataset_path: Path = Path("dataset.csv"),
     n_bootstrap: int = 100,
     ml_exist: bool = False,
     skip_ml: bool = False,
@@ -67,6 +68,7 @@ def main(
                 max_sample=max_sample,
                 day_windows=["All"],
                 n_job=n_job,
+                dataset_path=dataset_path
             )
 
     datasets = sorted([x for x in Path(out_dir).glob("**/*/samples.csv")])
