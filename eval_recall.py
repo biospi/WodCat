@@ -4,6 +4,32 @@ import json
 import numpy as np
 from sklearn.metrics import roc_curve, roc_auc_score
 import pandas as pd
+from tqdm import tqdm
+
+
+
+def test():
+    parent = Path("E:/Cats/paper_13")
+    folders = list(parent.glob("**/fold_data"))
+    dir_list, auc_list, optimal_threshold_list, optimal_sensitivity_list, optimal_specificity_list = [], [], [], [], []
+    for folder in folders:
+        auc, optimal_threshold, optimal_sensitivity, optimal_specificity = eval_recall(folder)
+        auc_list.append(auc)
+        optimal_threshold_list.append(optimal_threshold)
+        optimal_sensitivity_list.append(optimal_sensitivity)
+        optimal_specificity_list.append(optimal_specificity)
+        dir_list.append(folder)
+
+    df = pd.DataFrame()
+    df["auc"] = auc_list
+    df["optimal_threshold"] = optimal_threshold_list
+    df["optimal_sensitivity"] = optimal_sensitivity_list
+    df["optimal_specificity"] = optimal_specificity_list
+    df["directory"] = dir_list
+
+    df = df.sort_values(["auc", "optimal_sensitivity", "optimal_specificity"])
+    print(df)
+    df.to_csv("recall_test.csv", index=False)
 
 
 def eval_recall(
@@ -17,8 +43,7 @@ def eval_recall(
     y_true_list = []
     y_score_list = []
 
-    for file in fold_data_files:
-        print(file)
+    for file in tqdm(fold_data_files):
         with open(file, "r") as fp:
             fold_data = json.load(fp)
             y_true = fold_data["y_test"]
@@ -51,8 +76,10 @@ def eval_recall(
     filepath = input_folder.parent / "recall_data.csv"
     print(filepath)
     df.to_csv(filepath, index=False)
+    return auc, optimal_threshold, optimal_sensitivity, optimal_specificity
 
 
 if __name__ == "__main__":
+    test()
     #"E:\Cats\paper_13\All_100_10_030_008\rbf\_LeaveOneOut\fold_data"
     typer.run(eval_recall)

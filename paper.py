@@ -44,7 +44,7 @@ def main(
     out_dirname: str = 'paper',
     clf: str = 'rbf',
     dataset_path: Path = Path("dataset.csv"),
-    n_bootstrap: int = 100,
+    n_bootstrap: int = 1000,
     ml_exist: bool = False,
     skip_ml: bool = False,
     regularisation: bool = False,
@@ -58,11 +58,11 @@ def main(
     out_dir = data_dir / out_dirname
 
     if create_dataset:
-        for max_sample in [20]:
+        for max_sample in [30]:
             build_dataset.run(
                 w_size=[15],
                 threshs=[10],
-                n_peaks=[1, 2, 3, 4, 5, 6, 7, 8],
+                n_peaks=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
                 data_dir=data_dir,
                 out_dir=out_dir,
                 max_sample=max_sample,
