@@ -58,7 +58,7 @@ def main(
     out_dir = data_dir / out_dirname
 
     if create_dataset:
-        for max_sample in [30]:
+        for max_sample in [40]:
             build_dataset.run(
                 w_size=[15],
                 threshs=[10],
