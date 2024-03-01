@@ -392,7 +392,7 @@ def boostrap_auc_peak(results, out_dir):
                     color=colors[cpt],
                 )
 
-                intervals = pd.eval(df_["median_auc_test_bootstrap"])
+                intervals = pd.eval(df_["median_auc_test_bootstrap"].astype(str)) #todo fix strange bug eval should not be needed, seems that there is a mix of types in the column
                 perct = np.percentile(intervals, [2.5, 50, 97.5], axis=1)
                 top = perct[2, :]
                 bottom = perct[0, :]
@@ -410,7 +410,7 @@ def boostrap_auc_peak(results, out_dir):
                     color=colors[cpt],
                 )
 
-                intervals = pd.eval(df_["median_auc_train_bootstrap"])
+                intervals = pd.eval(df_["median_auc_train_bootstrap"].astype(str)) #same bug here
                 perct = np.percentile(intervals, [2.5, 50, 97.5], axis=1)
                 top = perct[2, :]
                 bottom = perct[0, :]
