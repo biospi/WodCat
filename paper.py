@@ -58,7 +58,7 @@ def main(
     out_dir = data_dir / out_dirname
 
     if create_dataset:
-        for max_sample in [40]:
+        for max_sample in [50]:
             build_dataset.run(
                 w_size=[15],
                 threshs=[10],
@@ -102,11 +102,11 @@ def main(
         else:
             print("Running machine learning pipeline...")
             for preprocessing_steps in [
+                ["L2"],
                 [""],
-                ["STDS"],
                 ["MINMAX"],
-                ["STDS", "ANSCOMBE"],
-                ["STDS", "ANSCOMBE", "LOG"],
+                ["MINMAX", "ANSCOMBE"],
+                ["MINMAX", "ANSCOMBE", "LOG"]
             ]:
                 out_ml_dir, status = run_ml.run(
                     preprocessing_steps=preprocessing_steps,
