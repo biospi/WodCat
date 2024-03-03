@@ -58,7 +58,7 @@ def main(
     out_dir = data_dir / out_dirname
 
     if create_dataset:
-        for max_sample in [50]:
+        for max_sample in [60]:
             build_dataset.run(
                 w_size=[15],
                 threshs=[10],
@@ -102,8 +102,10 @@ def main(
         else:
             print("Running machine learning pipeline...")
             for preprocessing_steps in [
-                ["L2"],
                 [""],
+                ["L2"],
+                ["L2", "ANSCOMBE"],
+                ["L2", "ANSCOMBE", "LOG"]
                 ["MINMAX"],
                 ["MINMAX", "ANSCOMBE"],
                 ["MINMAX", "ANSCOMBE", "LOG"]
