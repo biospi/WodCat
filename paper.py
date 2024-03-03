@@ -105,7 +105,7 @@ def main(
                 [""],
                 ["L2"],
                 ["L2", "ANSCOMBE"],
-                ["L2", "ANSCOMBE", "LOG"]
+                ["L2", "ANSCOMBE", "LOG"],
                 ["MINMAX"],
                 ["MINMAX", "ANSCOMBE"],
                 ["MINMAX", "ANSCOMBE", "LOG"]
