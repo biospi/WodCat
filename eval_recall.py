@@ -9,8 +9,19 @@ from tqdm import tqdm
 
 
 def test():
-    parent = Path("E:/Cats/paper_13")
+    parent = Path("E:/Cats/paper_debug_regularisation_5")
     folders = list(parent.glob("**/fold_data"))
+
+    recall_data = list(parent.glob("**/recall_data.csv"))
+    dfs = []
+    for file in recall_data:
+        df = pd.read_csv(file)
+        df["dataset"] = file
+        dfs.append(df)
+
+    data = pd.concat(dfs)
+    data = data.sort_values(["optimal_sensitivity", "optimal_specificity"])
+
     dir_list, auc_list, optimal_threshold_list, optimal_sensitivity_list, optimal_specificity_list = [], [], [], [], []
     for folder in folders:
         auc, optimal_threshold, optimal_sensitivity, optimal_specificity = eval_recall(folder)

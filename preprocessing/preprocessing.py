@@ -55,6 +55,7 @@ def apply_preprocessing_steps(
             "DWT",
             "SQRT",
             "L2",
+            "L1",
             "CENTER_STD",
             "CENTER",
             "MINMAX",
@@ -88,6 +89,8 @@ def apply_preprocessing_steps(
             )
         if step == "L2":
             df.iloc[:, :-N_META] = Normalizer().transform(df.iloc[:, :-N_META].values)
+        if step == "L1":
+            df.iloc[:, :-N_META] = Normalizer(norm="l1").transform(df.iloc[:, :-N_META].values)
         if step == "ANSCOMBE":
             df.iloc[:, :-N_META] = Anscombe().transform(df.iloc[:, :-N_META].values)
         if step == "SQRT":
