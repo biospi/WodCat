@@ -352,10 +352,12 @@ def boostrap_auc_peak(results, out_dir):
 
     print(df)
 
-    dfs_ntop = [group for _, group in df.groupby(["N top", "time_of_day", "Max sample count per indiv"])]
+    dfs_ntop = [group for _, group in df.groupby(["N top", "time_of_day", "Max sample count per indiv", "Sample length (seconds)"])]
     for df in dfs_ntop:
         ntop = int(df["N top"].values[0])
+        s_length = df["Sample length (seconds)"].values[0]
         fig, ax1 = plt.subplots(figsize=(9.80, 9.80))
+        ax1.set_ylim(0, 1)
         ax2 = ax1.twinx()
         dfs = [group for _, group in df.groupby(["pipeline"])]
 
@@ -448,7 +450,7 @@ def boostrap_auc_peak(results, out_dir):
         fig.tight_layout()
         time_of_day = df["time_of_day"].values[0]
         max_scount = df["Max sample count per indiv"].values[0]
-        filename = f"{time_of_day}_{ntop}_{max_scount}_auc_per_npeak_bootstrap.png"
+        filename = f"{time_of_day}_{ntop}_{max_scount}_{s_length}_auc_per_npeak_bootstrap.png"
         out_dir.mkdir(parents=True, exist_ok=True)
         filepath = out_dir / filename
         print(filepath)
