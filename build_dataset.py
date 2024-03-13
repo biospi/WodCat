@@ -470,7 +470,7 @@ def run(
         cat_data = [group for _, group in df_data.groupby(["cat_id"])]
     else:
         cat_data = get_cat_data(data_dir, bin)
-        dataset_path = dataset_path.parent / f"dataset_{bin}.csv"
+        dataset_path = f"dataset_{bin}.csv"
         print(f"saving {dataset_path}...")
         pd.concat(cat_data).to_csv(dataset_path, index=True)
         #print("done.")
