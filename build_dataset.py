@@ -48,7 +48,7 @@ def create_activity_graph(
     title=None,
     sub_folder="training_sets_time_domain_graphs",
 ):
-    fig = plt.figure(figsize=(600, 400))
+    fig = plt.figure(figsize=(6, 4))
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%Y"))
     plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=2))
     # plt.setp(plt.gca().xaxis.get_majorticklabels(), 'rotation', 90)
@@ -460,7 +460,7 @@ def run(
     """
     #pool = Pool(processes=n_job)
 
-    tot = len(w_size) * len(n_peaks) * len(threshs) * 3 # 3 is for len(['All', 'Day', 'Night'])
+    tot = len(w_size) * len(n_peaks) * len(threshs) * len(day_windows)
     cpt = 0
 
     if dataset_path.exists() and bin == "S":
