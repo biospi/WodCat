@@ -463,7 +463,8 @@ def run(
     tot = len(w_size) * len(n_peaks) * len(threshs) * len(day_windows)
     cpt = 0
 
-    if dataset_path.exists() and bin == "S":
+    print(f"dataset_path={dataset_path}")
+    if dataset_path.exists():
         print(f"loading {dataset_path}")
         df_data = pd.read_csv(dataset_path, index_col="date_time")
         df_data.index = pd.to_datetime(df_data.index)
