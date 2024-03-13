@@ -323,8 +323,8 @@ def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatma
                 df.index.values,
                 activity,
                 out_dir,
-                f"{cat_id}_{i}_{cat_meta['name']}.png",
-                title=f"{cat_id}_{cat_meta['name']}",
+                f"{cat_id}_{i}.png",
+                title=f"{cat_id}",
             )
 
         if out_heatmap:
@@ -337,7 +337,7 @@ def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatma
             if out_heatmap:
                 activity_list_w.append(roi)
                 datetime_list_w.append(df.index.values[0 : len(roi)])
-                individual_list_w.append(f"{cat_meta['name']} {cat_id} {i}")
+                individual_list_w.append(f"{cat_id} {i}")
             total += 1
         pd.DataFrame(meta_names).to_csv(out_dir / "meta_columns.csv", index=False)
 
