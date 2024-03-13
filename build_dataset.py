@@ -67,6 +67,7 @@ def create_activity_graph(
         verticalalignment="top",
         fontsize=10,
     )
+    plt.tight_layout()
     path = folder / sub_folder
     Path(path).mkdir(parents=True, exist_ok=True)
     filepath = f"{path}/{filename}"
