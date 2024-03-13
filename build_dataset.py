@@ -302,7 +302,7 @@ def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatma
     for i, df in enumerate(cat_data):
         print(f"[{run_id}/{tot}] progress[{i}/{len(cat_data)}]...")
 
-        if time_of_day is not 'All':
+        if time_of_day != 'All':
             df = df[df["time_of_day"] == time_of_day]
 
         cat_id = df["cat_id"].values[0]
