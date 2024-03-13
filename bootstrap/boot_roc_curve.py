@@ -12,6 +12,7 @@ from sklearn.metrics import precision_score
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.legend_handler import HandlerBase
+import sys
 
 
 class AnyObjectHandler(HandlerBase):
@@ -458,5 +459,46 @@ def boostrap_auc_peak(results, out_dir):
 
 
 if __name__ == "__main__":
-    # out_dir = Path("E:/Cats/article/ml_build_permutations_thesis_rev/")
-    print()
+
+    res_folder = Path(sys.argv[1])
+    if res_folder is None:
+        res_folder = Path("E:/Cats/paper_debug_regularisation_8/")
+
+    results = []
+    folders = [
+        x
+        for x in res_folder.glob("*/*/*")
+        if x.is_dir()
+    ]
+    for i, item in enumerate(folders):
+        print(f"{i}/{len(folders)}...")
+        print(item)
+        res = main(item, n_bootstrap=100)
+        #auc, optimal_threshold, optimal_sensitivity, optimal_specificity = eval_recall(Path(f"{item}/fold_data"))
+        if res is not None:
+            results.append(res)
+
+    df = pd.DataFrame(
+        results,
+        columns=[
+            "AUC testing (95% CI)",
+            "AUC training (95% CI)",
+            "Class1 Precision testing (95% CI)",
+            "Class1 Precision training (95% CI)",
+            "N training samples",
+            "N testing samples",
+            "N peaks",
+            "Sample length (minutes)",
+            "Classifier",
+            "Pre-processing",
+            "median_auc_test",
+            "path",
+        ],
+    )
+    df = df.sort_values("median_auc_test", ascending=False)
+    df_ = df.sort_values("median_auc_test", ascending=False)
+    df_ = df_.drop("median_auc_test", axis=1)
+    df_ = df_.drop("path", axis=1)
+    df_ = df_.head(20)
+    print(df_.to_latex(index=False))
+    df.to_csv("cat_result_table.csv", index=False)

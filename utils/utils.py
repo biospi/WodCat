@@ -197,12 +197,17 @@ def get_time_of_day(path):
     return time_of_day
 
 
-if __name__ == "__main__":
-    # Example usage:
-    command_list = ['command1', 'command2', 'command3']
-    num_of_commands = len(command_list)
-    create_batch_script('fo18103', 'sscm012844', command_list, num_of_commands)
+def ninefive_confidence_interval(x):
+    # boot_median = [np.median(np.random.choice(x, len(x))) for _ in range(iteration)]
+    x.sort()
+    lo_x_boot = np.percentile(x, 2.5)
+    hi_x_boot = np.percentile(x, 97.5)
+    # print(lo_x_boot, hi_x_boot)
+    return lo_x_boot, hi_x_boot
 
+
+if __name__ == "__main__":
+    print(0)
     # # Example usage with input list [1, 2, 3, ..., 1000000] and k = 10
     # input_list = list(range(1, 1000001))
     # k = 10
