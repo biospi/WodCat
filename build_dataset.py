@@ -58,6 +58,7 @@ def create_activity_graph(
     )
     plt.xlabel("time(1min bin)")
     plt.ylabel("Activity count")
+    plt.xticks(rotation=45)
     fig.suptitle(
         title,
         x=0.5,
