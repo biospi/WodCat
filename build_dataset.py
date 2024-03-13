@@ -48,7 +48,7 @@ def create_activity_graph(
     title=None,
     sub_folder="training_sets_time_domain_graphs",
 ):
-    fig = plt.figure(figsize=(24.20, 7.20))
+    fig = plt.figure(figsize=(600, 400))
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d/%m/%Y"))
     plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=2))
     # plt.setp(plt.gca().xaxis.get_majorticklabels(), 'rotation', 90)
