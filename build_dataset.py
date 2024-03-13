@@ -463,7 +463,7 @@ def run(
     tot = len(w_size) * len(n_peaks) * len(threshs) * 3 # 3 is for len(['All', 'Day', 'Night'])
     cpt = 0
 
-    if dataset_path.exists():
+    if dataset_path.exists() and bin == "S":
         print(f"loading {dataset_path}")
         df_data = pd.read_csv(dataset_path, index_col="date_time")
         df_data.index = pd.to_datetime(df_data.index)
