@@ -490,17 +490,28 @@ if __name__ == "__main__":
             "N training samples",
             "N testing samples",
             "N peaks",
-            "Sample length (minutes)",
+            "Max samples",
+            "n Top",
+            "Sample length (seconds)",
             "Classifier",
             "Pre-processing",
             "median_auc_test",
+            "median_auc_train",
+            "auc_list_test",
+            "auc_list_train",
             "path",
+            "time_of_day"
         ],
     )
     df = df.sort_values("median_auc_test", ascending=False)
     df_ = df.sort_values("median_auc_test", ascending=False)
     df_ = df_.drop("median_auc_test", axis=1)
     df_ = df_.drop("path", axis=1)
+    df_ = df_.drop("time_of_day", axis=1)
+    df_ = df_.drop("auc_list_train", axis=1)
+    df_ = df_.drop("auc_list_test", axis=1)
+    df_ = df_.drop("n Top", axis=1)
+    df_ = df_.drop("Max samples", axis=1)
     df_ = df_.head(20)
     print(df_.to_latex(index=False))
     df.to_csv("cat_result_table.csv", index=False)
