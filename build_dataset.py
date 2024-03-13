@@ -330,7 +330,7 @@ def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatma
         if out_heatmap:
             activity_list.append(activity)
             datetime_list.append(df.index.values)
-            individual_list.append(f"{cat_meta['name']} {cat_id}")
+            individual_list.append(f"{cat_id}")
 
         for roi, timestamp in zip(rois, rois_timestamp):
             _, meta_names = create_training_sets(run_id, roi, timestamp, cat_meta, max_sample, n_peak, w_size, thresh, out_dir, "samples.csv")
@@ -436,7 +436,7 @@ def run(
     out_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
-    dataset_path: Path = Path("E:\dataset.csv"),
+    dataset_path: Path = Path("dataset.csv"),
     bin: str = "S",
     w_size: List[int] = [10, 30, 60, 90],
     threshs: List[int] = [10, 100, 1000],
@@ -470,6 +470,7 @@ def run(
         cat_data = [group for _, group in df_data.groupby(["cat_id"])]
     else:
         cat_data = get_cat_data(data_dir, bin)
+        dataset_path = dataset_path.parent / f"dataset_{bin}.csv"
         print(f"saving {dataset_path}...")
         pd.concat(cat_data).to_csv(dataset_path, index=True)
         #print("done.")
