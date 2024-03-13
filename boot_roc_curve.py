@@ -460,8 +460,9 @@ def boostrap_auc_peak(results, out_dir):
 
 if __name__ == "__main__":
 
-    res_folder = Path(sys.argv[1])
-    if res_folder is None:
+    if len(sys.argv) > 1:
+        res_folder = Path(sys.argv[1])
+    else:
         res_folder = Path("E:/Cats/paper_debug_regularisation_8/")
 
     results = []

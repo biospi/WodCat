@@ -1,14 +1,11 @@
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
 import run_ml
-from bootstrap import boot_roc_curve
+import boot_roc_curve
 from build_dataset import get_cat_data, find_region_of_interest
-from utils._anscombe import anscombe
-from utils._normalisation import QuotientNormalizer
 from utils.utils import time_of_day_
 
 

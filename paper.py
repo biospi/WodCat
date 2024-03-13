@@ -24,13 +24,10 @@ import matplotlib
 matplotlib.use('Agg')
 import build_dataset
 import run_ml
-from bootstrap import boot_roc_curve
+import boot_roc_curve
 from pathlib import Path
 
 from utils.utils import purge_hpc_file, create_batch_script
-
-import platform
-import os
 
 
 def main(
