@@ -343,7 +343,7 @@ def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatma
             total += 1
         pd.DataFrame(meta_names).to_csv(out_dir / "meta_columns.csv", index=False)
 
-    if out_heatmap and len(activity_list_w) != 0:
+    if out_heatmap:
         print("create heatmap...")
         df_herd = pd.DataFrame(activity_list)
         datetime_xaxis = max(datetime_list, key=len)

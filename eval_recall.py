@@ -9,10 +9,10 @@ from tqdm import tqdm
 
 
 def test():
-    parent = Path("E:/Cats/paper_debug_regularisation_5")
-    folders = list(parent.glob("**/fold_data"))
+    input_dir = Path("E:/Cats/paper_debug_regularisation_5")
+    folders = list(input_dir.glob("**/fold_data"))
 
-    recall_data = list(parent.glob("**/recall_data.csv"))
+    recall_data = list(input_dir.glob("**/recall_data.csv"))
     dfs = []
     for file in recall_data:
         df = pd.read_csv(file)
@@ -40,7 +40,9 @@ def test():
 
     df = df.sort_values(["auc", "optimal_sensitivity", "optimal_specificity"])
     print(df)
-    df.to_csv("recall_test.csv", index=False)
+    filepath = input_dir / "recall_test.csv"
+    print(filepath)
+    df.to_csv(filepath, index=False)
 
 
 def eval_recall(

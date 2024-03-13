@@ -49,6 +49,7 @@ def main(
     skip_ml: bool = False,
     regularisation: bool = False,
     n_job: int = 28,
+    build_heatmap: bool = False
 ):
     """Script to reproduce paper results\n
     Args:\n
@@ -56,6 +57,23 @@ def main(
         export_hpc_string: Create .sh submission file for Blue Crystal/Blue Pebble. Please ignore if running locally.
     """
     out_dir = data_dir / out_dirname
+
+    if build_heatmap:
+        #plot all data heatmap
+        build_dataset.run(
+            w_size=[15],
+            threshs=[10],
+            n_peaks=[1],
+            data_dir=data_dir,
+            out_dir=out_dir,
+            max_sample=100,
+            day_windows=["All"],
+            n_job=n_job,
+            dataset_path=dataset_path,
+            out_heatmap=True,
+            bin='T'
+        )
+        exit()
 
     if create_dataset:
         for max_sample in [100]:
