@@ -42,7 +42,6 @@ def plot_heatmap(out_dir, datetime_xaxis, matrix, y_axis, filename, title="title
 
 def create_activity_graph(
     datetime,
-    colors,
     activity,
     folder,
     filename,
@@ -55,7 +54,7 @@ def create_activity_graph(
     # plt.setp(plt.gca().xaxis.get_majorticklabels(), 'rotation', 90)
     # plt.bar(range(0, len(activity)), activity)
     plt.bar(
-        datetime, activity[0 : len(datetime)], color=colors, align="edge", width=0.01
+        datetime, activity[0 : len(datetime)], align="edge", width=0.01
     )
     plt.xlabel("time(1min bin)")
     plt.ylabel("Activity count")
@@ -322,7 +321,6 @@ def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatma
         if bin == "T":
             create_activity_graph(
                 df.index.values,
-                df["color"].values,
                 activity,
                 out_dir,
                 f"{cat_id}_{i}_{cat_meta['name']}.png",
