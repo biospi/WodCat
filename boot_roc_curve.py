@@ -462,8 +462,8 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1:
         res_folder = Path(sys.argv[1])
-        n_job = int(sys.argv[2])
         n_bootstrap = int(sys.argv[2])
+        n_job = int(sys.argv[3])
     else:
         res_folder = Path("E:/Cats/paper_debug_regularisation_8/")
 
