@@ -357,7 +357,7 @@ def boostrap_auc_peak(results, out_dir):
     for df in dfs_ntop:
         ntop = int(df["N top"].values[0])
         s_length = df["Sample length (seconds)"].values[0]
-        fig, ax1 = plt.subplots(figsize=(9.00, 4.80))
+        fig, ax1 = plt.subplots(figsize=(8.00, 4.80))
         ax1.set_ylim(0.45, 1)
         ax2 = ax1.twinx()
         dfs = [group for _, group in df.groupby(["pipeline"])]
@@ -386,7 +386,7 @@ def boostrap_auc_peak(results, out_dir):
             dfs_ = [group for _, group in item.groupby(["Sample length (seconds)"])]
             for df_ in dfs_:
                 print(df_["pipeline"].tolist()[0])
-                label = f"Window size={df_['Sample length (seconds)'].tolist()[0]} sec | {'>'.join(df_['pipeline'].tolist()[0].split('_')[:])}"
+                label = f"Sample length={df_['Sample length (seconds)'].tolist()[0]}s | {'>'.join(df_['pipeline'].tolist()[0].split('_')[:])}"
                 ax1.plot(
                     df_["N peaks"],
                     df_["median_auc_test"],
