@@ -97,7 +97,7 @@ def main(
     dataset_filepath: Path = typer.Option(
         ..., exists=True, file_okay=True, dir_okay=False, resolve_path=True
     ),
-    preprocessing_steps: List[str] = ["QN", "ANSCOMBE", "LOG", "STDS"],
+    preprocessing_steps: List[str] = ["L1", "ANSCOMBE", "LOG", "STDS"],
     class_healthy_label: List[str] = [],
     class_unhealthy_label: List[str] = [],
     meta_columns: List[str] = [],

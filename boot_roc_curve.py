@@ -238,7 +238,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
     mean_fpr_test, mean_tpr_test, thresholds = roc_curve(
         all_test_y_list, all_test_proba_list
     )
-    label = f"Mean ROC Test (Median AUC = {median_auc_test:.2f}, 95% CI [{lo_test_auc:.4f}, {hi_test_auc:.4f}] )"
+    label = f"Median ROC Test (Median AUC = {median_auc_test:.2f}, 95% CI [{lo_test_auc:.4f}, {hi_test_auc:.4f}] )"
     ax_roc_merge.plot(
         mean_fpr_test, mean_tpr_test, color="black", label=label, lw=2, alpha=1
     )
@@ -250,7 +250,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
     mean_fpr_train, mean_tpr_train, thresholds = roc_curve(
         all_train_y_list, all_train_proba_list
     )
-    label = f"Mean ROC Training (Median AUC = {median_auc_train:.2f}, 95% CI [{lo_train_auc:.4f}, {hi_train_auc:.4f}] )"
+    label = f"Median ROC Training (Median AUC = {median_auc_train:.2f}, 95% CI [{lo_train_auc:.4f}, {hi_train_auc:.4f}] )"
 
     ax_roc_merge.plot(
         mean_fpr_train, mean_tpr_train, color="red", label=label, lw=2, alpha=1
