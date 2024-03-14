@@ -357,7 +357,7 @@ def boostrap_auc_peak(results, out_dir):
     for df in dfs_ntop:
         ntop = int(df["N top"].values[0])
         s_length = df["Sample length (seconds)"].values[0]
-        fig, ax1 = plt.subplots(figsize=(4.80, 480))
+        fig, ax1 = plt.subplots(figsize=(4.80, 4.80))
         ax1.set_ylim(0.45, 1)
         ax2 = ax1.twinx()
         dfs = [group for _, group in df.groupby(["pipeline"])]
