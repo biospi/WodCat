@@ -433,17 +433,17 @@ def boostrap_auc_peak(results, out_dir):
         fig.suptitle("Evolution of AUC(training and testing) with N peak increase")
         ax1.set_xlabel("Number of peaks")
         ax1.set_ylabel("Median AUC")
-        ax2.set_ylabel("Number of samples(high activity peak window)")
+        ax2.set_ylabel("Number of samples")
         # plt.legend()
         # ax1.legend(loc="lower right").set_visible(True)
-        ax2.legend(loc="upper left").set_visible(True)
+        ax2.legend(loc="lower left").set_visible(True)
 
         color_data = []
         for item in colors_:
             color_data.append((item, "--"))
 
         ax1.legend(
-            color_data, label_, loc="lower  right", handler_map={tuple: AnyObjectHandler()}
+            color_data, label_, loc="lower right", handler_map={tuple: AnyObjectHandler()}
         )
 
         ax1.grid()
