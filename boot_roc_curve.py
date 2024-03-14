@@ -463,6 +463,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         res_folder = Path(sys.argv[1])
         n_job = int(sys.argv[2])
+        n_bootstrap = int(sys.argv[2])
     else:
         res_folder = Path("E:/Cats/paper_debug_regularisation_8/")
 
@@ -475,7 +476,7 @@ if __name__ == "__main__":
     for i, item in enumerate(folders):
         print(f"{i}/{len(folders)}...")
         print(item)
-        res = main(item, n_bootstrap=100, n_job=n_job)
+        res = main(item, n_bootstrap=n_bootstrap, n_job=n_job)
         #auc, optimal_threshold, optimal_sensitivity, optimal_specificity = eval_recall(Path(f"{item}/fold_data"))
         if res is not None:
             results.append(res)
