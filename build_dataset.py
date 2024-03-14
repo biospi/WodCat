@@ -483,6 +483,9 @@ def run(
         for w in w_size:
             for n_peak in n_peaks:
                 for time_of_day in day_windows:
+                    if n_peak > t:
+                        print(f"top {t} peaks must be >= n_peak {n_peak} for permutation of {n_peak} peaks. setting top ranks peak to {n_peak}")
+                        t = n_peak
                     dirname = f"{max_sample}_{t}_{str(w).zfill(3)}_{str(n_peak).zfill(3)}"
                     if time_of_day is not None:
                         dirname = f"{time_of_day}_{max_sample}_{t}_{str(w).zfill(3)}_{str(n_peak).zfill(3)}"

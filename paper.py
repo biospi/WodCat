@@ -77,7 +77,7 @@ def main(
             build_dataset.run(
                 w_size=[30, 60, 120],
                 threshs=[10],
-                n_peaks=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+                n_peaks=[11],
                 data_dir=data_dir,
                 out_dir=out_dir,
                 max_sample=max_sample,
