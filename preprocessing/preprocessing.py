@@ -94,7 +94,7 @@ def apply_preprocessing_steps(
         if step == "ANSCOMBE":
             df.iloc[:, :-N_META] = Anscombe().transform(df.iloc[:, :-N_META].values)
         if step == "L1SCALE":
-            df.iloc[:, :-N_META] = L1Scaler(out_dir=graph_outputdir / step, output_graph=output_qn_graph, animal_ids=df["id"].values,
+            df.iloc[:, :-N_META] = L1Scaler(out_dir=graph_outputdir / step, output_graph=True, animal_ids=df["id"].values,
                 labels=df["target"].values).transform(df.iloc[:, :-N_META].values)
         if step == "SQRT":
             df.iloc[:, :-N_META] = Sqrt().transform(df.iloc[:, :-N_META].values)

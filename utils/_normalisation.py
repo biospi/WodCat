@@ -36,6 +36,21 @@ def l1scale(X, out_dir, output_graph, animal_ids, labels):
     median_array = np.median(X, axis=0)
     median_array[median_array <= 0] = 1
     X_scaled = X * median_array
+    zmin, zmax = np.nanmin(X_scaled), np.nanmax(X)
+    if output_graph:
+        traces.append(
+            plotHeatmap(
+                zmin,
+                zmax,
+                np.array(X_scaled).copy(),
+                out_dir_,
+                "STEP 1 | Median scale",
+                "1_X_samples.html",
+                y_log=False,
+                xaxis_title="Time (in minutes)",
+                yaxis_title="Samples"
+            )
+        )
     return X_scaled
 
 
