@@ -119,8 +119,8 @@ def main(
             for preprocessing_steps in [
                 [""],
                 ["L1"],
-                ["L1", "ANSCOMBE"],
-                ["L1", "ANSCOMBE", "LOG"]
+                ["L1", "L1SCALE", "ANSCOMBE"],
+                ["L1", "L1SCALE", "ANSCOMBE", "LOG"]
             ]:
                 out_ml_dir, status = run_ml.run(
                     preprocessing_steps=preprocessing_steps,

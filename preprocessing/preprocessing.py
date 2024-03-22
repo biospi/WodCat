@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler, Normalizer
 
 from cwt._cwt import STFT, CWT, CWTVisualisation, DWT
 from utils._anscombe import Anscombe, Sqrt, Log
-from utils._normalisation import CenterScaler, QuotientNormalizer
+from utils._normalisation import CenterScaler, QuotientNormalizer, L1Scaler
 from utils.resampling import resample_s
 
 
@@ -93,6 +93,9 @@ def apply_preprocessing_steps(
             df.iloc[:, :-N_META] = Normalizer(norm="l1").transform(df.iloc[:, :-N_META].values)
         if step == "ANSCOMBE":
             df.iloc[:, :-N_META] = Anscombe().transform(df.iloc[:, :-N_META].values)
+        if step == "L1SCALE":
+            df.iloc[:, :-N_META] = L1Scaler(out_dir=graph_outputdir / step, output_graph=output_qn_graph, animal_ids=df["id"].values,
+                labels=df["target"].values).transform(df.iloc[:, :-N_META].values)
         if step == "SQRT":
             df.iloc[:, :-N_META] = Sqrt().transform(df.iloc[:, :-N_META].values)
         if step == "LOG":

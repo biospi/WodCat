@@ -6,10 +6,37 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.utils import check_array
+from pathlib import Path
 
 from utils._anscombe import anscombe
 
 np.random.seed(0)
+
+
+def l1scale(X, out_dir, output_graph, animal_ids, labels):
+    out_dir_ = out_dir / "_l1normalisation"
+    traces = []
+    X = X.astype(float)
+    X_o = X.copy()
+    zmin, zmax = np.nanmin(X), np.nanmax(X)
+    if output_graph:
+        traces.append(
+            plotHeatmap(
+                zmin,
+                zmax,
+                np.array(X).copy(),
+                out_dir_,
+                "STEP 0 | Samples",
+                "0_X_samples.html",
+                y_log=False,
+                xaxis_title="Time (in minutes)",
+                yaxis_title="Samples"
+            )
+        )
+    median_array = np.median(X, axis=0)
+    median_array[median_array <= 0] = 1
+    X_scaled = X * median_array
+    return X_scaled
 
 
 def normalize(X, out_dir, output_graph, enable_qn_peak_filter, animal_ids, labels):
@@ -18,26 +45,26 @@ def normalize(X, out_dir, output_graph, enable_qn_peak_filter, animal_ids, label
     X = X.astype(float)
     X_o = X.copy()
 
-    if enable_qn_peak_filter:
-        X_peak_mask = X.copy()
-        X_peak_mask[:] = np.nan
-        n_peak = int(np.ceil(X.shape[1]/(4*60)))
-        stride = int(X.shape[1] / n_peak / 2)
-        w = 1
-
-        if n_peak == 1:
-            for i in range(X.shape[0]):
-                    X_peak_mask[i, stride - w:stride + w+1] = X[i, stride - w:stride + w+1]
-        else:
-            for i in range(X.shape[0]):
-                cpt = 0
-                for j in range(stride, X.shape[1], stride):
-                    cpt += 1
-                    if cpt % 2 == 0:
-                        continue
-                    #print(j)
-                    X_peak_mask[i, j-w:j+w] = X[i, j-w:j+w]
-        X = X_peak_mask
+    # if enable_qn_peak_filter:
+    #     X_peak_mask = X.copy()
+    #     X_peak_mask[:] = np.nan
+    #     n_peak = int(np.ceil(X.shape[1]/(4*60)))
+    #     stride = int(X.shape[1] / n_peak / 2)
+    #     w = 1
+    #
+    #     if n_peak == 1:
+    #         for i in range(X.shape[0]):
+    #                 X_peak_mask[i, stride - w:stride + w+1] = X[i, stride - w:stride + w+1]
+    #     else:
+    #         for i in range(X.shape[0]):
+    #             cpt = 0
+    #             for j in range(stride, X.shape[1], stride):
+    #                 cpt += 1
+    #                 if cpt % 2 == 0:
+    #                     continue
+    #                 #print(j)
+    #                 X_peak_mask[i, j-w:j+w] = X[i, j-w:j+w]
+    #     X = X_peak_mask
 
     zmin, zmax = np.nanmin(np.log(anscombe(X))), np.nanmax(np.log(anscombe(X)))
     if np.isinf(zmin) or np.isnan(zmin):
@@ -417,6 +444,44 @@ def createSyntheticActivityData(n_samples=4):
     return dataset
 
 
+class L1Scaler(TransformerMixin, BaseEstimator):
+    def __init__(self, *, out_dir=None, copy=True, output_graph=False, animal_ids=None, labels=None):
+        self.out_dir = out_dir
+        self.copy = copy
+        self.output_graph = output_graph
+        self.animal_ids = animal_ids
+        self.labels = labels
+
+    def fit(self, X, y=None):
+        """Do nothing and return the estimator unchanged
+
+        This method is just there to implement the usual API and hence
+        work in pipelines.
+
+        Parameters
+        ----------
+        X : array-like
+        """
+        self._validate_data(X, accept_sparse="csr")
+        return self
+
+    def transform(self, X, copy=None):
+        """QN
+
+        Parameters
+        ----------
+        X : {array-like, sparse matrix}, shape [n_samples, n_features]
+            The data to normalize, row by row. scipy.sparse matrices should be
+            in CSR format to avoid an un-necessary copy.
+        copy : bool, optional (default: None)
+            Copy the input X or not.
+        """
+        # copy = copy if copy is not None else self.copy
+        X = check_array(X, accept_sparse="csr")
+        scaled = l1scale(X, self.out_dir, self.output_graph, self.animal_ids, self.labels)
+        return scaled
+
+
 if __name__ == "__main__":
     print("********QuotientNormalizer*********")
     df = pd.DataFrame(
@@ -431,26 +496,26 @@ if __name__ == "__main__":
     )
     X = df.values
     print("X=", X)
-    X_centered = CenterScaler().transform(X)
+    # X_centered = CenterScaler().transform(X)
 
-    out_dir = "F:/Data2/_normalisation_1"
-    X_normalized = QuotientNormalizer(out_dir=out_dir).transform(X)
+    out_dir = Path("F:/Data2/_normalisation_1")
+    X_normalized = L1Scaler(out_dir=out_dir, output_graph=True).transform(X)
     # plotData(X, title="Activity sample before quotient normalisation")
     # plotData(X_normalized, title="Activity sample after quotient normalisation")
 
-    print("after normalisation.")
-    print(X_normalized)
-    print("************************************")
-
-    out_dir = "F:/Data2/_normalisation_2"
-    X = createSyntheticActivityData()
-    plotLine(X, out_dir=out_dir, title="Activity sample before quotient normalisation")
-
-    X_normalized = QuotientNormalizer(out_dir=out_dir).transform(X)
-
-    plotLine(
-        X_normalized,
-        out_dir=out_dir,
-        title="Activity sample after quotient normalisation",
-    )
-    print()
+    # print("after normalisation.")
+    # print(X_normalized)
+    # print("************************************")
+    #
+    # out_dir = Path("F:/Data2/_normalisation_2")
+    # X = createSyntheticActivityData()
+    # plotLine(X, out_dir=out_dir, title="Activity sample before quotient normalisation")
+    #
+    # X_normalized = QuotientNormalizer(out_dir=out_dir).transform(X)
+    #
+    # plotLine(
+    #     X_normalized,
+    #     out_dir=out_dir,
+    #     title="Activity sample after quotient normalisation",
+    # )
+    # print()
