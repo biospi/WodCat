@@ -1,7 +1,7 @@
 import os
 import random
 import shutil
-from itertools import permutations
+from itertools import permutations, combination
 from multiprocessing import Pool
 from pathlib import Path
 from typing import List
@@ -178,13 +178,13 @@ def get_cat_meta(output_dir, cat_id, output_fig=True):
 def build_n_peak_samples(run_id, tot, n_peak, rois, rois_timestamp, max_sample):
     print(f"[{run_id}/{tot}] number of peaks is 1, sample shape is{rois.shape}")
     idxs_peaks = np.arange(rois.shape[0])
-    permutation = list(permutations(idxs_peaks, n_peak))
+    combinat = list(combination(idxs_peaks, n_peak))
     try:
-        rois_idxs = random.sample(permutation, k=max_sample)
+        rois_idxs = random.sample(combinat, k=max_sample)
     except ValueError as e:
         print(e)
         print(f"There are less samples than max_sample={max_sample}")
-        rois_idxs = permutation
+        rois_idxs = combinat
 
     #build augmented sample by concatenating permutations of peaks
     n_peak_samples = []
