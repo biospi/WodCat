@@ -434,6 +434,7 @@ xaxis_title=None, yaxis_title=None
     fig.add_trace(trace, row=1, col=1)
     fig.update_layout(title_text=title, xaxis_title=xaxis_title, yaxis_title=yaxis_title)
     out_dir.mkdir(parents=True, exist_ok=True)
+    print(out_dir)
     file_path = out_dir / filename.replace("=", "_").lower()
     print(file_path)
     fig.write_html(file_path.as_posix())
