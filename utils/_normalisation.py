@@ -35,7 +35,7 @@ def l1scale(X, out_dir, output_graph, animal_ids, labels):
         )
     median_array = np.median(X, axis=0)
     median_array[median_array <= 0] = 1
-    X_scaled = X * median_array
+    X_scaled = X + median_array
     zmin, zmax = np.nanmin(X_scaled), np.nanmax(X)
     if output_graph:
         traces.append(
