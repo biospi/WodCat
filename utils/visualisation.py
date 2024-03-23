@@ -343,7 +343,7 @@ def plot_groups(
     filename = f"{stepid}_{title.replace(' ', '_')}_heatmap.html"
     filepath = graph_outputdir / filename
     print(filepath)
-    fig_.write_html(filepath)
+    fig_.write_html(filepath.as_posix())
 
     fig.clear()
     plt.close(fig)
