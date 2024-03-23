@@ -25,6 +25,7 @@ matplotlib.use('Agg')
 import build_dataset
 import run_ml
 import boot_roc_curve
+import shutil
 from pathlib import Path
 
 from utils.utils import purge_hpc_file, create_batch_script
@@ -125,6 +126,10 @@ def main(
                 pre_visu = False #export grapth just for the first run to save storage space
                 if i == 0:
                     pre_visu = True
+
+                if not ml_exist and out_dir.exists():
+                    shutil.rmtree(out_dir)
+
                 out_ml_dir, status = run_ml.run(
                     preprocessing_steps=preprocessing_steps,
                     export_hpc_string=export_hpc_string,

@@ -438,7 +438,6 @@ xaxis_title=None, yaxis_title=None
     file_path = out_dir / filename.replace("=", "_").lower()
     print(file_path)
     fig.write_html(file_path.as_posix())
-    exit()
     return trace, title
 
 
