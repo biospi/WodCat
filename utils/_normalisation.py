@@ -392,7 +392,7 @@ def plotLine(
     out_dir.mkdir(parents=True, exist_ok=True)
     file_path = out_dir / filename.replace("=", "_").lower()
     print(file_path)
-    fig.write_html(str(file_path))
+    fig.write_html(file_path.as_posix())
     return trace, title
 
 
@@ -436,7 +436,8 @@ xaxis_title=None, yaxis_title=None
     out_dir.mkdir(parents=True, exist_ok=True)
     file_path = out_dir / filename.replace("=", "_").lower()
     print(file_path)
-    fig.write_html(str(file_path))
+    fig.write_html(file_path.as_posix())
+    exit()
     return trace, title
 
 
