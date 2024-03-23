@@ -239,7 +239,7 @@ def main(
             animal_ids,
             data_frame.copy(),
             output_dir,
-            ["L1"],
+            ["L1", "L1SCALE"],
             class_healthy_label,
             class_unhealthy_label,
             clf_name="SVM_L1_VISU",
@@ -333,7 +333,7 @@ def main(
             clf_name="SVM",
             n_scales=n_scales,
             sub_sample_scales=sub_sample_scales,
-            enable_qn_peak_filter=enable_qn_peak_filter,
+            enable_qn_peak_filter=enable_qn_peak_filter
         )
         df_processed_list.append(df_processed)
 
