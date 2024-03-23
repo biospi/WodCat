@@ -98,7 +98,7 @@ def main(
         purge_hpc_file("hpc_ln.txt")
 
     results = []
-    for dataset in datasets:
+    for i, dataset in enumerate(datasets):
         # if int(dataset.parent.parent.name.split('_')[-1]) < 4: #todo remove
         #     continue
         meta_columns_file = dataset.parent / "meta_columns.csv"
@@ -122,6 +122,9 @@ def main(
                 ["L1", "L1SCALE", "ANSCOMBE"],
                 ["L1", "L1SCALE", "ANSCOMBE", "LOG"]
             ]:
+                pre_visu = False #export grapth just for the first run to save storage space
+                if i == 0:
+                    pre_visu = True
                 out_ml_dir, status = run_ml.run(
                     preprocessing_steps=preprocessing_steps,
                     export_hpc_string=export_hpc_string,
@@ -131,7 +134,8 @@ def main(
                     out_dir=out_dir,
                     skip=skip_ml,
                     n_job=n_job,
-                    clf=clf
+                    clf=clf,
+                    pre_visu=pre_visu
                 )
                 if export_hpc_string:
                     continue

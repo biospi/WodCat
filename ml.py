@@ -247,7 +247,8 @@ def main(
             keep_meta=True,
             output_qn_graph=output_qn_graph,
             sub_sample_scales=sub_sample_scales,
-            enable_qn_peak_filter=enable_qn_peak_filter
+            enable_qn_peak_filter=enable_qn_peak_filter,
+            output_l1_graph=True
         )
 
         plot_zeros_distrib(
