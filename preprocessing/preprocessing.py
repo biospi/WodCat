@@ -35,6 +35,7 @@ def apply_preprocessing_steps(
     output_l1_graph=False,
     enable_qn_peak_filter=False,
     sub_sample_scales=1,
+    df_o = None
 ):
     time_freq_shape = None
     N_META = len(meta_columns)
@@ -96,7 +97,7 @@ def apply_preprocessing_steps(
             df.iloc[:, :-N_META] = Anscombe().transform(df.iloc[:, :-N_META].values)
         if step == "L1SCALE":
             df.iloc[:, :-N_META] = L1Scaler(out_dir=graph_outputdir / step, output_graph=output_l1_graph, animal_ids=df["id"].values,
-                labels=df["target"].values).transform(df.iloc[:, :-N_META].values)
+                labels=df["target"].values).transform(df_o.iloc[:, :-N_META].values, df.iloc[:, :-N_META].values)
         if step == "SQRT":
             df.iloc[:, :-N_META] = Sqrt().transform(df.iloc[:, :-N_META].values)
         if step == "LOG":

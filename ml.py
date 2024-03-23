@@ -248,7 +248,8 @@ def main(
             output_qn_graph=output_qn_graph,
             sub_sample_scales=sub_sample_scales,
             enable_qn_peak_filter=enable_qn_peak_filter,
-            output_l1_graph=True
+            output_l1_graph=True,
+            df_o=data_frame.copy()
         )
 
         plot_zeros_distrib(
@@ -333,7 +334,8 @@ def main(
             clf_name="SVM",
             n_scales=n_scales,
             sub_sample_scales=sub_sample_scales,
-            enable_qn_peak_filter=enable_qn_peak_filter
+            enable_qn_peak_filter=enable_qn_peak_filter,
+            df_o=data_frame.copy()
         )
         df_processed_list.append(df_processed)
 

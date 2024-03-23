@@ -13,11 +13,10 @@ from utils._anscombe import anscombe
 np.random.seed(0)
 
 
-def l1scale(X, out_dir, output_graph, animal_ids, labels):
+def l1scale(X_o, X, out_dir, output_graph, animal_ids, labels):
     out_dir_ = out_dir / "_l1normalisation"
     traces = []
     X = X.astype(float)
-    X_o = X.copy()
     zmin, zmax = np.nanmin(X), np.nanmax(X)
     if output_graph:
         traces.append(
@@ -33,10 +32,10 @@ def l1scale(X, out_dir, output_graph, animal_ids, labels):
                 yaxis_title="Samples"
             )
         )
-    median_array = np.median(X, axis=0)
+    median_array = np.median(X_o, axis=0)
     median_array[median_array <= 0] = 1
-    X_scaled = X + median_array
-    zmin, zmax = np.nanmin(X_scaled), np.nanmax(X)
+    X_scaled = X * median_array
+    zmin, zmax = np.nanmin(X_scaled), np.nanmax(X_scaled)
     if output_graph:
         traces.append(
             plotHeatmap(
@@ -480,8 +479,8 @@ class L1Scaler(TransformerMixin, BaseEstimator):
         self._validate_data(X, accept_sparse="csr")
         return self
 
-    def transform(self, X, copy=None):
-        """QN
+    def transform(self, X_o, X, copy=None):
+        """
 
         Parameters
         ----------
@@ -493,7 +492,7 @@ class L1Scaler(TransformerMixin, BaseEstimator):
         """
         # copy = copy if copy is not None else self.copy
         X = check_array(X, accept_sparse="csr")
-        scaled = l1scale(X, self.out_dir, self.output_graph, self.animal_ids, self.labels)
+        scaled = l1scale(X_o, X, self.out_dir, self.output_graph, self.animal_ids, self.labels)
         return scaled
 
 
