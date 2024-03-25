@@ -342,14 +342,16 @@ def boostrap_auc_peak(results, out_dir):
             "time_of_day"
         ],
     )
+
     df = df[~pd.isna(df["median_auc_test"])]
     df.loc[
         df["median_auc_test"] <= 0.5, "median_auc_test"
-    ] = 0.5  # skitlearn can auc <0.5 are cahnce
+    ] = 0.5  # skitlearn can output auc <0.5 those are chance
     # df = df[df["N peaks"] < 6]
     df = df.sort_values("N peaks", ascending=True)
 
     df["pipeline"] = df["Pre-processing"] + "->" + df["Classifier"]
+    df["N peaks"] = df["N peaks"].astype(int)
 
     print(df)
 
@@ -357,7 +359,7 @@ def boostrap_auc_peak(results, out_dir):
     for df in dfs_ntop:
         ntop = int(df["N top"].values[0])
         s_length = df["Sample length (seconds)"].values[0]
-        fig, ax1 = plt.subplots(figsize=(8.00, 4.80))
+        fig, ax1 = plt.subplots(figsize=(8.00, 5.80))
         ax1.set_ylim(0.45, 1)
         ax2 = ax1.twinx()
         dfs = [group for _, group in df.groupby(["pipeline"])]
