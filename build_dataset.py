@@ -175,9 +175,9 @@ def get_cat_meta(output_dir, cat_id, output_fig=True):
     }
 
 
-def build_n_peak_samples(run_id, tot, n_peak, rois, rois_timestamp, max_sample):
+def build_n_peak_samples(run_id, tot, n_peak, rois, rois_timestamp, max_sample, thresh):
     print(f"[{run_id}/{tot}] number of peaks is 1, sample shape is{rois.shape}")
-    idxs_peaks = np.arange(rois.shape[0])
+    idxs_peaks = np.arange(1+thresh)
     combinat = list(combinations(idxs_peaks, n_peak))
     try:
         rois_idxs = random.sample(combinat, k=max_sample)
@@ -313,7 +313,7 @@ def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatma
         rois = []
         if w_size is not None:
             rois, rois_timestamp = find_region_of_interest(run_id, tot, timestamp, activity, w_size, thresh)
-            rois = build_n_peak_samples(run_id, tot, n_peak, rois, rois_timestamp, max_sample)
+            rois = build_n_peak_samples(run_id, tot, n_peak, rois, rois_timestamp, max_sample, thresh)
             rois_timestamp = rois[:, -n_peak:]
             rois = rois[:, :-n_peak].astype(int)
 
