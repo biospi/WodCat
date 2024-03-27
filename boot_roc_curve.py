@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from matplotlib.legend_handler import HandlerBase
 import sys
-
+np.random.seed(0)
 
 class AnyObjectHandler(HandlerBase):
     def create_artists(
@@ -36,7 +36,7 @@ def worker(
     data,
     i,
     tot,
-    paths,
+    bootstrap,
     xaxis_train,
     xaxis_test,
     auc_list_test,
@@ -53,7 +53,7 @@ def worker(
     prec_list_test = []
     prec_list_train = []
     print(f"bootstrap results progress {i}/{tot}...")
-    bootstrap = np.random.choice(paths, size=len(paths), replace=True)
+
     all_test_proba = []
     all_test_y = []
     all_train_proba = []
@@ -105,12 +105,14 @@ def worker(
         precision_score(all_train_y, (np.array(all_train_proba) > 0.5).astype(int))
     )
 
-    pd.DataFrame(all_test_y_list).to_pickle(out_dir / "all_test_y_list.pkl")
-    pd.DataFrame(all_test_proba_list).to_pickle(out_dir / "all_test_proba_list.pkl")
-    pd.DataFrame(all_train_y_list).to_pickle(out_dir / "all_train_y_list.pkl")
-    pd.DataFrame(all_train_proba_list).to_pickle(out_dir / "all_train_proba_list.pkl")
-    pd.DataFrame(prec_list_test).to_pickle(out_dir / "prec_list_test.pkl")
-    pd.DataFrame(prec_list_train).to_pickle(out_dir / "prec_list_train.pkl")
+    out = out_dir / str(i)
+    out.mkdir(parents=True, exist_ok=True)
+    pd.DataFrame(all_test_y_list).to_pickle(out / "all_test_y_list.pkl")
+    pd.DataFrame(all_test_proba_list).to_pickle(out / "all_test_proba_list.pkl")
+    pd.DataFrame(all_train_y_list).to_pickle(out / "all_train_y_list.pkl")
+    pd.DataFrame(all_train_proba_list).to_pickle(out / "all_train_proba_list.pkl")
+    pd.DataFrame(prec_list_test).to_pickle(out / "prec_list_test.pkl")
+    pd.DataFrame(prec_list_train).to_pickle(out / "prec_list_train.pkl")
     #print(f"{i}/{tot} done.")
 
 
@@ -166,6 +168,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
         xaxis_train = manager.list()
         xaxis_test = manager.list()
         for i in range(n_bootstrap):
+            bootstrap = np.random.choice(paths, size=len(paths), replace=True)
             pool.apply_async(
                 worker,
                 (
@@ -173,7 +176,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
                     data,
                     i,
                     n_bootstrap,
-                    paths,
+                    bootstrap,
                     xaxis_train,
                     xaxis_test,
                     auc_list_test,
@@ -193,12 +196,22 @@ def main(path=None, n_bootstrap=100, n_job=6):
         auc_list_test = list(auc_list_test)
         auc_list_train = list(auc_list_train)
 
-    all_test_y_list = pd.read_pickle(out_dir / "all_test_y_list.pkl").values
-    all_test_proba_list = pd.read_pickle(out_dir / "all_test_proba_list.pkl").values
-    all_train_y_list = pd.read_pickle(out_dir / "all_train_y_list.pkl").values
-    all_train_proba_list = pd.read_pickle(out_dir / "all_train_proba_list.pkl").values
-    prec_list_test = pd.read_pickle(out_dir / "prec_list_test.pkl").values
-    prec_list_train = pd.read_pickle(out_dir / "prec_list_train.pkl").values
+    all_test_y_list = []
+    all_test_proba_list = []
+    all_train_y_list = []
+    all_train_proba_list = []
+    prec_list_test = []
+    prec_list_train = []
+    for i in range(n_bootstrap):
+        all_test_y_list.append(pd.read_pickle(out_dir / str(i) / "all_test_y_list.pkl").values.flatten())
+        all_test_proba_list.append(pd.read_pickle(out_dir / str(i) / "all_test_proba_list.pkl").values.flatten())
+        all_train_y_list.append(pd.read_pickle(out_dir / str(i) / "all_train_y_list.pkl").values.flatten())
+        all_train_proba_list.append(pd.read_pickle(out_dir / str(i) / "all_train_proba_list.pkl").values.flatten())
+        prec_list_test.append(pd.read_pickle(out_dir / str(i) / "prec_list_test.pkl").values.flatten())
+        prec_list_train.append(pd.read_pickle(out_dir / str(i) / "prec_list_train.pkl").values.flatten())
+
+    # prec_list_test = np.mean(prec_list_test)
+    # prec_list_train = np.mean(prec_list_train)
 
     print("building roc...")
     median_auc_test = np.nanmedian(auc_list_test)
@@ -235,10 +248,24 @@ def main(path=None, n_bootstrap=100, n_job=6):
         [0, 1], [0, 1], linestyle="--", lw=2, color="orange", label="Chance", alpha=1
     )
 
-    mean_fpr_test, mean_tpr_test, thresholds = roc_curve(
-        all_test_y_list, all_test_proba_list
-    )
-    label = f"Median ROC Test (Median AUC = {median_auc_test:.2f}, 95% CI [{lo_test_auc:.4f}, {hi_test_auc:.4f}] )"
+
+    label = f"ROC Test (Median AUC = {median_auc_test:.2f}, 95% CI [{lo_test_auc:.4f}, {hi_test_auc:.4f}] )"
+
+    mean_fpr_test, mean_tpr_test = [], []
+    for y_list, proba_list in zip(all_test_y_list, all_test_proba_list):
+        mean_fpr, mean_tpr, thresholds = roc_curve(
+            y_list, proba_list
+        )
+        mean_fpr_test.append(mean_fpr)
+        mean_tpr_test.append(mean_tpr)
+
+    max_length = max(len(arr) for arr in mean_fpr_test)
+    mean_fpr_test = [np.pad(arr, (0, max_length - len(arr)), 'constant', constant_values=1) for arr in mean_fpr_test]
+    mean_tpr_test = [np.pad(arr, (0, max_length - len(arr)), 'constant', constant_values=1) for arr in mean_tpr_test]
+
+    mean_fpr_test = np.median(mean_fpr_test, axis=0)
+    mean_tpr_test = np.median(mean_tpr_test, axis=0)
+
     ax_roc_merge.plot(
         mean_fpr_test, mean_tpr_test, color="black", label=label, lw=2, alpha=1
     )
@@ -247,10 +274,21 @@ def main(path=None, n_bootstrap=100, n_job=6):
     ax_roc_merge.legend(loc="lower right")
     # fig.show()
 
-    mean_fpr_train, mean_tpr_train, thresholds = roc_curve(
-        all_train_y_list, all_train_proba_list
-    )
-    label = f"Median ROC Training (Median AUC = {median_auc_train:.2f}, 95% CI [{lo_train_auc:.4f}, {hi_train_auc:.4f}] )"
+    label = f"ROC Training (Median AUC = {median_auc_train:.2f}, 95% CI [{lo_train_auc:.4f}, {hi_train_auc:.4f}] )"
+    mean_fpr_train, mean_tpr_train = [], []
+    for y_list, proba_list in zip(all_train_y_list, all_train_proba_list):
+        mean_fpr, mean_tpr, thresholds = roc_curve(
+            y_list, proba_list
+        )
+        mean_fpr_train.append(mean_fpr)
+        mean_tpr_train.append(mean_tpr)
+
+    max_length = max(len(arr) for arr in mean_fpr_train)
+    mean_fpr_train = [np.pad(arr, (0, max_length - len(arr)), 'constant', constant_values=1) for arr in mean_fpr_train]
+    mean_tpr_train = [np.pad(arr, (0, max_length - len(arr)), 'constant', constant_values=1) for arr in mean_tpr_train]
+
+    mean_fpr_train = np.median(mean_fpr_train, axis=0)
+    mean_tpr_train = np.median(mean_tpr_train, axis=0)
 
     ax_roc_merge.plot(
         mean_fpr_train, mean_tpr_train, color="red", label=label, lw=2, alpha=1

@@ -15,6 +15,7 @@ import typer
 from plotnine import ggplot, aes, geom_jitter, stat_summary, theme, element_text
 from utils._anscombe import anscombe
 from utils.utils import time_of_day_
+import pytest
 
 
 def plot_heatmap(out_dir, datetime_xaxis, matrix, y_axis, filename, title="title"):
@@ -177,7 +178,7 @@ def get_cat_meta(output_dir, cat_id, output_fig=True):
 
 def build_n_peak_samples(run_id, tot, n_peak, rois, rois_timestamp, max_sample, thresh):
     print(f"[{run_id}/{tot}] number of peaks is 1, sample shape is{rois.shape}")
-    idxs_peaks = np.arange(1+thresh)
+    idxs_peaks = np.arange(len(rois))
     combinat = list(combinations(idxs_peaks, n_peak))
     try:
         rois_idxs = random.sample(combinat, k=max_sample)
@@ -201,6 +202,11 @@ def build_n_peak_samples(run_id, tot, n_peak, rois, rois_timestamp, max_sample, 
         n_peak_samples.append(s)
     n_peak_samples = np.array(n_peak_samples)
     print(f"[{run_id}/{tot}] number of peaks is {n_peak}, sample shape is{n_peak_samples.shape}")
+
+    if len(n_peak_samples) < len(rois):
+        print("combination could not increase the number of samples")
+        return None
+
     return n_peak_samples
 
 
@@ -314,6 +320,9 @@ def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatma
         if w_size is not None:
             rois, rois_timestamp = find_region_of_interest(run_id, tot, timestamp, activity, w_size, thresh)
             rois = build_n_peak_samples(run_id, tot, n_peak, rois, rois_timestamp, max_sample, thresh)
+            if rois is None:
+                return
+
             rois_timestamp = rois[:, -n_peak:]
             rois = rois[:, :-n_peak].astype(int)
 
@@ -503,6 +512,39 @@ def run(
     # pool.close()
     # pool.join()
     return datasets
+
+
+def test():
+    n_peak = 2
+    rois = []
+    for i in range(4):
+        rois.append([f"sample {i+1}"])
+    rois = np.array(rois)
+
+    idxs_peaks = np.arange(len(rois))
+    combinat = list(combinations(idxs_peaks, n_peak))
+    try:
+        rois_idxs = random.sample(combinat, k=100)
+    except ValueError as e:
+        print(e)
+        print(f"There are less samples than max_sample={100}")
+        rois_idxs = combinat
+
+    #build augmented sample by concatenating permutations of peaks
+    n_peak_samples = []
+    for idxs in rois_idxs:
+        new_samples = []
+        for i in idxs:
+            sample = rois[i]
+            new_samples.append(sample)
+        activity = np.concatenate(new_samples)
+        s = activity.tolist()
+        n_peak_samples.append(s)
+    n_peak_samples = np.array(n_peak_samples)
+    print(f"{len(rois)} samples before combination")
+    print(rois)
+    print(f"{len(n_peak_samples)} samples after combination")
+    print(n_peak_samples)
 
 
 if __name__ == "__main__":
