@@ -127,6 +127,8 @@ def get_cat_meta(output_dir, cat_id, output_fig=True):
     file = Path(os.getcwd()) / "metadata.csv"
     df = pd.read_csv(file, sep=",", nrows=55)
     df_ = df.copy()
+    individual_to_ignore = ["MrDudley", "Oliver_F", "Lucy"]
+    df_ = df_[~df_["Cat"].isin(individual_to_ignore)]
 
     if output_fig:
         for col in ["Age", "Mobility_Score"]:
@@ -154,11 +156,11 @@ def get_cat_meta(output_dir, cat_id, output_fig=True):
             filename = f"{col}.png"
             output_dir.mkdir(parents=True, exist_ok=True)
             filepath = output_dir / filename
-            if not filepath.exists():
-                print(filepath)
-                fig.set_size_inches(3, 4)
-                fig.tight_layout()
-                fig.savefig(filepath)
+            # if not filepath.exists():
+            print(filepath)
+            fig.set_size_inches(3, 4)
+            fig.tight_layout()
+            fig.savefig(filepath)
 
     df = df[pd.notnull(df["DJD_ID"])]
     df["DJD_ID"] = df["DJD_ID"].astype(int)

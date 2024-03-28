@@ -76,7 +76,7 @@ def main(
     if create_dataset:
         for max_sample in [100]:
             build_dataset.run(
-                w_size=[15, 30, 60, 120],
+                w_size=[30, 60, 120],
                 threshs=[20],
                 n_peaks=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
                 data_dir=data_dir,
