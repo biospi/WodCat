@@ -517,9 +517,9 @@ def run(
 
 
 def test():
-    n_peak = 2
+    n_peak = 20
     rois = []
-    for i in range(4):
+    for i in range(25):
         rois.append([f"sample {i+1}"])
     rois = np.array(rois)
 
