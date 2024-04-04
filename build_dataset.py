@@ -301,7 +301,7 @@ def format_raw_data(df, bin):
     return df
 
 
-def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatmap, max_sample, run_id, tot):
+def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatmap, max_sample, run_id, tot, use_age_as_feature=False):
     print(f"[{run_id}] progress[{run_id}/{tot}]...")
 
     datetime_list, datetime_list_w = [], []
@@ -330,6 +330,9 @@ def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatma
 
         cat_meta = get_cat_meta(out_dir, cat_id)
         cat_meta["date"] = df.index.strftime("%d/%m/%Y").values[0]
+
+        if use_age_as_feature:
+            rois = [[cat_meta["age"]]]
 
         if bin == "T":
             create_activity_graph(
@@ -517,7 +520,7 @@ def run(
 
 
 def test():
-    n_peak = 20
+    n_peak = 23
     rois = []
     for i in range(25):
         rois.append([f"sample {i+1}"])
@@ -544,9 +547,9 @@ def test():
         n_peak_samples.append(s)
     n_peak_samples = np.array(n_peak_samples)
     print(f"{len(rois)} samples before combination")
-    print(rois)
+    #print(rois)
     print(f"{len(n_peak_samples)} samples after combination")
-    print(n_peak_samples)
+    #print(n_peak_samples)
 
 
 if __name__ == "__main__":

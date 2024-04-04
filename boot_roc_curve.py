@@ -1,3 +1,4 @@
+import random
 from pathlib import Path
 
 import pandas as pd
@@ -238,10 +239,12 @@ def main(path=None, n_bootstrap=100, n_job=6):
         f"median Train prec = {median_prec_train:.2f}, 95% CI [{lo_train_prec:.2f}, {hi_train_prec:.2f}] )"
     )
 
-    for fpr, tpr in xaxis_train:
+    xaxis_train_ = random.sample(xaxis_train, 100)
+    for fpr, tpr in xaxis_train_:
         ax_roc_merge.plot(fpr, tpr, color="tab:purple", alpha=0.3, linewidth=1)
 
-    for fpr, tpr in xaxis_test:
+    xaxis_test_ = random.sample(xaxis_test, 100)
+    for fpr, tpr in xaxis_test_:
         ax_roc_merge.plot(fpr, tpr, color="tab:blue", alpha=0.3, linewidth=1)
 
     ax_roc_merge.plot(
@@ -391,6 +394,9 @@ def boostrap_auc_peak(results, out_dir):
     df["pipeline"] = df["Pre-processing"] + "->" + df["Classifier"]
     df["N peaks"] = df["N peaks"].astype(int)
 
+    n_peak = df["N peaks"].astype(int).max()
+    x_axis = np.arange(1, n_peak+1).astype(str)
+
     print(df)
 
     dfs_ntop = [group for _, group in df.groupby(["N top", "time_of_day", "Max sample count per indiv", "Sample length (seconds)"])]
@@ -469,6 +475,10 @@ def boostrap_auc_peak(results, out_dir):
                 if cpt >= len(colors):
                     cpt = 0
 
+        x_labels = [int(x) if isinstance(x, int) or x.is_integer() else ' ' for x in ax1.get_xticks()]
+
+        ax1.set_xticklabels(x_labels)
+
         ax1.axhline(y=0.5, color="black", linestyle="--")
         fig.suptitle("Evolution of AUC(training and testing) with N peak increase")
         ax1.set_xlabel("Number of peaks")
@@ -485,7 +495,6 @@ def boostrap_auc_peak(results, out_dir):
         ax1.legend(
             color_data, label_, loc="lower right", handler_map={tuple: AnyObjectHandler()}
         )
-
         ax1.grid()
 
         fig.tight_layout()

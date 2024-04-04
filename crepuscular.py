@@ -5,7 +5,7 @@ import pandas as pd
 
 import run_ml
 import boot_roc_curve
-from build_dataset import get_cat_data, find_region_of_interest
+from build_dataset import get_cat_data, find_region_of_interest, get_cat_meta
 from utils.utils import time_of_day_
 
 
@@ -84,6 +84,8 @@ def ml(samples_dir, n_bootstrap=100, n_job=5):
 if __name__ == "__main__":
     #init
     data_dir = Path("E:/Cats")
+    cat_meta = get_cat_meta(data_dir, None)
+
     #Get data from raw csv
     cat_data = get_cat_data(data_dir, "S")
     num_ticks = 6
