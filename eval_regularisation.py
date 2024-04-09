@@ -31,20 +31,19 @@ def plot_heatmap(df, col, out_dir, title=""):
 
 
 def plot_fig(df, col, out_dir, title=""):
-    scores = df[col].values
-    scores = np.array(scores).reshape(len(df["C"].unique()), len(df["gamma"].unique()))
-    Cs = df["C"].unique()
-    Gammas = df["gamma"].unique()
-    fig, ax = plt.subplots()
-    for ind, i in enumerate(Cs):
-        ax.plot(Gammas, scores[ind], label="C: " + str(i))
-    ax.set_title(title)
-    ax.set_xscale('log')
+    fig, ax = plt.subplots(figsize=(6., 4.))
+    fig.suptitle(f"{title}")
+    for g in df["kernel"].unique():
+        df_ = df[df["kernel"] == g]
+        scores = df_[col].values
+        Cs = df_["C"].values
+        ax.plot(Cs, scores, label=g)
+        ax.set_xscale('log')
+        ax.set_xlabel("C")
+        ax.set_ylabel("Accuracy")
+    ax.grid()
     ax.legend()
-    ax.set_xlabel("Gamma")
-    ax.set_ylabel("Accuracy")
     fig.tight_layout()
-    fig.show()
     out_dir.mkdir(parents=True, exist_ok=True)
     filename = f"plot_{col}_{title}.png".replace(":", "_").replace(" ", "_")
     filepath = out_dir / filename
@@ -73,18 +72,31 @@ def regularisation_heatmap(data_dir, out_dir):
     df_data["mean_test_score"] = pd.DataFrame(mean_test_score_list).mean()
     df_data["mean_train_score"] = pd.DataFrame(mean_train_score_list).mean()
 
-    plot_heatmap(
+    plot_fig(
         df_data,
         "mean_train_score",
         out_dir,
-        f"GridSearch Training model:{data_dir.parent.parent.name}",
+        f"GridSearch Training",
     )
-    plot_heatmap(
+    plot_fig(
         df_data,
         "mean_test_score",
         out_dir,
-        f"GridSearch Testing model:{data_dir.parent.parent.name}",
+        f"GridSearch Testing",
     )
+
+    # plot_heatmap(
+    #     df_data,
+    #     "mean_train_score",
+    #     out_dir,
+    #     f"GridSearch Training model:{data_dir.parent.parent.name}",
+    # )
+    # plot_heatmap(
+    #     df_data,
+    #     "mean_test_score",
+    #     out_dir,
+    #     f"GridSearch Testing model:{data_dir.parent.parent.name}",
+    # )
 
     # plot_fig(
     #     df_data,

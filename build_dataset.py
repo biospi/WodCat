@@ -522,7 +522,7 @@ def run(
 
 
 def test():
-    n_peak = 8
+    n_peak = 7
     rois = []
     for i in range(10):
         rois.append([f"sample {i+1}"])
