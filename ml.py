@@ -29,11 +29,7 @@ import typer
 from model.data_loader import load_activity_data
 from model.svm import process_ml
 from preprocessing.preprocessing import apply_preprocessing_steps
-from utils.visualisation import (
-    plot_mean_groups,
-    plot_time_pca,
-    plot_time_lda,
-    plot_time_pls, plot_zeros_distrib, plot_groups, plot_crepuscular,
+from utils.visualisation import ( plot_groups, plot_crepuscular,
 )
 
 
@@ -250,21 +246,6 @@ def main(
             enable_qn_peak_filter=enable_qn_peak_filter,
             output_l1_graph=True,
             df_o=data_frame.copy()
-        )
-
-        plot_zeros_distrib(
-            meta_columns,
-            label_series,
-            df_norm,
-            output_dir,
-            title="Percentage of zeros in activity per sample after normalisation",
-        )
-        plot_zeros_distrib(
-            meta_columns,
-            label_series,
-            data_frame.copy(),
-            output_dir,
-            title="Percentage of zeros in activity per sample before normalisation",
         )
 
         ntraces = 2

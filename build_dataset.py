@@ -122,13 +122,15 @@ def create_training_sets(run_id, activity, timestamp, metadata, max_sample, n_pe
     return filepath, meta_names
 
 
-def get_cat_meta(output_dir, cat_id, output_fig=True):
+def get_cat_meta(output_dir, cat_id, output_fig=True, age_filter=None, individual_to_ignore = ["MrDudley", "Oliver_F", "Lucy"]):
     # print("getting health classification for cat id=%d" % cat_id)
     file = Path(os.getcwd()) / "metadata.csv"
     df = pd.read_csv(file, sep=",", nrows=55)
     df_ = df.copy()
-    individual_to_ignore = ["MrDudley", "Oliver_F", "Lucy"]
+    #individual_to_ignore = ["MrDudley", "Oliver_F", "Lucy"]
     df_ = df_[~df_["Cat"].isin(individual_to_ignore)]
+    if age_filter is not None:
+        df_ = df_[df_["Age"] < age_filter]
 
     if output_fig:
         for col in ["Age", "Mobility_Score"]:
@@ -410,7 +412,7 @@ def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatma
     return meta_names
 
 
-def get_cat_data(data_dir, bin, subset=None):
+def get_cat_data(data_dir, bin, subset=None, age_filter=12.5):
     print("Loading cat data...")
     if bin not in ["S", "T"]:
         print(f"bin value must be 'S' or 'T'. {bin} is not supported!")
@@ -430,14 +432,19 @@ def get_cat_data(data_dir, bin, subset=None):
     for i, file in enumerate(files):
         print(f"progress[{i}/{len(files)}]...")
         print(f"reading file: {file}")
-        df = pd.read_csv(file, sep=",", skiprows=range(0, 23), header=None)
+
         cat_id = int(file.stem.split("_")[0])
         cat_name = file.stem.split("_")[1]
         individual_to_ignore = ["MrDudley", "Oliver_F", "Lucy"]
         if cat_name in individual_to_ignore:
             continue
+        cat_meta = get_cat_meta(data_dir, cat_id, age_filter=age_filter, individual_to_ignore=individual_to_ignore)
+        if cat_meta["age"] > age_filter:
+            print(cat_meta)
+            continue
+
+        df = pd.read_csv(file, sep=",", skiprows=range(0, 23), header=None)
         df = format_raw_data(df, bin)
-        cat_meta = get_cat_meta(data_dir, cat_id)
         df["health"] = cat_meta["health"]
         df["age"] = cat_meta["age"]
         df["cat_id"] = cat_id
@@ -454,11 +461,12 @@ def run(
     ),
     dataset_path: Path = Path("dataset.csv"),
     bin: str = "S",
-    w_size: List[int] = [10, 30, 60, 90],
-    threshs: List[int] = [10, 100, 1000],
-    n_peaks: List[int] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-    day_windows: List[str] = ['All', 'Day', 'Night'],
+    w_size: List[int] = [15],
+    threshs: List[int] = [10],
+    n_peaks: List[int] = [1],
+    day_windows: List[str] = ['All'],
     out_heatmap: bool = False,
+    use_age_as_feature: bool = False,
     max_sample: int = 100,
     n_job: int = 2,
 ):
@@ -487,7 +495,7 @@ def run(
         cat_data = [group for _, group in df_data.groupby(["cat_id"])]
     else:
         cat_data = get_cat_data(data_dir, bin)
-        dataset_path = f"dataset_{bin}.csv"
+        #dataset_path = f"{dataset_path.name}_{bin}.csv"
         print(f"saving {dataset_path}...")
         pd.concat(cat_data).to_csv(dataset_path, index=True)
         #print("done.")
@@ -512,7 +520,7 @@ def run(
                     #     main,
                     #     (cat_data, out_dataset_dir, bin, w, t, n_peak, out_heatmap, max_sample, cpt, tot),
                     # ), #TODO Fix multiprocessing doesn't work for large amount of data (dataset ids ~3GB)
-                    main(time_of_day, cat_data, out_dataset_dir, bin, w, t, n_peak, out_heatmap, max_sample, cpt, tot)
+                    main(time_of_day, cat_data, out_dataset_dir, bin, w, t, n_peak, out_heatmap, max_sample, cpt, tot, use_age_as_feature)
                     cpt += 1
     # pool.close()
     # pool.join()
@@ -520,9 +528,9 @@ def run(
 
 
 def test():
-    n_peak = 23
+    n_peak = 8
     rois = []
-    for i in range(25):
+    for i in range(10):
         rois.append([f"sample {i+1}"])
     rois = np.array(rois)
 
