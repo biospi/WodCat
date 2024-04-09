@@ -122,15 +122,13 @@ def create_training_sets(run_id, activity, timestamp, metadata, max_sample, n_pe
     return filepath, meta_names
 
 
-def get_cat_meta(output_dir, cat_id, output_fig=True, age_filter=None, individual_to_ignore = ["MrDudley", "Oliver_F", "Lucy"]):
+def get_cat_meta(output_dir, cat_id, output_fig=True, individual_to_ignore = ["MrDudley", "Oliver_F", "Lucy"]):
     # print("getting health classification for cat id=%d" % cat_id)
     file = Path(os.getcwd()) / "metadata.csv"
     df = pd.read_csv(file, sep=",", nrows=55)
     df_ = df.copy()
     #individual_to_ignore = ["MrDudley", "Oliver_F", "Lucy"]
     df_ = df_[~df_["Cat"].isin(individual_to_ignore)]
-    if age_filter is not None:
-        df_ = df_[df_["Age"] < age_filter]
 
     if output_fig:
         for col in ["Age", "Mobility_Score"]:
@@ -412,7 +410,7 @@ def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatma
     return meta_names
 
 
-def get_cat_data(data_dir, bin, subset=None, age_filter=12.5):
+def get_cat_data(data_dir, bin, subset=None):
     print("Loading cat data...")
     if bin not in ["S", "T"]:
         print(f"bin value must be 'S' or 'T'. {bin} is not supported!")
@@ -438,11 +436,7 @@ def get_cat_data(data_dir, bin, subset=None, age_filter=12.5):
         individual_to_ignore = ["MrDudley", "Oliver_F", "Lucy"]
         if cat_name in individual_to_ignore:
             continue
-        cat_meta = get_cat_meta(data_dir, cat_id, age_filter=age_filter, individual_to_ignore=individual_to_ignore)
-        if cat_meta["age"] > age_filter:
-            print(cat_meta)
-            continue
-
+        cat_meta = get_cat_meta(data_dir, cat_id, individual_to_ignore=individual_to_ignore)
         df = pd.read_csv(file, sep=",", skiprows=range(0, 23), header=None)
         df = format_raw_data(df, bin)
         df["health"] = cat_meta["health"]
