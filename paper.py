@@ -177,7 +177,7 @@ def best_model_boxplot(results, out_dir):
         l = f"{r[6]}_{r[16][0].parent.parent.stem}"
         labels.append(l)
 
-    fig, ax = plt.subplots(figsize=(len(results)*1.5, 6))
+    fig, ax = plt.subplots(figsize=(len(results)*1.1, 6))
     ax.boxplot(aucs, labels=labels)
     plt.xticks(rotation=45)
     ax.set_title('Best model AUC')
