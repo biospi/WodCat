@@ -40,7 +40,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.svm import SVC
 
 
-from var import parameters_rbf, parameters_linear, parameters
+from var import parameters
 
 
 def downsample_df(data_frame, class_healthy, class_unhealthy):
