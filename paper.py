@@ -131,8 +131,6 @@ def main(
                 if i == 0:
                     pre_visu = True
 
-                if regularisation:
-                    n_job = 1
                 out_ml_dir, status = run_ml.run(
                     preprocessing_steps=preprocessing_steps,
                     export_hpc_string=export_hpc_string,
