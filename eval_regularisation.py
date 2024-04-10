@@ -53,14 +53,14 @@ def plot_fig(df, col, out_dir, title=""):
 
 def regularisation_heatmap(data_dir, out_dir):
     files = list(data_dir.glob("*.csv"))
+    # print(data_dir)
+    # print(files)
     dfs = []
     mean_test_score_list = []
     mean_train_score_list = []
     for file in files:
         df = pd.read_csv(file)
-        if "param_gamma" not in df.columns:
-            df["param_gamma"] = 0
-        data = df[["param_gamma", "param_C", "mean_test_score", "mean_train_score"]]
+        data = df[["param_kernel", "param_gamma", "param_C", "mean_test_score", "mean_train_score"]]
         data = data.assign(fold=int(file.stem.split('_')[1]))
         data = data.sort_values(["param_gamma", "param_C"])
         mean_test_score_list.append(data["mean_test_score"].values)
@@ -69,6 +69,7 @@ def regularisation_heatmap(data_dir, out_dir):
     df_data = pd.DataFrame()
     df_data["gamma"] = df["param_gamma"]
     df_data["C"] = df["param_C"]
+    df_data["kernel"] = df["param_kernel"]
     df_data["mean_test_score"] = pd.DataFrame(mean_test_score_list).mean()
     df_data["mean_train_score"] = pd.DataFrame(mean_train_score_list).mean()
 
