@@ -33,5 +33,5 @@ import numpy as np
 # parameters_linear = {"C": [1, 10, 100, 1000, 2000]}
 
 parameters = [
-    {"C": list(np.logspace(-30, 10, 15)), "gamma": ["scale"], "kernel": ["rbf"]},
+    {"C": list(np.logspace(-15, 15, 15)), "gamma": ["scale"], "kernel": ["rbf"]},
 ]
