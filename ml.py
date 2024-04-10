@@ -124,7 +124,8 @@ def main(
     export_hpc_string: bool = False,
     c: float = 1.0,
     gamma: Union[float, str] = "scale",
-    regularisation: bool = False
+    regularisation: bool = False,
+    n_peak: int = 1
 ):
     """ML Main machine learning script\n
     Args:\n
@@ -277,8 +278,8 @@ def main(
             ntraces=ntraces,
         )
 
-        plot_crepuscular(output_dir, data_frame.copy(), filename="raw_median_peak", ylabel="Activity count")
-        plot_crepuscular(output_dir, df_norm.copy(), filename="qn_median_peak", ylabel="Activity count")
+        # plot_crepuscular(output_dir, data_frame.copy(), filename="raw_median_peak", ylabel="Activity count")
+        # plot_crepuscular(output_dir, df_norm.copy(), filename="qn_median_peak", ylabel="Activity count")
         ################################################################################################################
 
     step_slug = "_".join(preprocessing_steps)
@@ -352,7 +353,8 @@ def main(
         export_fig_as_pdf=export_fig_as_pdf,
         C=c,
         gamma=gamma,
-        regularisation=regularisation
+        regularisation=regularisation,
+        n_peak=n_peak
     )
 
 

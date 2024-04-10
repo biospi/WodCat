@@ -23,6 +23,8 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
 from sklearn.metrics import auc
 from sklearn.model_selection import learning_curve
 from tqdm import tqdm
+import time
+import scipy
 
 from cwt._cwt import CWT, plot_line, STFT, DWT
 from highdimensional.decisionboundaryplot import DBPlot
@@ -1667,6 +1669,551 @@ def plot_histogram(x, farm_id, threshold_gap, title):
         # plt.imsave()
     except Exception as e:
         print(e)
+
+
+def stringArrayToArray(string):
+    return [
+        float(x)
+        for x in string.replace("\n", "")
+        .replace("[", "")
+        .replace("]", "")
+        .replace(",", "")
+        .split(" ")
+        if len(x) > 0
+    ]
+
+
+def find_best_model(output_dir):
+    paths = list(output_dir.glob("**/*.csv"))
+    dfs = []
+    for path in paths:
+        if "report" not in str(path):
+            continue
+        df = pd.read_csv(str(path), index_col=None)
+        if "delmas" in str(path):
+            df["farm_id"] = "delmas"
+        if "cedara" in str(path):
+            df["farm_id"] = "cedara"
+        v = stringArrayToArray(df["roc_auc_scores"].values[0])
+        median = np.median(v)
+        df["median_auc"] = median
+        dfs.append(df)
+    df_res = pd.concat(dfs)
+    best_models = {}
+    for farm in df_res["farm_id"].unique():
+        d = df_res[df_res["farm_id"] == farm]
+        df_s = d.sort_values("median_auc", ascending=False)
+        #best_model = df_s.head(1)
+        best_model = df_s[df_s["post_p"] == "QN_ANSCOMBE_LOG"] #not the best model overall, this is the model that was trained with activity data only
+        if len(best_model) == 0:
+            best_model = df_s.head(1)
+        best_models[farm] = best_model
+    return best_models
+
+
+def formatForBoxPlot(df, best_model):
+    print("formatForBoxPlot...")
+    dfs = []
+    for index, row in df.iterrows():
+        data = pd.DataFrame()
+        test_balanced_accuracy_score = stringArrayToArray(
+            row["test_balanced_accuracy_score"]
+        )
+        test_precision_score0 = stringArrayToArray(row["test_precision_score0"])
+        test_precision_score1 = stringArrayToArray(row["test_precision_score1"])
+        test_recall_score0 = stringArrayToArray(row["test_recall_score0"])
+        test_recall_score1 = stringArrayToArray(row["test_recall_score1"])
+        test_f1_score0 = stringArrayToArray(row["test_f1_score0"])
+        test_f1_score1 = stringArrayToArray(row["test_f1_score1"])
+        roc_auc_scores = stringArrayToArray(row["roc_auc_scores"])
+        if best_model is not None:
+            roc_auc_scores_b = stringArrayToArray(
+                best_model["roc_auc_scores"].values[0]
+            )
+            roc_auc_scores = list(
+                np.array(roc_auc_scores) - np.array(roc_auc_scores_b)
+            )  # get the delta compared to the best model
+
+        config = [
+            row["config"].replace("->", ">").replace(" ", "")
+            for _ in range(len(test_balanced_accuracy_score))
+        ]
+
+        data["test_balanced_accuracy_score"] = test_balanced_accuracy_score
+        data["test_precision_score0"] = test_precision_score0
+        data["test_precision_score1"] = test_precision_score1
+        data["test_recall_score0"] = test_recall_score0
+        data["test_recall_score1"] = test_recall_score1
+        data["test_f1_score0"] = test_f1_score0
+        data["test_f1_score1"] = test_f1_score1
+        data["class0"] = row["class0"]
+        data["class1"] = row["class1"]
+        roc_auc_scores.extend(
+            [0] * (len(test_balanced_accuracy_score) - len(roc_auc_scores))
+        )  # in case auc could not be computed for fold
+        data["roc_auc_scores"] = roc_auc_scores
+        data["config"] = config
+        dfs.append(data)
+
+        if np.sum(roc_auc_scores) != 0:
+            p_value = scipy.stats.wilcoxon(roc_auc_scores, alternative='less').pvalue
+
+            # specified_value = 0.5
+            # statistic, p_value = scipy.stats.wilcoxon(roc_auc_scores - specified_value, alternative='greater')
+
+            data["p_value"] = p_value
+        else:
+            data["p_value"] = np.nan
+    formated = pd.concat(dfs, axis=0)
+    return formated
+
+
+def human_readable(string, df, n):
+    split = string.split(">")
+    hr_string = f"{split[1]} {split[2]} {split[3]} {split[10].split('_')[0]} {'NONE' if len(split[-4])==0 else split[-4]}"
+    if "rbf" in string:
+        hr_string = hr_string.replace("SVC", "SVCrbf")
+    # hr_string = f"{split[1]} {split[2]} {split[10].split('_')[0]}"
+    return hr_string
+
+
+def plot_ml_report_final_abs(output_dir):
+    best_models = find_best_model(output_dir)
+    print("building report visualisation...")
+    dfs = []
+    label_dict = {}
+    paths = list(output_dir.glob("**/*.csv"))
+
+    for path in paths:
+        if "report" not in str(path):
+            continue
+        df = pd.read_csv(str(path), index_col=None)
+
+        if "delmas" in str(path):
+            df["farm_id"] = "delmas"
+        if "cedara" in str(path):
+            df["farm_id"] = "cedara"
+
+        medians = []
+
+        if "roc_auc_scores" not in df.columns:
+            continue
+        for value in df["roc_auc_scores"].values:
+            v = stringArrayToArray(value)
+            medians.append(np.median(v))
+        df["median_auc"] = medians
+
+        df["config"] = f"{df.steps[0]}{df.classifier[0]}"
+        df = df.sort_values("median_auc")
+        df = df.drop_duplicates(subset=["config"], keep="first")
+        label_dict["UnHealthy"] = df["class1"].values[0]
+        label_dict["Healthy"] = df["class0"].values[0]
+        dfs.append(df)
+
+    if len(dfs) == 0:
+        print("no reports available.")
+        return
+    df = pd.concat(dfs, axis=0)
+    # df = df[df['classifier_details'] == 'SVC_rbf_results']
+    df["health_tags"] = df["class_0_label"] + df["class_1_label"]
+    df["color"] = [x.split(">")[-3] for x in df["config"].values]
+    # df = df.sort_values(["median_auc", "color"], ascending=[True, True])
+    for farm in df["farm_id"].unique():
+        df_f = df[df["farm_id"] == farm]
+        best = best_models[farm]
+        for h_tag in df_f["health_tags"].unique():
+            df_f_ = df_f[df_f["health_tags"] == h_tag]
+
+            df_f_ = df_f_.sort_values(["color", "median_auc"], ascending=[True, True])
+
+            t4 = "AUC performance of different inputs<br>%s" % str(label_dict)
+
+            t3 = "Accuracy performance of different inputs<br>%s" % str(label_dict)
+
+            t1 = "Precision class0 performance of different inputs<br>%s" % str(
+                label_dict
+            )
+
+            t2 = "Precision class1 performance of different inputs<br>%s" % str(
+                label_dict
+            )
+
+            fig = make_subplots(rows=4, cols=1, subplot_titles=(t1, t2, t3, t4))
+            fig_auc_only = make_subplots(rows=1, cols=1)
+
+            df_f_ = formatForBoxPlot(df_f_, best)
+            formated_label = []
+            formated_label_s = []
+            for n, label in enumerate(df_f_["config"].values):
+                split = label.split(">")
+                label_formated = ""
+                for i, item in enumerate(split):
+                    label_formated += f"{item}>"
+                    if i == len(split) - 4:
+                        label_formated += "<br>"
+                formated_label.append(label_formated)
+                formated_label_s.append(human_readable(label_formated, df_f_, n))
+            df_f_["config"] = formated_label
+            df_f_["config_s"] = formated_label_s
+            # df_f_ = get_delta(df_f_)
+            fig.append_trace(
+                px.box(df_f_, x="config_s", y="test_precision_score0").data[0],
+                row=1,
+                col=1,
+            )
+            fig.append_trace(
+                px.box(df_f_, x="config_s", y="test_precision_score1").data[0],
+                row=2,
+                col=1,
+            )
+            fig.append_trace(
+                px.box(df_f_, x="config_s", y="test_balanced_accuracy_score").data[0],
+                row=3,
+                col=1,
+            )
+            fig.append_trace(
+                px.box(df_f_, x="config_s", y="roc_auc_scores").data[0],
+                row=4,
+                col=1,
+            )
+            fig_auc_only.append_trace(
+                px.box(df_f_, x="config_s", y="roc_auc_scores", title=t4).data[0],
+                row=1,
+                col=1,
+            )
+            # annot = build_annotations(df_f_, fig_auc_only)
+            fig.update_xaxes(showticklabels=False)  # hide all the xticks
+            fig.update_xaxes(showticklabels=True, row=4, col=1, automargin=True)
+            fig.update_yaxes(showgrid=True, gridwidth=1, automargin=True)
+            fig.update_xaxes(showgrid=True, gridwidth=1, automargin=True)
+            fig.update_layout(margin=dict(l=20, r=20, t=20, b=500))
+            fig_auc_only.update_layout(margin=dict(l=20, r=20, t=20, b=500))
+            output_dir.mkdir(parents=True, exist_ok=True)
+            filepath = output_dir / f"ML_performance_final_{farm}_delta.html"
+            print(filepath)
+            fig.write_html(str(filepath))
+            # filepath = output_dir / f"ML_performance_final_auc_{farm}_{h_tag}.html"
+            # print(filepath)
+            # fig_auc_only.write_html(str(filepath))
+            # fig.show()
+
+            preproc = df_f_["config_s"].str.split(" ").str[-1].unique()
+            mapping = dict(zip(preproc, range(len(preproc))))
+
+            df_f_["config_s"] = (
+                df_f_["config_s"].str.split(" ").str[:].str.join(" ")
+                + " ("
+                + [str(mapping[x]) for x in df_f_["config_s"].str.split(" ").str[-1]]
+                + ")"
+            )
+
+            x_data = df_f_["config_s"].unique()
+            p_values = df_f_["p_value"].unique()
+
+            color_data = [x.split(" ")[-1] for x in x_data]
+            imp_days_data = [x.split(" ")[0].split("=")[1] for x in x_data]
+            y_data = []
+            for x in df_f_["config_s"].unique():
+                y_data.append(df_f_[df_f_["config_s"] == x]["roc_auc_scores"].values)
+            traces = []
+            colors = []
+            class0_list = []
+            class1_list = []
+            sec_axis = []
+            for i_d, c, xd, yd in zip(imp_days_data, color_data, x_data, y_data):
+                class0 = df_f_[df_f_["config_s"] == xd]["class0"].unique()
+                class1 = df_f_[df_f_["config_s"] == xd]["class1"].unique()
+                imp_days = df_f_[df_f_["config_s"] == xd]["class1"].unique()
+                xd = " ".join(xd.split(" ")[1:])
+                class0_list.append(class0)
+                class1_list.append(class1)
+                keys = np.unique(color_data)
+                values = px.colors.qualitative.Plotly[0 : len(keys)]
+                # values[values.index('#B6E880')] = 'black' #replace green-yellow
+                COLOR_MAP = dict(zip(keys, values))
+                try:
+                    color = COLOR_MAP[c]
+                except KeyError as e:
+                    print(e)
+                    color = values[0]
+
+                colors.append(color)
+                traces.append(
+                    [
+                        np.median(yd),
+                        go.Bar(
+                            y=class0,
+                            x=[xd],
+                            name="Healthy samples",
+                            width=[0.25],
+                            offsetgroup="Healthy samples",
+                            marker=dict(color="#1f77b4"),
+                            opacity=0.2,
+                            showlegend=False,
+                        )
+                    ]
+                )
+                sec_axis.append(False)
+                traces.append(
+                    [
+                        np.median(yd),
+                        go.Bar(
+                            y=class1,
+                            x=[xd],
+                            name="Unhealthy samples",
+                            width=[0.25],
+                            offsetgroup="Unhealthy samples",
+                            marker=dict(color="#ff7f0e"),
+                            opacity=0.2,
+                            showlegend=False,
+                        )
+                    ]
+                )
+                sec_axis.append(False)
+
+                traces.append(
+                    [
+
+                        np.median(yd),
+                        go.Box(
+                            y=yd,
+                            name=xd,
+                            boxpoints="all",
+                            jitter=0.9,  # Adjust the jitter value to control the spread
+                            pointpos=0,
+                            marker=dict(color=color, size=5, outliercolor="red"),
+                            legendgroup=c,
+                            line_width=1 if float(i_d) < 0 else float(i_d) * 0.5,
+                            showlegend=False,
+                        )
+                    ]
+                )
+                sec_axis.append(True)
+
+            for k, c in enumerate(np.unique(color_data)):
+                try:
+                    color = COLOR_MAP[c]
+                except KeyError as e:
+                    print(e)
+                    color = values[0]
+
+                try:
+                    label_ = f"|{c} <i>p_value={p_values[k]:.6f}</i>"
+                except IndexError as e:
+                    print(e)
+                    label_ = f"|{c}"
+
+                traces.append(
+                    [
+                        99,
+                        go.Box(
+                            y=yd,
+                            name={v: k for k, v in mapping.items()}[
+                                int(list(filter(str.isdigit, c))[0])
+                            ]
+                            + label_,
+                            boxpoints="outliers",
+                            marker=dict(color=color, size=10),
+                            marker_color=color,
+                            showlegend=True,
+                        )
+                    ]
+                )
+                sec_axis.append(True)
+
+            traces.append(
+                [ 99,
+                    go.Bar(
+                        y=class0,
+                        x=[xd],
+                        name="Healthy samples",
+                        width=[0],
+                        offsetgroup="Healthy samples",
+                        marker=dict(color="#1f77b4"),
+                        opacity=0.8,
+                        showlegend=True,
+                    )
+                ]
+            )
+            sec_axis.append(False)
+            traces.append(
+                [   99,
+                    go.Bar(
+                        y=class0,
+                        x=[xd],
+                        name="Unhealthy samples",
+                        width=[0],
+                        offsetgroup="Unhealthy samples",
+                        marker=dict(color="#ff7f0e"),
+                        opacity=0.8,
+                        showlegend=True,
+                    )
+
+                ]
+            )
+            sec_axis.append(False)
+
+            h_labels = df_f_["config"].values[0].split(">H=")[1].split(">")[0]
+            uh_labels = df_f_["config"].values[0].split(">UH=")[1].split(">")[0]
+
+            fig_ = make_subplots(specs=[[{"secondary_y": True}]])
+
+            traces.sort(key=lambda x: x[0])
+            for a, t in zip(sec_axis, traces):
+                fig_.add_trace(t[1], secondary_y=a)
+
+            fig_.update_yaxes(showgrid=True, gridwidth=1, automargin=True)
+            fig_.update_layout(
+                title=f"healthy labels={h_labels} unhealthy labels={uh_labels}",
+                yaxis_title="AUC",
+            )
+            fig_.update_xaxes(tickangle=45)
+
+            x_tick_labels = x_data
+
+            #todo remove
+            # custom_tick_vals = np.arange(len(x_data))
+            # custom_tick_text = []
+            # for v in x_data:
+            #     new_label = ''
+            #     steps = v.split(' ')[-2]
+            #     if steps == "TEMPERATURE_STDS":
+            #         new_label = "Temperature"
+            #     if steps == "QN_ANSCOMBE_LOG_WINDSPEED_STDS":
+            #         new_label = "Activity and Wind speed"
+            #     if steps == "RAINFALL_STDS":
+            #         new_label = "Rainfall"
+            #     if steps == "QN_ANSCOMBE_LOG":
+            #         new_label = "Activity"
+            #     if steps == "QN_ANSCOMBE_LOG_TEMPERATURE_STDS":
+            #         new_label = "Activity and Temperature"
+            #     if steps == "QN_ANSCOMBE_LOG_HUMIDITY_STDS":
+            #         new_label = "Activity and Humidity"
+            #     if steps == "WINDSPEED_STDS":
+            #         new_label = "Wind speed"
+            #     if steps == "HUMIDITY_STDS":
+            #         new_label = "Humidity"
+            #     if steps == "QN_ANSCOMBE_LOG_RAINFALLAPPEND_STDS":
+            #         new_label = "Activity and Rainfall"
+            #     custom_tick_text.append(new_label)
+            # # Update x-axis tick labels
+            # fig_.update_xaxes(tickvals=custom_tick_vals, ticktext=custom_tick_text)
+            #
+            # # Rename legend item names
+            # for i, trace in enumerate(fig_['data']):
+            #     print(trace['name'])
+            #     new_name = trace['name']\
+            #         .replace('QN_ANSCOMBE_LOG_RAINFALLAPPEND_STDS', 'Activity and Rainfall')\
+            #         .replace('QN_ANSCOMBE_LOG', 'Activity') \
+            #         .replace('RAINFALL_STDS', 'Rainfall') \
+            #         .replace('QN_ANSCOMBE_LOG_WINDSPEED_STDS', 'Activity and Wind speed') \
+            #         .replace('WINDSPEED_STDS', 'Wind speed') \
+            #         .replace('QN_ANSCOMBE_LOG_TEMPERATURE_STDS', 'Activity and Temperature') \
+            #         .replace('TEMPERATURE_STDS', 'Temperature') \
+            #         .replace('QN_ANSCOMBE_LOG_HUMIDITY_STDS', 'Activity and Humidity') \
+            #         .replace('HUMIDITY_STDS', 'Humidity')
+            #     trace['name'] = new_name
+
+            # custom_tick_text = custom_tick_text + ["Label 1", "Label 2"]  # Provide labels for each trace
+            # fig_.update_traces(name=custom_tick_text)
+
+            filepath = output_dir / f"ML_performance_final_auc_{farm}_{h_tag}_delta.html"
+            print(filepath)
+            fig_.update_layout(barmode="group")
+            fig_.update_yaxes(title_text="Delta AUC(%)", secondary_y=True)
+            fig_.update_yaxes(title_text="Sample count", secondary_y=False)
+            fig_.update_xaxes(range=[-1, len(x_data) - 0.5])
+            fig_.write_html(str(filepath))
+
+
+def build_report(
+    output_dir,
+    peak,
+    data,
+    y,
+    steps,
+    study_id,
+    sampling,
+    downsample,
+    cv,
+    cross_validation_method,
+    class_healthy_label,
+    class_unhealthy_label,
+):
+    for k, v in data.items():
+        scores = {}
+        report_rows_list = []
+        test_precision_score0, test_precision_score1 = [], []
+        test_precision_recall0, test_precision_recall1 = [], []
+        test_precision_fscore0, test_precision_fscore1 = [], []
+        test_precision_support0, test_precision_support1 = [], []
+        test_balanced_accuracy_score = []
+        aucs = []
+        fit_times = []
+        for item in v:
+            test_precision_score0.append(item["test_precision_score_0"])
+            test_precision_score1.append(item["test_precision_score_1"])
+            test_precision_recall0.append(item["test_recall_0"])
+            test_precision_recall1.append(item["test_recall_1"])
+            test_precision_fscore0.append(item["test_fscore_0"])
+            test_precision_fscore1.append(item["test_fscore_1"])
+            test_precision_support0.append(item["test_support_0"])
+            test_precision_support1.append(item["test_support_1"])
+            fit_times.append(item["fit_time"])
+            test_balanced_accuracy_score.append(item["accuracy"])
+            aucs.append(item["auc"])
+
+        scores["downsample"] = downsample
+        scores["class0"] = y[y == 0].size
+        scores["class1"] = y[y == 1].size
+        scores["post_p"] = steps
+        scores[
+            "steps"
+        ] = f"{study_id}->P={peak}->H={str(class_healthy_label)}->UH={str(class_unhealthy_label)}->{steps}->{cv}"
+        scores["peak"] = peak
+        scores["farm_id"] = study_id
+        scores["balanced_accuracy_score_mean"] = np.mean(test_balanced_accuracy_score)
+        scores["test_balanced_accuracy_score"] = test_balanced_accuracy_score
+        scores["precision_score0_mean"] = np.mean(test_precision_score0)
+        scores["test_precision_score0"] = test_precision_score0
+        scores["precision_score1_mean"] = np.mean(test_precision_score1)
+        scores["test_precision_score1"] = test_precision_score1
+        scores["recall_score0_mean"] = np.mean(test_precision_recall0)
+        scores["test_recall_score0"] = test_precision_recall0
+        scores["recall_score1_mean"] = np.mean(test_precision_recall1)
+        scores["test_recall_score1"] = test_precision_recall1
+        scores["f1_score0_mean"] = np.mean(test_precision_recall0)
+        scores["f1_score1_mean"] = np.mean(test_precision_recall1)
+        scores["test_f1_score0"] = test_precision_fscore0
+        scores["test_f1_score1"] = test_precision_fscore1
+        scores["sampling"] = sampling
+        scores["classifier"] = f"->{k}"
+        scores["classifier_details"] = k
+        scores["roc_auc_score_mean"] = np.mean(aucs)
+        scores["roc_auc_scores"] = aucs
+        scores["fit_time"] = fit_times
+        report_rows_list.append(scores)
+
+        df_report = pd.DataFrame(report_rows_list)
+
+        df_report["class_0_label"] = str(class_healthy_label)
+        df_report["class_1_label"] = str(class_unhealthy_label)
+        df_report["nfold"] = cross_validation_method.get_n_splits()
+
+        df_report["total_fit_time"] = [
+            time.strftime("%H:%M:%S", time.gmtime(np.nansum(x)))
+            for x in df_report["fit_time"].values
+        ]
+
+        out = output_dir / cv
+        out.mkdir(parents=True, exist_ok=True)
+        filename = (
+            out
+            / f"{k}_{peak}_{str(class_unhealthy_label)}_{study_id}_classification_report_peak_{peak}_{steps}_sampling_{sampling}.csv"
+        )
+        df_report.to_csv(filename, sep=",", index=False)
+        print("filename=", filename)
+        plot_ml_report(k, filename, out)
 
 
 if __name__ == "__main__":

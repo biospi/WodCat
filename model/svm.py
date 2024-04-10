@@ -30,7 +30,7 @@ from utils.visualisation import (
     build_individual_animal_pred,
     plot_high_dimension_db,
     plot_learning_curves,
-    plot_fold_details,
+    plot_fold_details, build_report, plot_ml_report_final_abs,
 )
 
 import pandas as pd
@@ -40,7 +40,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.svm import SVC
 
 
-from var import parameters_rbf, parameters_linear
+from var import parameters_rbf, parameters_linear, parameters
 
 
 def downsample_df(data_frame, class_healthy, class_unhealthy):
@@ -87,7 +87,8 @@ def process_ml(
     export_fig_as_pdf=False,
     C=None,
     gamma=None,
-    regularisation=False
+    regularisation=False,
+    n_peak=None
 ):
     print("*******************************************************************")
 
@@ -218,6 +219,22 @@ def process_ml(
             tt="train",
         )
         build_proba_hist(output_dir, steps, class_unhealthy_label, scores_proba)
+
+    # build_report(
+    #     output_dir,
+    #     n_peak,
+    #     scores,
+    #     y_h,
+    #     steps,
+    #     study_id,
+    #     sampling,
+    #     downsample_false_class,
+    #     cv,
+    #     cross_validation_method,
+    #     class_healthy_label,
+    #     class_unhealthy_label,
+    # )
+    # plot_ml_report_final_abs(output_dir.parent.parent)
 
 
 def fold_worker(
@@ -571,12 +588,7 @@ def cross_validate_svm_fast(
         if kernel in ["linear", "rbf"]:
             if regularisation:
                 svc = SVC(kernel=kernel, probability=True, max_iter=max_iter)
-                if kernel == "rbf":
-                    parameters_rbf["kernel"] = [kernel]
-                    clf = GridSearchCV(svc, parameters_rbf, return_train_score=True, n_jobs=1)
-                if kernel == "linear":
-                    parameters_linear["kernel"] = [kernel]
-                    clf = GridSearchCV(svc, parameters_linear, return_train_score=True, n_jobs=1)
+                clf = GridSearchCV(svc, parameters, return_train_score=True, n_jobs=1)
             else:
                 clf = SVC(kernel=kernel, probability=True, C=C, gamma=gamma, max_iter=max_iter)
 
@@ -782,11 +794,12 @@ def make_y_hist(data0, data1, out_dir, cv_name, steps, auc, info="", tag=""):
 
 
 if __name__ == "__main__":
-    iris = datasets.load_iris()
-    parameters = {'kernel': ('linear', 'rbf'), 'C': [1, 10]}
-    svc = svm.SVC()
-    clf = GridSearchCV(svc, parameters, return_train_score=True, refit=True)
-    clf.fit(iris.data, iris.target)
-    df = pd.DataFrame(clf.cv_results_)
-    print(sorted(clf.cv_results_.keys()))
-    print(df)
+    print(0)
+    # iris = datasets.load_iris()
+    # parameters = {'kernel': ('linear', 'rbf'), 'C': [1, 10]}
+    # svc = svm.SVC()
+    # clf = GridSearchCV(svc, parameters, return_train_score=True, refit=True)
+    # clf.fit(iris.data, iris.target)
+    # df = pd.DataFrame(clf.cv_results_)
+    # print(sorted(clf.cv_results_.keys()))
+    # print(df)

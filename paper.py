@@ -18,6 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with seaMass.  If not, see <http://www.gnu.org/licenses/>.
 #
+import numpy as np
 import pandas as pd
 import typer
 import matplotlib
@@ -26,8 +27,9 @@ import build_dataset
 import run_ml
 import boot_roc_curve
 import shutil
+import numpy as np
 from pathlib import Path
-
+import matplotlib.pyplot as plt
 from utils.utils import purge_hpc_file, create_batch_script
 
 
@@ -76,9 +78,9 @@ def main(
     if create_dataset:
         for max_sample in [100]:
             build_dataset.run(
-                w_size=[15, 30, 60],
+                w_size=[15],
                 threshs=[10],
-                n_peaks=[1, 2, 3, 4, 5, 6, 7],
+                n_peaks=[1, 2],
                 data_dir=data_dir,
                 out_dir=out_dir,
                 max_sample=max_sample,
@@ -103,6 +105,7 @@ def main(
     for i, dataset in enumerate(datasets):
         # if int(dataset.parent.parent.name.split('_')[-1]) < 4: #todo remove
         #     continue
+        n_peak = int(dataset.parent.parent.stem.split('_')[-1])
         meta_columns_file = dataset.parent / "meta_columns.csv"
         meta_columns = pd.read_csv(meta_columns_file).values.flatten().tolist()
         print(f"dataset={dataset}")
@@ -140,7 +143,8 @@ def main(
                     skip=skip_ml,
                     n_job=n_job,
                     clf=clf,
-                    pre_visu=pre_visu
+                    pre_visu=pre_visu,
+                    n_peak=n_peak
                 )
                 if export_hpc_string:
                     continue
@@ -158,6 +162,29 @@ def main(
 
     print("Create n peak comparison ROC curve...")
     boot_roc_curve.boostrap_auc_peak(results, out_dir)
+
+    print("Create boxplot best model")
+    best_model_boxplot(results, out_dir)
+
+
+def best_model_boxplot(results, out_dir):
+    results.sort(key=lambda x: x[12])
+    best_model = np.array(results[-1][14])
+
+    aucs = [np.array(x[14]) - best_model for x in results]
+    labels = []
+    for r in results:
+        l = f"{r[6]}_{r[16][0].parent.parent.stem}"
+        labels.append(l)
+
+    fig, ax = plt.subplots(figsize=(len(results)*1.5, 6))
+    ax.boxplot(aucs, labels=labels)
+    plt.xticks(rotation=45)
+    ax.set_title('Best model AUC')
+    ax.set_ylabel('AUC Values')
+    ax.grid()
+    plt.tight_layout()
+    fig.savefig(out_dir / 'box_plot.png')
 
 
 if __name__ == "__main__":

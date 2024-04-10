@@ -21,6 +21,7 @@ def run(
     pre_visu: bool = False,
     regularisation: bool = False,
     skip: bool = False,
+    n_peak: int = 1,
     n_job: int = 6,
 ):
     """Thesis script runs the cats study
@@ -51,7 +52,8 @@ def run(
         plot_2d_space=False,
         skip=skip,
         export_hpc_string=export_hpc_string,
-        regularisation=regularisation
+        regularisation=regularisation,
+        n_peak=n_peak
     )
     return output_dir, s
 

@@ -25,9 +25,14 @@ import numpy as np
 # }
 
 
-parameters_rbf = {
-    "C": list(np.logspace(-30, 10, 15)),
-    "gamma": ["scale"],
-}
+# parameters_rbf = {
+#     "C": list(np.logspace(-30, 10, 15)),
+#     "gamma": ["scale"],
+# }
+#
+# parameters_linear = {"C": [1, 10, 100, 1000, 2000]}
 
-parameters_linear = {"C": [1, 10, 100, 1000, 2000]}
+parameters = [
+    {"C": list(np.logspace(-30, 10, 15)), "kernel": ["linear"]},
+    {"C": list(np.logspace(-30, 10, 15)), "gamma": ["scale"], "kernel": ["rbf"]},
+]
