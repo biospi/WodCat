@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 
 def test():
-    input_dir = Path("E:/Cats/paper_debug_regularisation_5")
+    input_dir = Path("E:/BIOSPI/paper_debug_regularisation_36")
     folders = list(input_dir.glob("**/fold_data"))
 
     recall_data = list(input_dir.glob("**/recall_data.csv"))

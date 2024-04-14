@@ -318,21 +318,24 @@ def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatma
         activity = df["activity_counts"].values
         timestamp = df.index
 
-        rois = []
-        if w_size is not None:
-            rois, rois_timestamp = find_region_of_interest(run_id, tot, timestamp, activity, w_size, thresh)
-            rois = build_n_peak_samples(run_id, tot, n_peak, rois, rois_timestamp, max_sample, thresh)
-            if rois is None:
-                return
-
-            rois_timestamp = rois[:, -n_peak:]
-            rois = rois[:, :-n_peak].astype(int)
-
         cat_meta = get_cat_meta(out_dir, cat_id)
         cat_meta["date"] = df.index.strftime("%d/%m/%Y").values[0]
 
         if use_age_as_feature:
             rois = [[cat_meta["age"]]]
+            rois_timestamp = [[]]
+        else:
+            rois = []
+            if w_size is not None:
+                rois, rois_timestamp = find_region_of_interest(run_id, tot, timestamp, activity, w_size, thresh)
+                rois = build_n_peak_samples(run_id, tot, n_peak, rois, rois_timestamp, max_sample, thresh)
+                if rois is None:
+                    return
+
+                rois_timestamp = rois[:, -n_peak:]
+                rois = rois[:, :-n_peak].astype(int)
+
+
 
         if bin == "T":
             create_activity_graph(
@@ -505,6 +508,8 @@ def run(
                     dirname = f"{max_sample}_{t}_{str(w).zfill(3)}_{str(n_peak).zfill(3)}"
                     if time_of_day is not None:
                         dirname = f"{time_of_day}_{max_sample}_{t}_{str(w).zfill(3)}_{str(n_peak).zfill(3)}"
+                    if use_age_as_feature:
+                        dirname = f"0_0_0_0_0"
 
                     out_dataset_dir = out_dir / dirname / "dataset"
                     datasets.append(out_dataset_dir / "samples.csv")

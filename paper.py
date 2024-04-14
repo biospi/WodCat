@@ -31,6 +31,8 @@ import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 from utils.utils import purge_hpc_file, create_batch_script
+import plotly.graph_objects as go
+import scipy
 
 
 def main(
@@ -47,7 +49,7 @@ def main(
     n_bootstrap: int = 1000,
     ml_exist: bool = False,
     skip_ml: bool = False,
-    regularisation: bool = False,
+    regularisation: bool = True,
     n_job: int = 28,
     build_heatmap: bool = False
 ):
@@ -57,6 +59,20 @@ def main(
         export_hpc_string: Create .sh submission file for Blue Crystal/Blue Pebble. Please ignore if running locally.
     """
     out_dir = data_dir / out_dirname
+
+    # build_dataset.run(
+    #     w_size=[15],
+    #     threshs=[10],
+    #     n_peaks=[0],
+    #     data_dir=data_dir,
+    #     out_dir=out_dir,
+    #     max_sample=100,
+    #     day_windows=["All"],
+    #     n_job=n_job,
+    #     dataset_path=dataset_path,
+    #     use_age_as_feature=True
+    # )
+    # exit()
 
     if build_heatmap:
         #plot all data heatmap
@@ -76,11 +92,11 @@ def main(
         exit()
 
     if create_dataset:
-        for max_sample in [100]:
+        for max_sample in [150]:
             build_dataset.run(
                 w_size=[15],
-                threshs=[10],
-                n_peaks=[1, 2],
+                threshs=[25],
+                n_peaks=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
                 data_dir=data_dir,
                 out_dir=out_dir,
                 max_sample=max_sample,
@@ -121,18 +137,9 @@ def main(
                 results.append(res)
         else:
             print("Running machine learning pipeline...")
-            for preprocessing_steps in [
-                [""],
-                ["L1"],
-                ["L1", "L1SCALE", "ANSCOMBE"],
-                ["L1", "L1SCALE", "ANSCOMBE", "LOG"]
-            ]:
-                pre_visu = True #export grapth just for the first run to save storage space
-                if i == 0:
-                    pre_visu = True
-
+            if n_peak == 0: #process dataset wit age as the only feature
                 out_ml_dir, status = run_ml.run(
-                    preprocessing_steps=preprocessing_steps,
+                    preprocessing_steps=[""],
                     export_hpc_string=export_hpc_string,
                     regularisation=regularisation,
                     meta_columns=meta_columns,
@@ -141,15 +148,43 @@ def main(
                     skip=skip_ml,
                     n_job=n_job,
                     clf=clf,
-                    pre_visu=pre_visu,
+                    pre_visu=False,
                     n_peak=n_peak
                 )
-                if export_hpc_string:
-                    continue
                 res = boot_roc_curve.main(
                     out_ml_dir, n_bootstrap=n_bootstrap, n_job=n_job
                 )
                 results.append(res)
+            else:
+                for preprocessing_steps in [
+                    # [""],
+                    # ["L1"],
+                    ["L1", "L1SCALE", "ANSCOMBE"],
+                    # ["L1", "L1SCALE", "ANSCOMBE", "LOG"]
+                ]:
+                    pre_visu = True #export grapth just for the first run to save storage space
+                    if i == 0:
+                        pre_visu = True
+
+                    out_ml_dir, status = run_ml.run(
+                        preprocessing_steps=preprocessing_steps,
+                        export_hpc_string=export_hpc_string,
+                        regularisation=regularisation,
+                        meta_columns=meta_columns,
+                        dataset_filepath=dataset,
+                        out_dir=out_dir,
+                        skip=skip_ml,
+                        n_job=n_job,
+                        clf=clf,
+                        pre_visu=pre_visu,
+                        n_peak=n_peak
+                    )
+                    if export_hpc_string:
+                        continue
+                    res = boot_roc_curve.main(
+                        out_ml_dir, n_bootstrap=n_bootstrap, n_job=n_job
+                    )
+                    results.append(res)
 
     #create submission file for Blue Crystal(UoB), please ignore if running on local computer
     if export_hpc_string:
@@ -168,21 +203,46 @@ def main(
 def best_model_boxplot(results, out_dir):
     results.sort(key=lambda x: x[12])
     best_model = np.array(results[-1][14])
-
+    #
+    # aucs = [np.array(x[14]) - best_model for x in results]
+    # labels = []
+    # for r in results:
+    #     l = f"{r[6]}_{r[16][0].parent.parent.stem}"
+    #     labels.append(l)
+    #
+    # fig, ax = plt.subplots(figsize=(len(results)*1.1, 6))
+    # ax.boxplot(aucs, labels=labels)
+    # plt.xticks(rotation=45)
+    # ax.set_title('Best model AUC')
+    # ax.set_ylabel('AUC Values')
+    # ax.grid()
+    # plt.tight_layout()
+    # filepath = out_dir / 'box_plot.png'
+    # print(filepath)
+    # fig.savefig(filepath)
     aucs = [np.array(x[14]) - best_model for x in results]
-    labels = []
-    for r in results:
-        l = f"{r[6]}_{r[16][0].parent.parent.stem}"
-        labels.append(l)
+    labels = [f"{r[6]}_{r[16][0].parent.parent.stem}" for r in results]
+    fig = go.Figure()
+    for auc, label in zip(aucs, labels):
+        if np.sum(auc) == 0:
+            p_value = np.nan
+        else:
+            p_value = scipy.stats.wilcoxon(auc, alternative='less').pvalue
+        #print(p_value)
 
-    fig, ax = plt.subplots(figsize=(len(results)*1.1, 6))
-    ax.boxplot(aucs, labels=labels)
-    plt.xticks(rotation=45)
-    ax.set_title('Best model AUC')
-    ax.set_ylabel('AUC Values')
-    ax.grid()
-    plt.tight_layout()
-    fig.savefig(out_dir / 'box_plot.png')
+        label_with_p_value = f"{label} (p-value: {p_value:.2e})" if not np.isnan(p_value) else f"{label} (p-value: NaN)"
+        fig.add_trace(go.Box(y=auc, name=label_with_p_value))
+
+    fig.update_layout(
+        title='Best Model AUC Comparison',
+        xaxis_title="Model",
+        yaxis_title="AUC Values",
+        xaxis={'tickangle': 45},  # Rotate labels for better readability
+        showlegend=True
+    )
+    filepath = str(out_dir / 'best_vs_others.html')
+    print(filepath)
+    fig.write_html(filepath)
 
 
 if __name__ == "__main__":

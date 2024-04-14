@@ -202,7 +202,8 @@ def process_ml(
         export_fig_as_pdf,
         C=C,
         gamma=gamma,
-        regularisation=regularisation
+        regularisation=regularisation,
+        n_peak=n_peak
     )
 
     if cv != "LeaveOneOut":
@@ -538,7 +539,8 @@ def cross_validate_svm_fast(
     C=None,
     gamma=None,
     regularisation=False,
-    max_iter=-1
+    max_iter=-1,
+    n_peak=1
 ):
     """Cross validate X,y data and plot roc curve with range
     Args:
