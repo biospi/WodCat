@@ -539,7 +539,7 @@ def cross_validate_svm_fast(
     C=None,
     gamma=None,
     regularisation=False,
-    max_iter=-1,
+    max_iter=100000,
     n_peak=1
 ):
     """Cross validate X,y data and plot roc curve with range
