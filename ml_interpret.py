@@ -15,7 +15,8 @@ from sklearn.svm import SVC
 from cwt._cwt import CWT, DWT
 from model.data_loader import load_activity_data
 from preprocessing.preprocessing import apply_preprocessing_steps
-
+rcParams['font.family'] = 'serif'
+rcParams['font.serif'] = ['Times New Roman']
 
 def report_mannwhitney(array1, array2):
     U1, p = mannwhitneyu(list(array1), list(array2), method="exact")
@@ -149,7 +150,7 @@ def get_imp_stat_cat(
     print(filepath)
     fig_box.set_size_inches(4, 4)
     fig_box.tight_layout()
-    fig_box.savefig(filepath)
+    fig_box.savefig(filepath, dpi=500)
 
     mask = np.array([1 for _ in range(len(activity))])
     cpt = 0

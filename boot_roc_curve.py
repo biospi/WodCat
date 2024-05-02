@@ -321,7 +321,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
     )
     print(final_path)
 
-    fig_roc_merge.set_size_inches(4, 4)
+    fig_roc_merge.set_size_inches(6, 6)
     fig_roc_merge.tight_layout()
     fig_roc_merge.savefig(final_path, dpi=500)
 
@@ -514,7 +514,7 @@ def boostrap_auc_peak(results, out_dir):
         filepath = out_dir / filename
         print(filepath)
         # fig.savefig(filepath)
-        fig.set_size_inches(4, 3)
+        fig.set_size_inches(8, 6)
         fig.tight_layout()
         fig.savefig(filepath, dpi=500)
 
