@@ -321,7 +321,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
     )
     print(final_path)
 
-    fig_roc_merge.set_size_inches(5, 5)
+    fig_roc_merge.set_size_inches(6, 6)
     fig_roc_merge.tight_layout()
     fig_roc_merge.savefig(final_path, dpi=500)
 
