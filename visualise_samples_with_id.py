@@ -146,7 +146,9 @@ def make_plot(A, output_dir, id, n_meta):
     health = A["health"].mean()
     df_activity = A.iloc[:, :-n_meta]
     print(df_activity)
-    title = f"Samples health={health}"
+    title = f"Samples for a healthy cat"
+    if health == 1:
+        title = f"Samples for a unhealthy cat"
     plt.clf()
     fig = df_activity.T.plot(
         kind="line",
@@ -161,24 +163,25 @@ def make_plot(A, output_dir, id, n_meta):
     #plt.ylim(0, 70)
     plt.xticks(rotation=45)
     plt.tight_layout()
+    fig.set_size_inches(4, 4)  # Adjust the figure size as needed
     filepath = output_dir / f"{id}.png"
     print(filepath)
-    fig.savefig(filepath)
+    fig.savefig(filepath, dpi=500)
 
 
 if __name__ == "__main__":
-    # dataset = Path(
-    #         "E:/Cats/paper_debug_regularisation_8/All_100_10_060_001/dataset/samples.csv"
-    #     )
-    # meta_columns_file = dataset.parent / "meta_columns.csv"
-    # meta_columns = pd.read_csv(meta_columns_file).values.flatten().tolist()
-    #
-    # main(
-    #     dataset_file=dataset,
-    #     meta_columns=meta_columns,
-    #     output_dir=Path("E:/Cats/paper_visu/All_100_10_060_001"),
-    #     ids=IDS2,
-    # )
+    dataset = Path(
+            "E:/Cats/paper_debug_regularisation_8/All_100_10_060_001/dataset/samples.csv"
+        )
+    meta_columns_file = dataset.parent / "meta_columns.csv"
+    meta_columns = pd.read_csv(meta_columns_file).values.flatten().tolist()
+
+    main(
+        dataset_file=dataset,
+        meta_columns=meta_columns,
+        output_dir=Path("E:/Cats/paper_visu/All_100_10_060_001"),
+        ids=IDS2,
+    )
 
     dataset = Path(
             "E:/Cats/paper_debug_regularisation_8/All_100_10_060_003/dataset/samples.csv"

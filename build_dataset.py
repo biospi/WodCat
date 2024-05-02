@@ -17,6 +17,11 @@ from utils._anscombe import anscombe
 from utils.utils import time_of_day_
 import pytest
 
+from matplotlib import rcParams
+# Set matplotlib to use Times New Roman
+rcParams['font.family'] = 'serif'
+rcParams['font.serif'] = ['Times New Roman']
+
 
 def plot_heatmap(out_dir, datetime_xaxis, matrix, y_axis, filename, title="title"):
     fig = go.Figure(
@@ -28,16 +33,27 @@ def plot_heatmap(out_dir, datetime_xaxis, matrix, y_axis, filename, title="title
             showscale=True,
         )
     )
+
     fig.update_layout(
-        title=title,
+        # title=title,
         autosize=True,
         xaxis_title="Time (1 min bin)",
         yaxis_title="Cats",
+        font=dict(
+            family="Times New Roman",  # This sets the font family to Times New Roman
+            size=12,                  # You can also specify the size here if necessary
+            color="black"             # And the font color
+        )
     )
+
     output = out_dir / "heatmap"
     output.mkdir(parents=True, exist_ok=True)
     filepath = output / filename
     fig.write_html(str(filepath))
+    print(filepath)
+
+    filepath = output / (filename.split('.')[0] + '.png')
+    fig.write_image(str(filepath), width=3*500, height=500, scale=1)  # Save as 2K image
     print(filepath)
 
 
@@ -143,16 +159,17 @@ def get_cat_meta(output_dir, cat_id, output_fig=True, individual_to_ignore = ["M
                     + geom_jitter()  # defining the type of plot to use
                     + stat_summary(geom="crossbar", color="black", width=0.2)
                     + theme(
-                subplots_adjust={"right": 0.82}, axis_text_x=element_text(angle=45, hjust=1), legend_position='none'
+                subplots_adjust={"right": 0.82}, axis_text_x=element_text(angle=45, hjust=1, family='Times New Roman'), legend_position='none',
+                text=element_text(family='Times New Roman')
             )
             )
 
             fig = g.draw()
             ax = fig.gca()
-            ax.set_title(f"Cat {col}")
-            ax.set_ylabel("Mobility Score")
+            ax.set_title(f"Cat {col}", fontdict={'family': 'Times New Roman'})
+            ax.set_ylabel("Mobility Score", fontdict={'family': 'Times New Roman'})
             if col == "Age":
-                ax.set_ylabel("Age(years)")
+                ax.set_ylabel("Age(years)", fontdict={'family': 'Times New Roman'})
             filename = f"{col}.png"
             output_dir.mkdir(parents=True, exist_ok=True)
             filepath = output_dir / filename
@@ -160,7 +177,7 @@ def get_cat_meta(output_dir, cat_id, output_fig=True, individual_to_ignore = ["M
             print(filepath)
             fig.set_size_inches(3, 4)
             fig.tight_layout()
-            fig.savefig(filepath)
+            fig.savefig(filepath, dpi=500)
 
     df = df[pd.notnull(df["DJD_ID"])]
     df["DJD_ID"] = df["DJD_ID"].astype(int)
@@ -335,8 +352,6 @@ def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatma
                 rois_timestamp = rois[:, -n_peak:]
                 rois = rois[:, :-n_peak].astype(int)
 
-
-
         if bin == "T":
             create_activity_graph(
                 df.index.values,
@@ -365,14 +380,14 @@ def main(time_of_day, cat_data, out_dir, bin, w_size, thresh, n_peak, out_heatma
         df_herd = pd.DataFrame(activity_list)
         datetime_xaxis = max(datetime_list, key=len)
         datetime_xaxis = pd.to_datetime(datetime_xaxis)
-        plot_heatmap(
-            out_dir,
-            datetime_xaxis,
-            df_herd.values,
-            individual_list,
-            "cats.html",
-            title="Cats activity",
-        )
+        # plot_heatmap(
+        #     out_dir,
+        #     datetime_xaxis,
+        #     df_herd.values,
+        #     individual_list,
+        #     "cats.html",
+        #     title="Cats activity",
+        # )
 
         plot_heatmap(
             out_dir,

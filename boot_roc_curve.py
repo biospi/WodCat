@@ -15,6 +15,11 @@ import matplotlib.colors as mcolors
 from matplotlib.legend_handler import HandlerBase
 import sys
 np.random.seed(0)
+from matplotlib import rcParams
+# Set matplotlib to use Times New Roman
+rcParams['font.family'] = 'serif'
+rcParams['font.serif'] = ['Times New Roman']
+
 
 class AnyObjectHandler(HandlerBase):
     def create_artists(
@@ -126,7 +131,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
     out_dir = paths[0].parent.parent / "pickles"
     out_dir.mkdir(parents=True, exist_ok=True)
     data = {}
-    fig_roc_merge, ax_roc_merge = plt.subplots(figsize=(6, 6))
+    fig_roc_merge, ax_roc_merge = plt.subplots()
     for filepath in tqdm(paths):
         with open(filepath, "r") as fp:
             try:
@@ -315,7 +320,10 @@ def main(path=None, n_bootstrap=100, n_job=6):
         / f"{n_bootstrap}_{max_sample}_{n_top}_{window_size}_{n_peaks}_{loo_result['steps']}.png"
     )
     print(final_path)
-    fig_roc_merge.savefig(final_path)
+
+    fig_roc_merge.set_size_inches(4, 4)
+    fig_roc_merge.tight_layout()
+    fig_roc_merge.savefig(filepath, dpi=500)
 
     return [
         f"{median_auc_test:.2f} ({lo_test_auc:.2f}-{hi_test_auc:.2f})",
@@ -403,8 +411,8 @@ def boostrap_auc_peak(results, out_dir):
     for df in dfs_ntop:
         ntop = int(df["N top"].values[0])
         s_length = df["Sample length (seconds)"].values[0]
-        fig, ax1 = plt.subplots(figsize=(8.00, 5.80))
-        ax1.set_ylim(0.45, 1)
+        fig, ax1 = plt.subplots()
+
         ax2 = ax1.twinx()
         dfs = [group for _, group in df.groupby(["pipeline"])]
 
@@ -497,14 +505,18 @@ def boostrap_auc_peak(results, out_dir):
         )
         ax1.grid()
 
-        fig.tight_layout()
+        ax1.set_ylim(0.45, 1)
+
         time_of_day = df["time_of_day"].values[0]
         max_scount = df["Max sample count per indiv"].values[0]
         filename = f"{time_of_day}_{ntop}_{max_scount}_{s_length}_auc_per_npeak_bootstrap.png"
         out_dir.mkdir(parents=True, exist_ok=True)
         filepath = out_dir / filename
         print(filepath)
-        fig.savefig(filepath)
+        # fig.savefig(filepath)
+        fig.set_size_inches(4, 3)
+        fig.tight_layout()
+        fig.savefig(filepath, dpi=500)
 
 
 if __name__ == "__main__":
