@@ -157,10 +157,10 @@ def main(
                 results.append(res)
             else:
                 for preprocessing_steps in [
-                    # [""],
-                    # ["L1"],
+                    [""],
+                    ["L1"],
                     ["L1", "L1SCALE", "ANSCOMBE"],
-                    # ["L1", "L1SCALE", "ANSCOMBE", "LOG"]
+                    ["L1", "L1SCALE", "ANSCOMBE", "LOG"]
                 ]:
                     pre_visu = True #export grapth just for the first run to save storage space
                     if i == 0:
