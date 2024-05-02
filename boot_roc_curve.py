@@ -323,7 +323,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
 
     fig_roc_merge.set_size_inches(4, 4)
     fig_roc_merge.tight_layout()
-    fig_roc_merge.savefig(filepath, dpi=500)
+    fig_roc_merge.savefig(final_path, dpi=500)
 
     return [
         f"{median_auc_test:.2f} ({lo_test_auc:.2f}-{hi_test_auc:.2f})",
