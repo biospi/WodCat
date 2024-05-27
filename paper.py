@@ -203,27 +203,23 @@ def main(
 def best_model_boxplot(results, out_dir):
     results.sort(key=lambda x: x[12])
     best_model = np.array(results[-1][14])
-    #
-    # aucs = [np.array(x[14]) - best_model for x in results]
-    # labels = []
-    # for r in results:
-    #     l = f"{r[6]}_{r[16][0].parent.parent.stem}"
-    #     labels.append(l)
-    #
-    # fig, ax = plt.subplots(figsize=(len(results)*1.1, 6))
-    # ax.boxplot(aucs, labels=labels)
-    # plt.xticks(rotation=45)
-    # ax.set_title('Best model AUC')
-    # ax.set_ylabel('AUC Values')
-    # ax.grid()
-    # plt.tight_layout()
-    # filepath = out_dir / 'box_plot.png'
-    # print(filepath)
-    # fig.savefig(filepath)
+
     aucs = [np.array(x[14]) - best_model for x in results]
     labels = [f"{r[6]}_{r[16][0].parent.parent.stem}" for r in results]
+
+    #format labels to human readable
+    labels_formatted = []
+    for l in labels:
+        if l ==  '0__LeaveOneOut':
+            labels_formatted.append("Age")
+        if l ==  '1_L1_L1SCALE_ANSCOMBE_LeaveOneOut':
+            labels_formatted.append("Activity 1 peak")
+        if l ==  '22_L1_L1SCALE_ANSCOMBE_LeaveOneOut':
+            labels_formatted.append("Activity 22 peaks")
+
+
     fig = go.Figure()
-    for auc, label in zip(aucs, labels):
+    for auc, label in zip(aucs, labels_formatted):
         if np.sum(auc) == 0:
             p_value = np.nan
         else:
@@ -231,18 +227,36 @@ def best_model_boxplot(results, out_dir):
         #print(p_value)
 
         label_with_p_value = f"{label} (p-value: {p_value:.2e})" if not np.isnan(p_value) else f"{label} (p-value: NaN)"
-        fig.add_trace(go.Box(y=auc, name=label_with_p_value))
+        fig.add_trace(go.Box(y=auc, name=label))
 
     fig.update_layout(
         title='Best Model AUC Comparison',
         xaxis_title="Model",
-        yaxis_title="AUC Values",
+        yaxis_title="AUC(Delta)",
         xaxis={'tickangle': 45},  # Rotate labels for better readability
-        showlegend=True
+        showlegend=True,
+        font=dict(family="Times New Roman", size=12, color="black")
     )
-    filepath = str(out_dir / 'best_vs_others.html')
+    filepath = str(out_dir / 'best_vs_others_nop.html')
     print(filepath)
     fig.write_html(filepath)
+
+    # Set size and DPI for the PNG export
+    width_in_inches = 1
+    height_in_inches = 1.5
+    dpi = 500
+
+    # Convert inches to pixels
+    width_in_pixels = 715
+    height_in_pixels = 930
+
+    # Define the file path for the PNG
+    png_filepath = str(out_dir / 'best_vs_others.png')
+
+    # Export as PNG
+    fig.write_image(png_filepath, width=width_in_pixels, height=height_in_pixels, scale=1)
+
+    print(f"Saved to {png_filepath}")
 
 
 if __name__ == "__main__":

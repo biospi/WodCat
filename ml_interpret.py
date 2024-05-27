@@ -15,6 +15,7 @@ from sklearn.svm import SVC
 from cwt._cwt import CWT, DWT
 from model.data_loader import load_activity_data
 from preprocessing.preprocessing import apply_preprocessing_steps
+from matplotlib import rcParams
 rcParams['font.family'] = 'serif'
 rcParams['font.serif'] = ['Times New Roman']
 
@@ -161,7 +162,6 @@ def get_imp_stat_cat(
             cpt = 0
         cpt+=1
 
-
     light = np.zeros(mask.shape).astype(str)
     light[mask == 0] = "before"
     light[mask == 1] = "after"
@@ -294,7 +294,7 @@ def main(
         n_peaks=n_peaks
     )
 
-    fig, ax = plt.subplots(figsize=(width, height))
+    fig, ax = plt.subplots()
     ax2 = ax.twinx()
     ax.plot(
         date_list,
@@ -314,21 +314,24 @@ def main(
         date_list,
         roll_avg,
         color="black",
-        label=f"Feature importance (roll avg, {r_avg})",
+        label=f"Feature importance rolling avg ({r_avg} pts)",
         alpha=0.9,
     )
 
-    ax.legend(loc="upper left")
-    ax2.legend(loc="upper right")
+    ax.legend(loc="upper left", fontsize=14)
+    ax2.legend(loc="upper right", fontsize=14)
     ax.set_title(
         f"Feature importance {type(clf).__name__} n_peaks={n_peaks}"
     )
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Activity")
-    ax2.set_ylabel("Absolute value of Coefficients")
+    ax.set_xlabel("Time", fontsize=18)
+    ax.set_ylabel("Activity", fontsize=18)
+    ax2.set_ylabel("Abs(Coefficients)", fontsize=18)
     filename = f"{n_peaks}_feature_importance_{X_train.shape[1]}.png"
     filepath = output_dir / filename
     print(filepath)
+    fig.set_size_inches(6, 9)
+    fig.tight_layout()
+    fig.savefig(filepath, dpi=500)
 
     fig.savefig(filepath)
 
@@ -391,7 +394,7 @@ def main(
         imp_top_n_perct, (f_transform.shape[0], f_transform.shape[1])
     )
 
-    fig, axs = plt.subplots(3, 1, facecolor="white", figsize=(12.80, 18.80))
+    fig, axs = plt.subplots(3, 1, facecolor="white")
     axs = axs.ravel()
     fig, ax = plt.subplots(figsize=(12.80, 7.20))
     ax2 = ax.twinx()
@@ -418,7 +421,9 @@ def main(
     )
     filepath = output_dir / filename
     print(filepath)
-    fig.savefig(filepath)
+    fig.set_size_inches(8, 6)
+    fig.tight_layout()
+    fig.savefig(filepath, dpi=500)
 
     cwt_0 = X_train[y_train == 0]
     cwt_1 = X_train[y_train == 1]

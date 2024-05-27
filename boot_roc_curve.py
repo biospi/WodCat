@@ -223,28 +223,33 @@ def main(path=None, n_bootstrap=100, n_job=6):
     median_auc_test = np.nanmedian(auc_list_test)
     lo_test_auc, hi_test_auc = ninefive_confidence_interval(auc_list_test)
     print(
-        f"median Test AUC = {median_auc_test:.2f}, 95% CI [{lo_test_auc:.2f}, {hi_test_auc:.2f}] )"
+        f"Testing AUC = {median_auc_test:.2f}({lo_test_auc:.1f}, {hi_test_auc:.1f})"
     )
 
     median_auc_train = np.nanmedian(auc_list_train)
     lo_train_auc, hi_train_auc = ninefive_confidence_interval(auc_list_train)
     print(
-        f"median Train AUC = {median_auc_train:.2f}, 95% CI [{lo_train_auc:.2f}, {hi_train_auc:.2f}] )"
+        f"Training AUC = {median_auc_train:.2f}({lo_train_auc:.1f}, {hi_train_auc:.1f})"
     )
 
     median_prec_test = np.nanmedian(prec_list_test)
     lo_test_prec, hi_test_prec = ninefive_confidence_interval(prec_list_test)
     print(
-        f"median Test prec = {median_prec_test:.2f}, 95% CI [{lo_test_prec:.2f}, {hi_test_prec:.2f}] )"
+        f"Testing prec = {median_prec_test:.2f}({lo_test_prec:.1f}, {hi_test_prec:.1f})"
     )
 
     median_prec_train = np.nanmedian(prec_list_train)
     lo_train_prec, hi_train_prec = ninefive_confidence_interval(prec_list_train)
     print(
-        f"median Train prec = {median_prec_train:.2f}, 95% CI [{lo_train_prec:.2f}, {hi_train_prec:.2f}] )"
+        f"Training prec = {median_prec_train:.2f}({lo_train_prec:.1f}, {hi_train_prec:.1f})"
     )
 
-    xaxis_train_ = random.sample(xaxis_train, 100)
+    try:
+        xaxis_train_ = random.sample(xaxis_train, 100)
+    except ValueError as e:
+        print(e)
+        xaxis_train_ = xaxis_train
+
     for fpr, tpr in xaxis_train_:
         ax_roc_merge.plot(fpr, tpr, color="tab:purple", alpha=0.3, linewidth=1)
 
@@ -256,8 +261,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
         [0, 1], [0, 1], linestyle="--", lw=2, color="orange", label="Chance", alpha=1
     )
 
-
-    label = f"ROC Test (Median AUC = {median_auc_test:.2f}, 95% CI [{lo_test_auc:.4f}, {hi_test_auc:.4f}] )"
+    label = f"Testing (Median AUC = {median_auc_test:.2f}({lo_test_auc:.1f}, {hi_test_auc:.1f})"
 
     mean_fpr_test, mean_tpr_test = [], []
     for y_list, proba_list in zip(all_test_y_list, all_test_proba_list):
@@ -277,12 +281,14 @@ def main(path=None, n_bootstrap=100, n_job=6):
     ax_roc_merge.plot(
         mean_fpr_test, mean_tpr_test, color="black", label=label, lw=2, alpha=1
     )
-    ax_roc_merge.set_xlabel("False positive rate")
-    ax_roc_merge.set_ylabel("True positive rate")
-    ax_roc_merge.legend(loc="lower right")
+    ax_roc_merge.tick_params(axis='x', labelsize=18)  # Adjust the fontsize as needed for the x-axis
+    ax_roc_merge.tick_params(axis='y', labelsize=18)
+    ax_roc_merge.set_xlabel("False positive rate", fontsize=22)
+    ax_roc_merge.set_ylabel("True positive rate", fontsize=22)
+    ax_roc_merge.legend(loc="lower right", fontsize=14)
     # fig.show()
 
-    label = f"ROC Training (Median AUC = {median_auc_train:.2f}, 95% CI [{lo_train_auc:.4f}, {hi_train_auc:.4f}] )"
+    label = f"Training (Median AUC = {median_auc_train:.2f}({lo_train_auc:.1f}, {hi_train_auc:.1f})"
     mean_fpr_train, mean_tpr_train = [], []
     for y_list, proba_list in zip(all_train_y_list, all_train_proba_list):
         mean_fpr, mean_tpr, thresholds = roc_curve(
@@ -304,7 +310,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
     ax_roc_merge.set(
         xlim=[-0.05, 1.05],
         ylim=[-0.05, 1.05],
-        title=f"Receiver operating characteristic (n_bootstrap={n_bootstrap})",
+        #title=f"Receiver operating characteristic (n_bootstrap={n_bootstrap})",
     )
     ax_roc_merge.legend(loc="lower right")
 
