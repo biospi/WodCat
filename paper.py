@@ -241,22 +241,22 @@ def best_model_boxplot(results, out_dir):
     print(filepath)
     fig.write_html(filepath)
 
-    # Set size and DPI for the PNG export
-    width_in_inches = 1
-    height_in_inches = 1.5
-    dpi = 500
-
-    # Convert inches to pixels
-    width_in_pixels = 715
-    height_in_pixels = 930
-
-    # Define the file path for the PNG
-    png_filepath = str(out_dir / 'best_vs_others.png')
-
-    # Export as PNG
-    fig.write_image(png_filepath, width=width_in_pixels, height=height_in_pixels, scale=1)
-
-    print(f"Saved to {png_filepath}")
+    # # Set size and DPI for the PNG export
+    # width_in_inches = 1
+    # height_in_inches = 1.5
+    # dpi = 500
+    #
+    # # Convert inches to pixels
+    # width_in_pixels = 715
+    # height_in_pixels = 930
+    #
+    # # Define the file path for the PNG
+    # png_filepath = str(out_dir / 'best_vs_others.png')
+    #
+    # # Export as PNG
+    # fig.write_image(png_filepath, width=width_in_pixels, height=height_in_pixels, scale=1)
+    #
+    # print(f"Saved to {png_filepath}")
 
 
 if __name__ == "__main__":

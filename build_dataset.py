@@ -52,9 +52,9 @@ def plot_heatmap(out_dir, datetime_xaxis, matrix, y_axis, filename, title="title
     fig.write_html(str(filepath))
     print(filepath)
 
-    filepath = output / (filename.split('.')[0] + '.png')
-    fig.write_image(str(filepath), width=3*500, height=500, scale=1)  # Save as 2K image
-    print(filepath)
+    # filepath = output / (filename.split('.')[0] + '.png')
+    # fig.write_image(str(filepath), width=3*500, height=500, scale=1)  # Save as 2K image
+    # print(filepath)
 
 
 def create_activity_graph(

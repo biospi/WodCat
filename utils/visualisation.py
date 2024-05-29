@@ -2026,26 +2026,26 @@ def plot_ml_report_final_abs(output_dir):
             )
             fig_.write_html(str(filepath))
 
-            width_in_inches = 6
-            height_in_inches = 7
-            dpi = 1
-
-            # Convert inches to pixels
-            width_in_pixels = 700
-            height_in_pixels = 930*1.1
-
-            # Define the file path for the PNG
-            png_filepath = str(output_dir / 'best_vs_others.png')
-
-            # Export as PNG
-            print(png_filepath)
-            fig_.write_image(png_filepath, width=width_in_pixels, height=height_in_pixels, scale=2)
-
-            # Define the file path for the PDF
-            pdf_filepath = str(output_dir / 'best_vs_others.pdf')
-            # Export as PDF
-            print(pdf_filepath)
-            pio.write_image(fig_, pdf_filepath, format="pdf", width=width_in_pixels, height=height_in_pixels)
+            # width_in_inches = 6
+            # height_in_inches = 7
+            # dpi = 1
+            #
+            # # Convert inches to pixels
+            # width_in_pixels = 700
+            # height_in_pixels = 930*1.1
+            #
+            # # Define the file path for the PNG
+            # png_filepath = str(output_dir / 'best_vs_others.png')
+            #
+            # # Export as PNG
+            # print(png_filepath)
+            # fig_.write_image(png_filepath, width=width_in_pixels, height=height_in_pixels, scale=2)
+            #
+            # # Define the file path for the PDF
+            # pdf_filepath = str(output_dir / 'best_vs_others.pdf')
+            # # Export as PDF
+            # print(pdf_filepath)
+            # pio.write_image(fig_, pdf_filepath, format="pdf", width=width_in_pixels, height=height_in_pixels)
 
 
 def build_report(
