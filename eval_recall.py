@@ -125,7 +125,7 @@ def eval_recall(
         df["optimal_threshold"] = [optimal_threshold]
         df["optimal_sensitivity"] = [optimal_sensitivity]
         df["optimal_specificity"] = [optimal_specificity]
-        filepath = input_folder.parent / "recall_data.csv"
+        filepath = input_folder.parent / f"{i}_recall_data.csv"
         print(filepath)
         df.to_csv(filepath, index=False)
         optimal_sensitivity_list.append(optimal_sensitivity)
