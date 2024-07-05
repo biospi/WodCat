@@ -46,13 +46,14 @@ def test():
 
 
 def get_cli(data, l="Sensitivity"):
+    print(data)
     # Convert the list to a NumPy array for convenience
     data = np.array(data)
     # Calculate the median
-    median = np.median(data)
+    median = np.nanmedian(data)
     # Calculate the 2.5th and 97.5th percentiles for the confidence interval
-    lower_bound = np.percentile(data, 2.5)
-    upper_bound = np.percentile(data, 97.5)
+    lower_bound = np.nanpercentile(data, 2.5)
+    upper_bound = np.nanpercentile(data, 97.5)
     print(f"Median {l}: {median:.4f}")
     print(f"95% Confidence Interval: ({lower_bound:.4f}, {upper_bound:.4f})")
 
