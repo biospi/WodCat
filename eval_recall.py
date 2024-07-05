@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 
 def test():
-    input_dir = Path("E:/BIOSPI/paper_debug_regularisation_36")
+    input_dir = Path("/mnt/storage/scratch/axel/cats/paper_debug_regularisation_36")
     folders = list(input_dir.glob("**/fold_data"))
 
     recall_data = list(input_dir.glob("**/recall_data.csv"))
@@ -64,8 +64,6 @@ def eval_recall(
             y_score = fold_data["y_pred_proba_test"]
             y_score_list.extend(y_score)
 
-    print(y_true_list)
-    print(y_score_list)
     fpr, tpr, thresholds = roc_curve(y_true_list, y_score_list)
     sensitivity = tpr
     specificity = 1 - fpr
@@ -95,6 +93,6 @@ def eval_recall(
 
 
 if __name__ == "__main__":
-    #test()
+    test()
     #"E:\Cats\paper_13\All_100_10_030_008\rbf\_LeaveOneOut\fold_data"
     typer.run(eval_recall)
