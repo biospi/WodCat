@@ -121,6 +121,6 @@ def eval_recall(
 
 
 if __name__ == "__main__":
-    test()
+    #test()
     #"E:\Cats\paper_13\All_100_10_030_008\rbf\_LeaveOneOut\fold_data"
     typer.run(eval_recall)
