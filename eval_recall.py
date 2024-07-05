@@ -80,6 +80,8 @@ def eval_recall(
             y_score = fold_data["y_pred_proba_test"]
             y_score_list.extend(y_score)
 
+            print(y_true)
+            print(y_score)
             fpr, tpr, thresholds = roc_curve(y_true, y_score)
             sensitivity = tpr
             specificity = 1 - fpr
