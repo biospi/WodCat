@@ -45,6 +45,18 @@ def test():
     df.to_csv(filepath, index=False)
 
 
+def get_cli(data, l="Sensitivity"):
+    # Convert the list to a NumPy array for convenience
+    data = np.array(data)
+    # Calculate the median
+    median = np.median(data)
+    # Calculate the 2.5th and 97.5th percentiles for the confidence interval
+    lower_bound = np.percentile(data, 2.5)
+    upper_bound = np.percentile(data, 97.5)
+    print(f"Median {l}: {median:.4f}")
+    print(f"95% Confidence Interval: ({lower_bound:.4f}, {upper_bound:.4f})")
+
+
 def eval_recall(
     input_folder: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
@@ -56,6 +68,9 @@ def eval_recall(
     y_true_list = []
     y_score_list = []
 
+    optimal_sensitivity_list = []
+    optimal_specificity_list = []
+
     for file in tqdm(fold_data_files):
         with open(file, "r") as fp:
             fold_data = json.load(fp)
@@ -63,6 +78,19 @@ def eval_recall(
             y_true_list.extend(y_true)
             y_score = fold_data["y_pred_proba_test"]
             y_score_list.extend(y_score)
+
+            fpr, tpr, thresholds = roc_curve(y_true, y_score)
+            sensitivity = tpr
+            specificity = 1 - fpr
+            optimal_idx = np.argmax(sensitivity + specificity)
+            optimal_threshold = thresholds[optimal_idx]
+            optimal_sensitivity = sensitivity[optimal_idx]
+            optimal_specificity = specificity[optimal_idx]
+            optimal_sensitivity_list.append(optimal_sensitivity)
+            optimal_specificity_list.append(optimal_specificity)
+
+    get_cli(optimal_sensitivity, "optimal_sensitivity")
+    get_cli(optimal_specificity, "optimal_specificity")
 
     fpr, tpr, thresholds = roc_curve(y_true_list, y_score_list)
     sensitivity = tpr
