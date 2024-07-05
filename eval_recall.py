@@ -46,7 +46,7 @@ def test():
 
 
 def get_cli(data, l="Sensitivity"):
-    print(data)
+    print(f"DATA={data}")
     # Convert the list to a NumPy array for convenience
     data = np.array(data)
     # Calculate the median
@@ -90,8 +90,8 @@ def eval_recall(
             optimal_sensitivity_list.append(optimal_sensitivity)
             optimal_specificity_list.append(optimal_specificity)
 
-    get_cli(optimal_sensitivity, "optimal_sensitivity")
-    get_cli(optimal_specificity, "optimal_specificity")
+    get_cli(optimal_sensitivity_list, "optimal_sensitivity")
+    get_cli(optimal_specificity_list, "optimal_specificity")
 
     fpr, tpr, thresholds = roc_curve(y_true_list, y_score_list)
     sensitivity = tpr
