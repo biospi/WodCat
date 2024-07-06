@@ -138,6 +138,7 @@ def eval_recall(
         auc_list.append(auc)
         #return auc, optimal_threshold, optimal_sensitivity, optimal_specificity
 
+    get_cli(auc_list, "auc_list")
     get_cli(optimal_sensitivity_list, "optimal_sensitivity")
     get_cli(optimal_specificity_list, "optimal_specificity")
 
