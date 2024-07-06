@@ -63,9 +63,9 @@ def eval_recall(
     input_folder: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
-    n_boots: int = 10
+    n_boots: int = 100
 ):
-    optimal_sensitivity_list, optimal_specificity_list = [], []
+    optimal_sensitivity_list, optimal_specificity_list, auc_list, optimal_threshold_list = [], [], [], []
     for i in range(n_boots):
         print("Find optimal Sensitivity/Specificity...")
         print(input_folder)
@@ -107,8 +107,13 @@ def eval_recall(
         sensitivity = tpr
         specificity = 1 - fpr
 
-        # Find the index of the point on the ROC curve closest to the top-left corner
-        optimal_idx = np.argmax(sensitivity + specificity)
+        # # Find the index of the point on the ROC curve closest to the top-left corner
+        # optimal_idx = np.argmax(sensitivity + specificity)
+        # Calculate Youden's index
+        youden_index = sensitivity + specificity - 1
+
+        # Find the optimal threshold
+        optimal_idx = np.argmax(youden_index)
 
         optimal_threshold = thresholds[optimal_idx]
         optimal_sensitivity = sensitivity[optimal_idx]
@@ -130,10 +135,13 @@ def eval_recall(
         df.to_csv(filepath, index=False)
         optimal_sensitivity_list.append(optimal_sensitivity)
         optimal_specificity_list.append(optimal_specificity)
+        auc_list.append(auc)
         #return auc, optimal_threshold, optimal_sensitivity, optimal_specificity
 
     get_cli(optimal_sensitivity_list, "optimal_sensitivity")
     get_cli(optimal_specificity_list, "optimal_specificity")
+
+    return auc_list, optimal_threshold_list, optimal_sensitivity_list, optimal_specificity_list
 
 
 if __name__ == "__main__":
