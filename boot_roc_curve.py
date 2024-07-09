@@ -545,9 +545,6 @@ if __name__ == "__main__":
         if x.is_dir()
     ]
     for i, item in enumerate(folders):
-
-        if i > 4:
-            break
         print(f"{i}/{len(folders)}...")
         print(item)
         res = main(item, n_bootstrap=n_bootstrap, n_job=n_job)
