@@ -19,7 +19,9 @@ from matplotlib import rcParams
 # Set matplotlib to use Times New Roman
 rcParams['font.family'] = 'serif'
 rcParams['font.serif'] = ['Times New Roman']
-
+import scipy
+from scipy.stats import ttest_rel
+import scipy.stats as stats
 
 class AnyObjectHandler(HandlerBase):
     def create_artists(
@@ -245,7 +247,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
     )
 
     try:
-        xaxis_train_ = random.sample(xaxis_train, 100)
+        xaxis_train_ = random.sample(xaxis_train, 10)
     except ValueError as e:
         print(e)
         xaxis_train_ = xaxis_train
@@ -253,7 +255,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
     for fpr, tpr in xaxis_train_:
         ax_roc_merge.plot(fpr, tpr, color="tab:purple", alpha=0.3, linewidth=1)
 
-    xaxis_test_ = random.sample(xaxis_test, 100)
+    xaxis_test_ = random.sample(xaxis_test, 10)
     for fpr, tpr in xaxis_test_:
         ax_roc_merge.plot(fpr, tpr, color="tab:blue", alpha=0.3, linewidth=1)
 
@@ -533,6 +535,8 @@ if __name__ == "__main__":
         n_job = int(sys.argv[3])
     else:
         res_folder = Path("E:/Cats/paper_debug_regularisation_8/")
+        n_bootstrap = 20
+        n_job = 2
 
     results = []
     folders = [
@@ -541,6 +545,9 @@ if __name__ == "__main__":
         if x.is_dir()
     ]
     for i, item in enumerate(folders):
+
+        if i > 4:
+            break
         print(f"{i}/{len(folders)}...")
         print(item)
         res = main(item, n_bootstrap=n_bootstrap, n_job=n_job)
@@ -583,3 +590,18 @@ if __name__ == "__main__":
     df_ = df_.head(20)
     print(df_.to_latex(index=False))
     df.to_csv("cat_result_table.csv", index=False)
+
+    df_noproc = df[df["Pre-processing"] == '']
+    df_noproc = df_noproc.sort_values("N peaks")
+    df_noproc_auc = df_noproc["median_auc_test"].values
+
+    df_l1 = df[df["Pre-processing"] == 'L1']
+    df_l1 = df_l1.sort_values("N peaks")
+    df_l1_auc = df_l1["median_auc_test"].values
+
+    # First, conduct the Wilcoxon signed-rank test
+    wilcoxon_p_value = stats.wilcoxon(df_l1_auc, df_noproc_auc, alternative='less').pvalue
+    print(f"Wilcoxon Signed-Rank Test: p-value = {wilcoxon_p_value}")
+
+    t_stat, p_value = ttest_rel(df_l1_auc, df_noproc_auc)
+    print(f"Paired T-Test: t-statistic = {t_stat}, p-value = {p_value}")

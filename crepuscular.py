@@ -87,7 +87,11 @@ if __name__ == "__main__":
     cat_meta = get_cat_meta(data_dir, None)
 
     #Get data from raw csv
+    dataset_path = "meta_data.csv"
     cat_data = get_cat_data(data_dir, "S")
+    print(f"saving {dataset_path}...")
+    pd.concat(cat_data).to_csv(dataset_path, index=True)
+
     num_ticks = 6
     p = 0.95
     w_size = 30

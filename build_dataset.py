@@ -15,7 +15,7 @@ import typer
 from plotnine import ggplot, aes, geom_jitter, stat_summary, theme, element_text
 from utils._anscombe import anscombe
 from utils.utils import time_of_day_
-import pytest
+
 
 from matplotlib import rcParams
 # Set matplotlib to use Times New Roman
@@ -445,22 +445,37 @@ def get_cat_data(data_dir, bin, subset=None):
     # files = new
 
     dfs = []
+    gender = ""
     for i, file in enumerate(files):
-        print(f"progress[{i}/{len(files)}]...")
-        print(f"reading file: {file}")
+        try:
+            print(f"progress[{i}/{len(files)}]...")
+            print(f"reading file: {file}")
+            cat_id = int(file.stem.split("_")[0])
+            cat_name = file.stem.split("_")[1]
 
-        cat_id = int(file.stem.split("_")[0])
-        cat_name = file.stem.split("_")[1]
-        individual_to_ignore = ["MrDudley", "Oliver_F", "Lucy"]
-        if cat_name in individual_to_ignore:
-            continue
-        cat_meta = get_cat_meta(data_dir, cat_id, individual_to_ignore=individual_to_ignore)
-        df = pd.read_csv(file, sep=",", skiprows=range(0, 23), header=None)
-        df = format_raw_data(df, bin)
-        df["health"] = cat_meta["health"]
-        df["age"] = cat_meta["age"]
-        df["cat_id"] = cat_id
-        dfs.append(df)
+            if "maisie" not in str(file).lower():
+                continue
+
+            individual_to_ignore = ["MrDudley", "Oliver_F", "Lucy"]
+            if cat_name in individual_to_ignore:
+                continue
+            cat_meta = get_cat_meta(data_dir, cat_id, individual_to_ignore=individual_to_ignore)
+            df = pd.read_csv(file, sep=",", nrows=1, header=None)
+
+            df_ = pd.read_csv(file, sep=",", nrows=23, header=1, error_bad_lines=False)
+            gender = df_[df_["Filename:"] == "Gender:"].values[0][1]
+            weight = df_[df_["Filename:"] == "Weight:"].values[0][1]
+            #df = format_raw_data(df, bin)
+            df["health"] = cat_meta["health"]
+            df["age"] = cat_meta["age"]
+            df["cat_id"] = cat_id
+            df["mob_score"] = cat_meta['mobility_score']
+            df["gender"] = gender
+            df["weight"] = weight
+            df = df[["cat_id", "age", "gender", "mob_score", "health", "weight"]]
+            dfs.append(df)
+        except Exception as e:
+            print(e)
     return dfs
 
 
@@ -471,7 +486,7 @@ def run(
     out_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
-    dataset_path: Path = Path("dataset.csv"),
+    dataset_path: Path = Path("dataset_test8.csv"),
     bin: str = "S",
     w_size: List[int] = [15],
     threshs: List[int] = [10],
@@ -509,8 +524,11 @@ def run(
         cat_data = get_cat_data(data_dir, bin)
         #dataset_path = f"{dataset_path.name}_{bin}.csv"
         print(f"saving {dataset_path}...")
-        pd.concat(cat_data).to_csv(dataset_path, index=True)
-        #print("done.")
+        df_meta = pd.concat(cat_data)
+        df_meta.to_csv(dataset_path, index=True)
+        df_meta = df_meta.drop("weight", axis=1)
+        print(df_meta.to_latex())
+        print("done.")
 
     datasets = []
     for t in threshs:
@@ -541,40 +559,41 @@ def run(
     return datasets
 
 
-def test():
-
-    n_peak = 7
-    rois = []
-    for i in range(10):
-        rois.append([f"sample {i+1}"])
-    rois = np.array(rois)
-
-    idxs_peaks = np.arange(len(rois))
-    combinat = list(combinations(idxs_peaks, n_peak))
-    try:
-        rois_idxs = random.sample(combinat, k=100)
-    except ValueError as e:
-        print(e)
-        print(f"There are less samples than max_sample={100}")
-        rois_idxs = combinat
-
-    #build augmented sample by concatenating permutations of peaks
-    n_peak_samples = []
-    for idxs in rois_idxs:
-        new_samples = []
-        for i in idxs:
-            sample = rois[i]
-            new_samples.append(sample)
-        activity = np.concatenate(new_samples)
-        s = activity.tolist()
-        n_peak_samples.append(s)
-    n_peak_samples = np.array(n_peak_samples)
-    print(f"{len(rois)} samples before combination")
-    #print(rois)
-    print(f"{len(n_peak_samples)} samples after combination")
-    #print(n_peak_samples)
+# def test():
+#
+#     n_peak = 7
+#     rois = []
+#     for i in range(10):
+#         rois.append([f"sample {i+1}"])
+#     rois = np.array(rois)
+#
+#     idxs_peaks = np.arange(len(rois))
+#     combinat = list(combinations(idxs_peaks, n_peak))
+#     try:
+#         rois_idxs = random.sample(combinat, k=100)
+#     except ValueError as e:
+#         print(e)
+#         print(f"There are less samples than max_sample={100}")
+#         rois_idxs = combinat
+#
+#     #build augmented sample by concatenating permutations of peaks
+#     n_peak_samples = []
+#     for idxs in rois_idxs:
+#         new_samples = []
+#         for i in idxs:
+#             sample = rois[i]
+#             new_samples.append(sample)
+#         activity = np.concatenate(new_samples)
+#         s = activity.tolist()
+#         n_peak_samples.append(s)
+#     n_peak_samples = np.array(n_peak_samples)
+#     print(f"{len(rois)} samples before combination")
+#     #print(rois)
+#     print(f"{len(n_peak_samples)} samples after combination")
+#     #print(n_peak_samples)
 
 
 if __name__ == "__main__":
-    typer.run(run)
+    run(Path("E:\Cats"), Path("E:\Cats"))
+    #typer.run(run)
 
