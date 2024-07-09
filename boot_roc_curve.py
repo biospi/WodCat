@@ -589,7 +589,7 @@ if __name__ == "__main__":
     df_ = df_.drop("Max samples", axis=1)
     df_ = df_.head(20)
     print(df_.to_latex(index=False))
-    df.to_csv("cat_result_table.csv", index=False)
+    df.to_csv(res_folder / "cat_result_table.csv", index=False)
 
     df_noproc = df[df["Pre-processing"] == '']
     df_noproc = df_noproc.sort_values("N peaks")
@@ -600,6 +600,8 @@ if __name__ == "__main__":
     df_l1_auc = df_l1["median_auc_test"].values
 
     # First, conduct the Wilcoxon signed-rank test
+    print("df_l1_auc", df_l1_auc)
+    print("df_noproc_auc", df_noproc_auc)
     wilcoxon_p_value = stats.wilcoxon(df_l1_auc, df_noproc_auc, alternative='less').pvalue
     print(f"Wilcoxon Signed-Rank Test: p-value = {wilcoxon_p_value}")
 
