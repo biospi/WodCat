@@ -599,8 +599,8 @@ if __name__ == "__main__":
     # First, conduct the Wilcoxon signed-rank test
     print("df_l1_auc", df_l1_auc)
     print("df_noproc_auc", df_noproc_auc)
-    wilcoxon_p_value = stats.wilcoxon(df_l1_auc, df_noproc_auc, alternative='less').pvalue
+    wilcoxon_p_value = stats.wilcoxon(df_l1_auc - df_noproc_auc, alternative='less').pvalue
     print(f"Wilcoxon Signed-Rank Test: p-value = {wilcoxon_p_value}")
 
-    t_stat, p_value = ttest_rel(df_l1_auc, df_noproc_auc)
-    print(f"Paired T-Test: t-statistic = {t_stat}, p-value = {p_value}")
+    # t_stat, p_value = ttest_rel(df_l1_auc, df_noproc_auc)
+    # print(f"Paired T-Test: t-statistic = {t_stat}, p-value = {p_value}")
