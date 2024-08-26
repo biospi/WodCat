@@ -725,6 +725,8 @@ if __name__ == "__main__":
         if res is not None:
             results.append(res)
 
+    boostrap_auc_peak_delta(results, res_folder)
+
     df = pd.DataFrame(
         results,
         columns=[
