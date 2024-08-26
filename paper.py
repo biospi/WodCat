@@ -262,8 +262,8 @@ def best_model_boxplot(results, out_dir):
 
 if __name__ == "__main__":
     #data_dir = Path("/mnt/storage/scratch/axel/cats")
-    main(data_dir=Path("E:/Cats"),
-         dataset_path=Path('E:/dataset.csv'),
-         out_dirname="paper_debug_regularisation_20",
-         n_bootstrap=11)
-    #typer.run(main)
+    # main(data_dir=Path("E:/Cats"),
+    #      dataset_path=Path('E:/dataset.csv'),
+    #      out_dirname="paper_debug_regularisation_20",
+    #      n_bootstrap=11)
+    typer.run(main)
