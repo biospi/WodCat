@@ -177,6 +177,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
         xaxis_test = manager.list()
         for i in range(n_bootstrap):
             bootstrap = np.random.choice(paths, size=len(paths), replace=True)
+            print(bootstrap)
             pool.apply_async(
                 worker,
                 (
@@ -371,6 +372,177 @@ def bootstrap_roc():
     return results
 
 
+def boostrap_auc_peak_delta(results, out_dir):
+    if len(results) == 0:
+        print("None value in results!")
+        return
+
+    df = pd.DataFrame(
+        results,
+        columns=[
+            "AUC testing (95% CI)",
+            "AUC training (95% CI)",
+            "Class1 Precision testing (95% CI)",
+            "Class1 Precision training (95% CI)",
+            "N training samples",
+            "N testing samples",
+            "N peaks",
+            "Max sample count per indiv",
+            "N top",
+            "Sample length (seconds)",
+            "Classifier",
+            "Pre-processing",
+            "median_auc_test",
+            "median_auc_train",
+            "median_auc_test_bootstrap",
+            "median_auc_train_bootstrap",
+            "path",
+            "time_of_day"
+        ],
+    )
+
+    df = df[~pd.isna(df["median_auc_test"])]
+    df.loc[
+        df["median_auc_test"] <= 0.5, "median_auc_test"
+    ] = 0.5  # skitlearn can output auc <0.5 those are chance
+    # df = df[df["N peaks"] < 6]
+    df = df.sort_values("N peaks", ascending=True)
+
+    df["pipeline"] = df["Pre-processing"] + "->" + df["Classifier"]
+    df["N peaks"] = df["N peaks"].astype(int)
+
+    n_peak = df["N peaks"].astype(int).max()
+    x_axis = np.arange(1, n_peak+1).astype(str)
+
+    print(df)
+
+    dfs_ntop = [group for _, group in df.groupby(["N top", "time_of_day", "Max sample count per indiv", "Sample length (seconds)"])]
+    for df in dfs_ntop:
+        ntop = int(df["N top"].values[0])
+        s_length = df["Sample length (seconds)"].values[0]
+        fig, ax1 = plt.subplots()
+
+        ax2 = ax1.twinx()
+        dfs = [group for _, group in df.groupby(["pipeline"])]
+
+        x_ticks = sorted(df["N peaks"].unique())
+        y_ticks = []
+        for x_t in x_ticks:
+            y_ = df[df["N peaks"] == x_t][["N training samples", "N testing samples"]].values[0].sum()
+            y_ticks.append(y_)
+
+        ax2.bar(
+            x_ticks,
+            y_ticks,
+            color="grey",
+            label="n samples",
+            alpha=0.4,
+            width=0.2,
+        )
+
+        colors = list(mcolors.TABLEAU_COLORS.keys())
+        print(colors)
+        cpt = 0
+        colors_ = []
+        label_ = []
+
+        #find normalised pipeline for substraction
+        df_l1 = pd.DataFrame()
+
+        for val in dfs:
+            df_l1["median_auc_test"] = [0] * len(val)
+            if val["pipeline"].values[0] == "L1->SVC(rbf)":
+                df_l1 = val
+                break
+
+        for i, item in enumerate(dfs):
+            dfs_ = [group for _, group in item.groupby(["Sample length (seconds)"])]
+            for df_ in dfs_:
+                print(df_["pipeline"].tolist()[0])
+                label = f"Sample length={df_['Sample length (seconds)'].tolist()[0]}s | {'>'.join(df_['pipeline'].tolist()[0].split('_')[:])}"
+                ax1.plot(
+                    df_["N peaks"],
+                    df_["median_auc_test"].values - df_l1["median_auc_test"].values,
+                    label=label,
+                    marker="x",
+                    color=colors[cpt],
+                )
+
+                intervals = pd.eval(df_["median_auc_test_bootstrap"].astype(str)) #todo fix strange bug eval should not be needed, seems that there is a mix of types in the column
+                if "median_auc_test_bootstrap" in df_l1.columns:
+                    intervals_l1 = pd.eval(df_l1["median_auc_test_bootstrap"].astype(str))
+                    intervals_diff = np.array(intervals) - np.array(intervals_l1)
+                    intervals = [arr.tolist() for arr in intervals_diff]
+
+                perct = np.percentile(intervals, [2.5, 50, 97.5], axis=1)
+                top = perct[2, :]
+                bottom = perct[0, :]
+                x = df_["N peaks"].values
+                ax1.fill_between(
+                    x, top.astype(float), bottom.astype(float), alpha=0.1, color=colors[cpt]
+                )
+
+                ax1.plot(
+                    df_["N peaks"],
+                    df_["median_auc_train"].values - df_l1["median_auc_train"].values,
+                    # label=f"Train Window size={df_['window_size_list'].tolist()[0]*2} sec | {'>'.join(df_['p_steps_list'].tolist()[0].split('_')[4:])}",
+                    marker="s",
+                    linestyle="-.",
+                    color=colors[cpt],
+                )
+
+                intervals = pd.eval(df_["median_auc_train_bootstrap"].astype(str)) #same bug here
+                perct = np.percentile(intervals, [2.5, 50, 97.5], axis=1)
+                top = perct[2, :]
+                bottom = perct[0, :]
+                x = df_["N peaks"].values
+                ax1.fill_between(
+                    x, top.astype(float), bottom.astype(float), alpha=0.1, color=colors[cpt]
+                )
+
+                colors_.append(colors[cpt])
+                label_.append(label)
+
+                cpt += 1
+                if cpt >= len(colors):
+                    cpt = 0
+
+        x_labels = [int(x) if isinstance(x, int) or x.is_integer() else ' ' for x in ax1.get_xticks()]
+
+        ax1.set_xticklabels(x_labels)
+
+        ax1.axhline(y=0.5, color="black", linestyle="--")
+        fig.suptitle("Delta L1 Normalised AUC with N peak increase")
+        ax1.set_xlabel("Number of peaks")
+        ax1.set_ylabel("Delta AUC (Compared to Normalised)")
+        ax2.set_ylabel("Number of samples")
+        # plt.legend()
+        # ax1.legend(loc="lower right").set_visible(True)
+        ax2.legend(loc="upper left").set_visible(True)
+
+        color_data = []
+        for item in colors_:
+            color_data.append((item, "--"))
+
+        ax1.legend(
+            color_data, label_, loc="lower right", handler_map={tuple: AnyObjectHandler()}
+        )
+        ax1.grid()
+
+        ax1.set_ylim(-0.4, 0.25)
+
+        time_of_day = df["time_of_day"].values[0]
+        max_scount = df["Max sample count per indiv"].values[0]
+        filename = f"{time_of_day}_{ntop}_{max_scount}_{s_length}_auc_per_npeak_bootstrap_delta.png"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        filepath = out_dir / filename
+        print(filepath)
+        # fig.savefig(filepath)
+        fig.set_size_inches(6, 4)
+        fig.tight_layout()
+        fig.savefig(filepath, dpi=500)
+
+
 def boostrap_auc_peak(results, out_dir):
     if len(results) == 0:
         print("None value in results!")
@@ -444,6 +616,7 @@ def boostrap_auc_peak(results, out_dir):
         cpt = 0
         colors_ = []
         label_ = []
+
         for i, item in enumerate(dfs):
             dfs_ = [group for _, group in item.groupby(["Sample length (seconds)"])]
             for df_ in dfs_:

@@ -39,7 +39,7 @@ def main(
     data_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
-    create_dataset: bool = True,
+    create_dataset: bool = False,
     export_hpc_string: bool = False,
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
@@ -49,8 +49,8 @@ def main(
     n_bootstrap: int = 1000,
     ml_exist: bool = False,
     skip_ml: bool = False,
-    regularisation: bool = True,
-    n_job: int = 28,
+    regularisation: bool = False,
+    n_job: int = 4,
     build_heatmap: bool = False
 ):
     """Script to reproduce paper results\n
@@ -195,6 +195,7 @@ def main(
 
     print("Create n peak comparison ROC curve...")
     boot_roc_curve.boostrap_auc_peak(results, out_dir)
+    boot_roc_curve.boostrap_auc_peak_delta(results, out_dir)
 
     print("Create boxplot best model")
     best_model_boxplot(results, out_dir)
@@ -261,4 +262,8 @@ def best_model_boxplot(results, out_dir):
 
 if __name__ == "__main__":
     #data_dir = Path("/mnt/storage/scratch/axel/cats")
-    typer.run(main)
+    main(data_dir=Path("E:/Cats"),
+         dataset_path=Path('E:/dataset.csv'),
+         out_dirname="paper_debug_regularisation_20",
+         n_bootstrap=11)
+    #typer.run(main)
