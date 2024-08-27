@@ -462,7 +462,7 @@ def boostrap_auc_peak_delta(results, out_dir):
                 label = f"Sample length={df_['Sample length (seconds)'].tolist()[0]}s | {'>'.join(df_['pipeline'].tolist()[0].split('_')[:])}"
                 ax1.plot(
                     df_["N peaks"],
-                    df_["median_auc_test"].values - df_l1["median_auc_test"].values,
+                    df_l1["median_auc_test"].values - df_["median_auc_test"].values,
                     label=label,
                     marker="x",
                     color=colors[cpt],
@@ -484,7 +484,7 @@ def boostrap_auc_peak_delta(results, out_dir):
 
                 ax1.plot(
                     df_["N peaks"],
-                    df_["median_auc_train"].values - df_l1["median_auc_train"].values,
+                    df_l1["median_auc_train"].values - df_["median_auc_train"].values,
                     # label=f"Train Window size={df_['window_size_list'].tolist()[0]*2} sec | {'>'.join(df_['p_steps_list'].tolist()[0].split('_')[4:])}",
                     marker="s",
                     linestyle="-.",
