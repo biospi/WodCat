@@ -39,18 +39,18 @@ def main(
     data_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
-    create_dataset: bool = False,
+    create_dataset: bool = True,
     export_hpc_string: bool = False,
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
-    out_dirname: str = 'paper',
+    out_dirname: str = 'paper_allclf',
     clf: str = 'rbf',
     dataset_path: Path = Path("dataset.csv"),
     n_bootstrap: int = 1000,
     ml_exist: bool = False,
     skip_ml: bool = False,
     regularisation: bool = False,
-    n_job: int = 4,
+    n_job: int = 30,
     build_heatmap: bool = False
 ):
     """Script to reproduce paper results\n
@@ -94,9 +94,9 @@ def main(
     if create_dataset:
         for max_sample in [150]:
             build_dataset.run(
-                w_size=[15],
+                w_size=[30],
                 threshs=[25],
-                n_peaks=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+                n_peaks=[1, 2, 3, 4, 5],
                 data_dir=data_dir,
                 out_dir=out_dir,
                 max_sample=max_sample,
