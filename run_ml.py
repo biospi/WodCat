@@ -40,7 +40,7 @@ def run(
         individual_to_ignore=["MrDudley", "Oliver_F", "Lucy"],
         individual_to_keep=[],
         # classifiers=[clf],
-        classifiers=["rbf", "knn", "dtree", "lreg"],
+        classifiers=["lreg", "rbf", "knn", "dtree"],
         class_healthy_label=["0.0"],
         class_unhealthy_label=["1.0"],
         n_splits=5,
