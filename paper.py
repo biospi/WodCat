@@ -46,7 +46,7 @@ def main(
     out_dirname: str = 'paper_allclf',
     clf: str = 'rbf',
     dataset_path: Path = Path("dataset.csv"),
-    n_bootstrap: int = 1000,
+    n_bootstrap: int = 100,
     ml_exist: bool = False,
     skip_ml: bool = False,
     regularisation: bool = False,
@@ -159,8 +159,7 @@ def main(
                 for preprocessing_steps in [
                     [""],
                     ["L1"],
-                    ["L1", "L1SCALE", "ANSCOMBE"],
-                    ["L1", "L1SCALE", "ANSCOMBE", "LOG"]
+                    ["L1", "L1SCALE", "ANSCOMBE"]
                 ]:
                     pre_visu = False #export grapth just for the first run to save storage space
                     if i == 0:
