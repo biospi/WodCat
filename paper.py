@@ -39,7 +39,7 @@ def main(
     data_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
-    create_dataset: bool = True,
+    create_dataset: bool = False,
     export_hpc_string: bool = False,
     bc_username: str = 'sscm012844',
     uob_username: str = 'fo18103',
@@ -162,9 +162,9 @@ def main(
                     ["L1", "L1SCALE", "ANSCOMBE"],
                     ["L1", "L1SCALE", "ANSCOMBE", "LOG"]
                 ]:
-                    pre_visu = True #export grapth just for the first run to save storage space
+                    pre_visu = False #export grapth just for the first run to save storage space
                     if i == 0:
-                        pre_visu = True
+                        pre_visu = False
 
                     out_ml_dir, status = run_ml.run(
                         preprocessing_steps=preprocessing_steps,

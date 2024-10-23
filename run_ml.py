@@ -22,7 +22,7 @@ def run(
     regularisation: bool = False,
     skip: bool = False,
     n_peak: int = 1,
-    n_job: int = 6,
+    n_job: int = 30,
 ):
     """Thesis script runs the cats study
     Args:\n
