@@ -48,7 +48,7 @@ def run(
         n_job=n_job,
         study_id="cat",
         cv=cv,
-        output_qn_graph=True,
+        output_qn_graph=False,
         pre_visu=pre_visu,
         plot_2d_space=False,
         skip=skip,
