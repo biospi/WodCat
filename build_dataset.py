@@ -144,7 +144,7 @@ def get_cat_meta(output_dir, cat_id, output_fig=True, individual_to_ignore = ["M
     df = pd.read_csv(file, sep=",", nrows=55)
     df_ = df.copy()
     #individual_to_ignore = ["MrDudley", "Oliver_F", "Lucy"]
-    df_ = df_[~df_["Cat"].isin(individual_to_ignore)]
+    #df_ = df_[~df_["Cat"].isin(individual_to_ignore)]
 
     if output_fig:
         for col in ["Age", "Mobility_Score"]:
@@ -297,15 +297,17 @@ def format_raw_data(df, bin):
     #df["hour"] = df["date_time"].dt.hour
     #df["weekday"] = np.where(df["date_time"].dt.dayofweek < 5, True, False)
     #df["day_light"] = df["hour"].apply(check_if_hour_daylight)
-    df = df.resample(bin, on="date_time").sum()
-    df = df.reset_index()
+    df.index = df["date_time"]
+    df = df.apply(pd.to_numeric)
+    df = df.drop("date_time", axis=1)
+    df = df.resample(bin).sum()
 
     if bin == "T":
         df = df.iloc[: 1440 * 12, :]  # clip data to study duration 12 days
     if bin == "S":
         df = df.iloc[: 86400 * 12, :]
 
-    df = df.set_index("date_time")
+    # df = df.set_index("date_time")
     #df.reset_index(level=0, inplace=True)
     #df["color"] = df.apply(attribute_color, axis=1)
     df["epoch"] = df["epoch"].astype(np.int32)
@@ -452,27 +454,25 @@ def get_cat_data(data_dir, bin, subset=None):
             print(f"reading file: {file}")
             cat_id = int(file.stem.split("_")[0])
             cat_name = file.stem.split("_")[1]
-
-            if "maisie" not in str(file).lower():
-                continue
-
-            individual_to_ignore = ["MrDudley", "Oliver_F", "Lucy"]
-            if cat_name in individual_to_ignore:
+            individual_to_ignore = ["mrdudley", "oliver_f", "lucy"]
+            if cat_name.lower() in individual_to_ignore:
+                print(f"Remove cat cat_id:{cat_id} cat_name:{cat_name}")
                 continue
             cat_meta = get_cat_meta(data_dir, cat_id, individual_to_ignore=individual_to_ignore)
-            df = pd.read_csv(file, sep=",", nrows=1, header=None)
-
-            df_ = pd.read_csv(file, sep=",", nrows=23, header=1, error_bad_lines=False)
+            print("Read csv...")
+            df_ = pd.read_csv(file, sep=",", header=1, nrows=23, on_bad_lines="skip")
+            print("Get meta...")
+            df = pd.read_csv(file, sep=",", on_bad_lines="skip", header=None, skiprows=23)
             gender = df_[df_["Filename:"] == "Gender:"].values[0][1]
             weight = df_[df_["Filename:"] == "Weight:"].values[0][1]
-            #df = format_raw_data(df, bin)
+            df = format_raw_data(df, bin)
             df["health"] = cat_meta["health"]
             df["age"] = cat_meta["age"]
             df["cat_id"] = cat_id
             df["mob_score"] = cat_meta['mobility_score']
             df["gender"] = gender
             df["weight"] = weight
-            df = df[["cat_id", "age", "gender", "mob_score", "health", "weight"]]
+            df = df[["cat_id", "age", "gender", "mob_score", "health", "weight", "activity_counts"]]
             dfs.append(df)
         except Exception as e:
             print(e)
@@ -486,13 +486,13 @@ def run(
     out_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
-    dataset_path: Path = Path("dataset_test8.csv"),
+    dataset_path: Path = Path("dataset_all.csv"),
     bin: str = "S",
     w_size: List[int] = [15],
     threshs: List[int] = [10],
     n_peaks: List[int] = [1],
     day_windows: List[str] = ['All'],
-    out_heatmap: bool = False,
+    out_heatmap: bool = True,
     use_age_as_feature: bool = False,
     max_sample: int = 100,
     n_job: int = 2,

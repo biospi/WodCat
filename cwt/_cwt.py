@@ -17,7 +17,7 @@ from scipy import signal
 from sklearn.base import TransformerMixin, BaseEstimator
 from sklearn.metrics import auc
 from sklearn.metrics import make_scorer
-from sklearn.metrics import plot_roc_curve
+# from sklearn.metrics import plot_roc_curve
 from sklearn.metrics import (
     recall_score,
     balanced_accuracy_score,
@@ -213,49 +213,49 @@ def plot_roc_range(ax, tprs, mean_fpr, aucs, out_dir, classifier_name, fig):
 
 
 def make_roc_curve(out_dir, classifier, X, y, cv, param_str, animal):
-    print("make_roc_curve")
-    details = str(classifier).replace("\n", "").replace(" ", "")
-    slug = "".join(x for x in details if x.isalnum())
-
-    clf_name = "%s_%s" % (slug, param_str)
-    print(clf_name)
-
-    if isinstance(X, pd.DataFrame):
-        X = X.values
-
-    tprs = []
-    aucs = []
-    mean_fpr = np.linspace(0, 1, 100)
-    plt.clf()
-    fig, ax = plt.subplots()
-    for i, (train, test) in enumerate(cv.split(X, y)):
-        if isinstance(cv, RepeatedStratifiedKFold):
-            print("make_roc_curve fold %d/%d" % (i, cv.get_n_splits()))
-        else:
-            print("make_roc_curve fold %d/%d" % (i, cv.nfold))
-        classifier.fit(X[train], y[train])
-        viz = plot_roc_curve(
-            classifier,
-            X[test],
-            y[test],
-            label=None,
-            alpha=0.3,
-            lw=1,
-            ax=ax,
-            c="tab:blue",
-        )
-        interp_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
-        interp_tpr[0] = 0.0
-        if np.isnan(viz.roc_auc):
-            continue
-        tprs.append(interp_tpr)
-        aucs.append(viz.roc_auc)
-        # ax.plot(viz.fpr, viz.tpr, c="tab:green")
-    print("make_roc_curve done!")
-    mean_auc = plot_roc_range(ax, tprs, mean_fpr, aucs, out_dir, clf_name, fig)
-    plt.close(fig)
-    plt.clf()
-    return mean_auc
+    # print("make_roc_curve")
+    # details = str(classifier).replace("\n", "").replace(" ", "")
+    # slug = "".join(x for x in details if x.isalnum())
+    #
+    # clf_name = "%s_%s" % (slug, param_str)
+    # print(clf_name)
+    #
+    # if isinstance(X, pd.DataFrame):
+    #     X = X.values
+    #
+    # tprs = []
+    # aucs = []
+    # mean_fpr = np.linspace(0, 1, 100)
+    # plt.clf()
+    # fig, ax = plt.subplots()
+    # for i, (train, test) in enumerate(cv.split(X, y)):
+    #     if isinstance(cv, RepeatedStratifiedKFold):
+    #         print("make_roc_curve fold %d/%d" % (i, cv.get_n_splits()))
+    #     else:
+    #         print("make_roc_curve fold %d/%d" % (i, cv.nfold))
+    #     classifier.fit(X[train], y[train])
+    #     viz = plot_roc_curve(
+    #         classifier,
+    #         X[test],
+    #         y[test],
+    #         label=None,
+    #         alpha=0.3,
+    #         lw=1,
+    #         ax=ax,
+    #         c="tab:blue",
+    #     )
+    #     interp_tpr = np.interp(mean_fpr, viz.fpr, viz.tpr)
+    #     interp_tpr[0] = 0.0
+    #     if np.isnan(viz.roc_auc):
+    #         continue
+    #     tprs.append(interp_tpr)
+    #     aucs.append(viz.roc_auc)
+    #     # ax.plot(viz.fpr, viz.tpr, c="tab:green")
+    # print("make_roc_curve done!")
+    # mean_auc = plot_roc_range(ax, tprs, mean_fpr, aucs, out_dir, clf_name, fig)
+    # plt.close(fig)
+    # plt.clf()
+    return 0
 
 
 def plot_dwt_power(

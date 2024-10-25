@@ -96,7 +96,7 @@ def main(
             build_dataset.run(
                 w_size=[30],
                 threshs=[25],
-                n_peaks=[1, 2, 3, 4, 5],
+                n_peaks=[1, 2, 3],
                 data_dir=data_dir,
                 out_dir=out_dir,
                 max_sample=max_sample,
@@ -263,6 +263,7 @@ if __name__ == "__main__":
     #data_dir = Path("/mnt/storage/scratch/axel/cats")
     # main(data_dir=Path("E:/Cats"),
     #      dataset_path=Path('E:/dataset.csv'),
-    #      out_dirname="paper_debug_regularisation_20",
+    #      out_dirname="paper_debug_pub",
+    #      create_dataset=True,
     #      n_bootstrap=11)
     typer.run(main)
