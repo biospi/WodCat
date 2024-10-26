@@ -97,7 +97,7 @@ def main(
                 build_dataset.run(
                     w_size=[30],
                     threshs=[25],
-                    n_peaks=[1, 2, 3],
+                    n_peaks=[1],
                     data_dir=data_dir,
                     out_dir=out_dir,
                     max_sample=max_sample,
@@ -108,7 +108,7 @@ def main(
 
     datasets = sorted([x for x in Path(out_dir).glob("**/*/samples.csv")])
 
-    print(f"datasets={datasets}")
+    #print(f"datasets={datasets}")
     # meta_columns = sorted([pd.read_csv(x).values.flatten().tolist() for x in Path(out_dir).glob("**/*/meta_columns.csv")])
     # print(f"meta_columns={meta_columns}")
 
@@ -128,7 +128,7 @@ def main(
         meta_columns_file = dataset.parent / "meta_columns.csv"
         meta_columns = pd.read_csv(meta_columns_file).values.flatten().tolist()
         print(f"dataset={dataset}")
-        print(f"meta_columns={meta_columns}")
+        # print(f"meta_columns={meta_columns}")
         if ml_exist:  # if you already ran the classification pipeline on hpc
             print("Parsing existing results...")
             ml_out = [x.parent for x in dataset.parent.parent.glob("**/fold_data")]
@@ -159,35 +159,34 @@ def main(
                 )
                 results.append(res)
             else:
-                for preprocessing_steps in [
-                    [""],
-                    ["L1"],
-                    ["L1", "L1SCALE", "ANSCOMBE"],
-                ]:
-                    pre_visu = False  # export grapth just for the first run to save storage space
-                    if i == 0:
+                for clf in ["lreg", "rbf", "knn", "dtree"]:
+                    for preprocessing_steps in [
+                        [""],
+                        ["L1"],
+                        ["L1", "L1SCALE", "ANSCOMBE"],
+                    ]:
                         pre_visu = False
+                        out_ml_dir, status = run_ml.run(
+                            preprocessing_steps=preprocessing_steps,
+                            export_hpc_string=export_hpc_string,
+                            regularisation=regularisation,
+                            meta_columns=meta_columns,
+                            dataset_filepath=dataset,
+                            out_dir=out_dir,
+                            skip=skip_ml,
+                            n_job=n_job,
+                            pre_visu=pre_visu,
+                            n_peak=n_peak,
+                            clf=clf
+                        )
 
-                    out_ml_dir, status = run_ml.run(
-                        preprocessing_steps=preprocessing_steps,
-                        export_hpc_string=export_hpc_string,
-                        regularisation=regularisation,
-                        meta_columns=meta_columns,
-                        dataset_filepath=dataset,
-                        out_dir=out_dir,
-                        skip=skip_ml,
-                        n_job=n_job,
-                        pre_visu=pre_visu,
-                        n_peak=n_peak,
-                    )
+                        if export_hpc_string:
+                            continue
 
-                    if export_hpc_string:
-                        continue
-
-                    res = boot_roc_curve.main(
-                        out_ml_dir, n_bootstrap=n_bootstrap, n_job=n_job
-                    )
-                    results.append(res)
+                        res = boot_roc_curve.main(
+                            out_ml_dir, n_bootstrap=n_bootstrap, n_job=n_job
+                        )
+                        results.append(res)
 
     # create submission file for Blue Crystal(UoB), please ignore if running on local computer
     if export_hpc_string:
@@ -200,7 +199,7 @@ def main(
     boot_roc_curve.boostrap_auc_peak(results, out_dir)
     #boot_roc_curve.boostrap_auc_peak_delta(results, out_dir)
 
-    print("Create boxplot best model")
+    #print("Create boxplot best model")
     #best_model_boxplot(results, out_dir)
 
 
@@ -268,9 +267,9 @@ def best_model_boxplot(results, out_dir):
 
 if __name__ == "__main__":
     # data_dir = Path("/mnt/storage/scratch/axel/cats")
-    # main(data_dir=Path("E:/Cats"),
-    #      dataset_path=Path('E:/dataset.csv'),
-    #      out_dirname="paper_debug_pub",
-    #      create_dataset=True,
-    #      n_bootstrap=11)
-    typer.run(main)
+    main(data_dir=Path("E:/Cats"),
+         dataset_path=Path('E:/dataset.csv'),
+         out_dirname="paper_debug_pub",
+         create_dataset=True,
+         n_bootstrap=11)
+    # typer.run(main)
