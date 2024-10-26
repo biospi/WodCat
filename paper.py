@@ -132,6 +132,7 @@ def main(
         if ml_exist:  # if you already ran the classification pipeline on hpc
             print("Parsing existing results...")
             ml_out = [x.parent for x in dataset.parent.parent.glob("**/fold_data")]
+            print(f"ml_out={ml_out}")
             for out_ml_dir in ml_out:
                 print(f"out_ml_dir={out_ml_dir}")
                 res = boot_roc_curve.main(
@@ -179,8 +180,10 @@ def main(
                         pre_visu=pre_visu,
                         n_peak=n_peak,
                     )
+
                     if export_hpc_string:
                         continue
+
                     res = boot_roc_curve.main(
                         out_ml_dir, n_bootstrap=n_bootstrap, n_job=n_job
                     )

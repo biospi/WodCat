@@ -125,7 +125,7 @@ def worker(
 
 
 def main(path=None, n_bootstrap=100, n_job=6):
-    print("loading data...")
+    print(f"loading data... path={path}")
     paths = list(path.glob("**/fold_data/*.json"))
     if len(paths) == 0:
         print("There are no .json files in the fold_data folder.")
@@ -177,7 +177,7 @@ def main(path=None, n_bootstrap=100, n_job=6):
         xaxis_test = manager.list()
         for i in range(n_bootstrap):
             bootstrap = np.random.choice(paths, size=len(paths), replace=True)
-            print(bootstrap)
+            #print(bootstrap)
             pool.apply_async(
                 worker,
                 (
