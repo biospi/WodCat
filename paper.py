@@ -48,7 +48,7 @@ def all_clf(
     clf: str = "rbf",
     dataset_path: Path = Path("dataset.csv"),
     n_bootstrap: int = 100,
-    ml_exist: bool = False,
+    ml_exist: bool = True,
     skip_ml: bool = False,
     regularisation: bool = False,
     n_job: int = 30,
@@ -131,18 +131,19 @@ def main(
         exit()
 
     if create_dataset:
-        for max_sample in [150]:
-            build_dataset.run(
-                w_size=[30],
-                threshs=[25],
-                n_peaks=[1, 2, 3],
-                data_dir=data_dir,
-                out_dir=out_dir,
-                max_sample=max_sample,
-                day_windows=["All"],
-                n_job=n_job,
-                dataset_path=dataset_path,
-            )
+        if not out_dir.exists():
+            for max_sample in [150]:
+                build_dataset.run(
+                    w_size=[30],
+                    threshs=[25],
+                    n_peaks=[1, 2, 3],
+                    data_dir=data_dir,
+                    out_dir=out_dir,
+                    max_sample=max_sample,
+                    day_windows=["All"],
+                    n_job=n_job,
+                    dataset_path=dataset_path,
+                )
 
     datasets = sorted([x for x in Path(out_dir).glob("**/*/samples.csv")])
 
@@ -235,10 +236,10 @@ def main(
 
     print("Create n peak comparison ROC curve...")
     boot_roc_curve.boostrap_auc_peak(results, out_dir)
-    boot_roc_curve.boostrap_auc_peak_delta(results, out_dir)
+    #boot_roc_curve.boostrap_auc_peak_delta(results, out_dir)
 
     print("Create boxplot best model")
-    best_model_boxplot(results, out_dir)
+    #best_model_boxplot(results, out_dir)
 
 
 def best_model_boxplot(results, out_dir):
