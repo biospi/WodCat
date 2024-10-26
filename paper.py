@@ -36,44 +36,6 @@ import plotly.graph_objects as go
 import scipy
 
 
-def all_clf(
-    data_dir: Path = typer.Option(
-        ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
-    ),
-    create_dataset: bool = False,
-    export_hpc_string: bool = False,
-    bc_username: str = "sscm012844",
-    uob_username: str = "fo18103",
-    out_dirname: str = "paper_allclf",
-    clf: str = "rbf",
-    dataset_path: Path = Path("dataset.csv"),
-    n_bootstrap: int = 100,
-    ml_exist: bool = True,
-    skip_ml: bool = False,
-    regularisation: bool = False,
-    n_job: int = 30,
-    build_heatmap: bool = False,
-):
-    for clf in ["lreg", "rbf", "knn", "dtree"]:
-        out_dirname = f"{out_dirname}_{clf}"
-        main(
-            data_dir,
-            create_dataset,
-            export_hpc_string,
-            bc_username,
-            uob_username,
-            out_dirname,
-            clf,
-            dataset_path,
-            n_bootstrap,
-            ml_exist,
-            skip_ml,
-            regularisation,
-            n_job,
-            build_heatmap,
-        )
-
-
 def main(
     data_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
@@ -83,7 +45,6 @@ def main(
     bc_username: str = "sscm012844",
     uob_username: str = "fo18103",
     out_dirname: str = "paper_allclf",
-    clf: str = "rbf",
     dataset_path: Path = Path("dataset.csv"),
     n_bootstrap: int = 100,
     ml_exist: bool = False,
@@ -189,7 +150,6 @@ def main(
                     out_dir=out_dir,
                     skip=skip_ml,
                     n_job=n_job,
-                    clf=clf,
                     pre_visu=False,
                     n_peak=n_peak,
                 )
@@ -216,7 +176,6 @@ def main(
                         out_dir=out_dir,
                         skip=skip_ml,
                         n_job=n_job,
-                        clf=clf,
                         pre_visu=pre_visu,
                         n_peak=n_peak,
                     )
@@ -311,4 +270,4 @@ if __name__ == "__main__":
     #      out_dirname="paper_debug_pub",
     #      create_dataset=True,
     #      n_bootstrap=11)
-    typer.run(all_clf)
+    typer.run(main)
