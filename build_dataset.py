@@ -138,7 +138,7 @@ def create_training_sets(run_id, activity, timestamp, metadata, max_sample, n_pe
     return filepath, meta_names
 
 
-def get_cat_meta(output_dir, cat_id, output_fig=True, individual_to_ignore = ["MrDudley", "Oliver_F", "Lucy"]):
+def get_cat_meta(output_dir, cat_id, output_fig=False, individual_to_ignore = ["MrDudley", "Oliver_F", "Lucy"]):
     # print("getting health classification for cat id=%d" % cat_id)
     file = Path(os.getcwd()) / "metadata.csv"
     df = pd.read_csv(file, sep=",", nrows=55)
@@ -492,7 +492,7 @@ def run(
     threshs: List[int] = [10],
     n_peaks: List[int] = [1],
     day_windows: List[str] = ['All'],
-    out_heatmap: bool = True,
+    out_heatmap: bool = False,
     use_age_as_feature: bool = False,
     max_sample: int = 100,
     n_job: int = 2,
