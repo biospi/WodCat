@@ -22,7 +22,8 @@ import numpy as np
 import pandas as pd
 import typer
 import matplotlib
-matplotlib.use('Agg')
+
+matplotlib.use("Agg")
 import build_dataset
 import run_ml
 import boot_roc_curve
@@ -35,23 +36,61 @@ import plotly.graph_objects as go
 import scipy
 
 
-def main(
+def all_clf(
     data_dir: Path = typer.Option(
         ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
     ),
     create_dataset: bool = False,
     export_hpc_string: bool = False,
-    bc_username: str = 'sscm012844',
-    uob_username: str = 'fo18103',
-    out_dirname: str = 'paper_allclf',
-    clf: str = 'rbf',
+    bc_username: str = "sscm012844",
+    uob_username: str = "fo18103",
+    out_dirname: str = "paper_allclf",
+    clf: str = "rbf",
     dataset_path: Path = Path("dataset.csv"),
     n_bootstrap: int = 100,
     ml_exist: bool = False,
     skip_ml: bool = False,
     regularisation: bool = False,
     n_job: int = 30,
-    build_heatmap: bool = False
+    build_heatmap: bool = False,
+):
+    for clf in ["lreg", "rbf", "knn", "dtree"]:
+        out_dirname = f"{out_dirname}_{clf}"
+        main(
+            data_dir,
+            create_dataset,
+            export_hpc_string,
+            bc_username,
+            uob_username,
+            out_dirname,
+            clf,
+            dataset_path,
+            n_bootstrap,
+            ml_exist,
+            skip_ml,
+            regularisation,
+            n_job,
+            build_heatmap,
+        )
+
+
+def main(
+    data_dir: Path = typer.Option(
+        ..., exists=False, file_okay=False, dir_okay=True, resolve_path=True
+    ),
+    create_dataset: bool = False,
+    export_hpc_string: bool = False,
+    bc_username: str = "sscm012844",
+    uob_username: str = "fo18103",
+    out_dirname: str = "paper_allclf",
+    clf: str = "rbf",
+    dataset_path: Path = Path("dataset.csv"),
+    n_bootstrap: int = 100,
+    ml_exist: bool = False,
+    skip_ml: bool = False,
+    regularisation: bool = False,
+    n_job: int = 30,
+    build_heatmap: bool = False,
 ):
     """Script to reproduce paper results\n
     Args:\n
@@ -75,7 +114,7 @@ def main(
     # exit()
 
     if build_heatmap:
-        #plot all data heatmap
+        # plot all data heatmap
         build_dataset.run(
             w_size=[15],
             threshs=[10],
@@ -87,7 +126,7 @@ def main(
             n_job=n_job,
             dataset_path=dataset_path,
             out_heatmap=True,
-            bin='T'
+            bin="T",
         )
         exit()
 
@@ -102,7 +141,7 @@ def main(
                 max_sample=max_sample,
                 day_windows=["All"],
                 n_job=n_job,
-                dataset_path=dataset_path
+                dataset_path=dataset_path,
             )
 
     datasets = sorted([x for x in Path(out_dir).glob("**/*/samples.csv")])
@@ -111,9 +150,11 @@ def main(
     # meta_columns = sorted([pd.read_csv(x).values.flatten().tolist() for x in Path(out_dir).glob("**/*/meta_columns.csv")])
     # print(f"meta_columns={meta_columns}")
 
-    assert len(datasets) > 0, f"There is no dataset in {out_dir}. create_dataset={create_dataset}"
+    assert (
+        len(datasets) > 0
+    ), f"There is no dataset in {out_dir}. create_dataset={create_dataset}"
 
-    if export_hpc_string: #ignore this if you do not use Blue Crystal(UoB)
+    if export_hpc_string:  # ignore this if you do not use Blue Crystal(UoB)
         purge_hpc_file("hpc.txt")
         purge_hpc_file("hpc_ln.txt")
 
@@ -121,12 +162,12 @@ def main(
     for i, dataset in enumerate(datasets):
         # if int(dataset.parent.parent.name.split('_')[-1]) < 4: #todo remove
         #     continue
-        n_peak = int(dataset.parent.parent.stem.split('_')[-1])
+        n_peak = int(dataset.parent.parent.stem.split("_")[-1])
         meta_columns_file = dataset.parent / "meta_columns.csv"
         meta_columns = pd.read_csv(meta_columns_file).values.flatten().tolist()
         print(f"dataset={dataset}")
         print(f"meta_columns={meta_columns}")
-        if ml_exist: #if you already ran the classification pipeline on hpc
+        if ml_exist:  # if you already ran the classification pipeline on hpc
             print("Parsing existing results...")
             ml_out = [x.parent for x in dataset.parent.parent.glob("**/fold_data")]
             for out_ml_dir in ml_out:
@@ -137,7 +178,7 @@ def main(
                 results.append(res)
         else:
             print("Running machine learning pipeline...")
-            if n_peak == 0: #process dataset wit age as the only feature
+            if n_peak == 0:  # process dataset wit age as the only feature
                 out_ml_dir, status = run_ml.run(
                     preprocessing_steps=[""],
                     export_hpc_string=export_hpc_string,
@@ -149,7 +190,7 @@ def main(
                     n_job=n_job,
                     clf=clf,
                     pre_visu=False,
-                    n_peak=n_peak
+                    n_peak=n_peak,
                 )
                 res = boot_roc_curve.main(
                     out_ml_dir, n_bootstrap=n_bootstrap, n_job=n_job
@@ -159,9 +200,9 @@ def main(
                 for preprocessing_steps in [
                     [""],
                     ["L1"],
-                    ["L1", "L1SCALE", "ANSCOMBE"]
+                    ["L1", "L1SCALE", "ANSCOMBE"],
                 ]:
-                    pre_visu = False #export grapth just for the first run to save storage space
+                    pre_visu = False  # export grapth just for the first run to save storage space
                     if i == 0:
                         pre_visu = False
 
@@ -176,7 +217,7 @@ def main(
                         n_job=n_job,
                         clf=clf,
                         pre_visu=pre_visu,
-                        n_peak=n_peak
+                        n_peak=n_peak,
                     )
                     if export_hpc_string:
                         continue
@@ -185,9 +226,9 @@ def main(
                     )
                     results.append(res)
 
-    #create submission file for Blue Crystal(UoB), please ignore if running on local computer
+    # create submission file for Blue Crystal(UoB), please ignore if running on local computer
     if export_hpc_string:
-        with open('hpc_ln.txt') as file:
+        with open("hpc_ln.txt") as file:
             command_list = [line.rstrip() for line in file]
         create_batch_script(uob_username, bc_username, command_list, len(command_list))
         return
@@ -207,37 +248,40 @@ def best_model_boxplot(results, out_dir):
     aucs = [np.array(x[14]) - best_model for x in results]
     labels = [f"{r[6]}_{r[16][0].parent.parent.stem}" for r in results]
 
-    #format labels to human readable
+    # format labels to human readable
     labels_formatted = []
     for l in labels:
-        if l ==  '0__LeaveOneOut':
+        if l == "0__LeaveOneOut":
             labels_formatted.append("Age")
-        if l ==  '1_L1_L1SCALE_ANSCOMBE_LeaveOneOut':
+        if l == "1_L1_L1SCALE_ANSCOMBE_LeaveOneOut":
             labels_formatted.append("Activity 1 peak")
-        if l ==  '22_L1_L1SCALE_ANSCOMBE_LeaveOneOut':
+        if l == "22_L1_L1SCALE_ANSCOMBE_LeaveOneOut":
             labels_formatted.append("Activity 22 peaks")
-
 
     fig = go.Figure()
     for auc, label in zip(aucs, labels_formatted):
         if np.sum(auc) == 0:
             p_value = np.nan
         else:
-            p_value = scipy.stats.wilcoxon(auc, alternative='less').pvalue
-        #print(p_value)
+            p_value = scipy.stats.wilcoxon(auc, alternative="less").pvalue
+        # print(p_value)
 
-        label_with_p_value = f"{label} (p-value: {p_value:.2e})" if not np.isnan(p_value) else f"{label} (p-value: NaN)"
+        label_with_p_value = (
+            f"{label} (p-value: {p_value:.2e})"
+            if not np.isnan(p_value)
+            else f"{label} (p-value: NaN)"
+        )
         fig.add_trace(go.Box(y=auc, name=label))
 
     fig.update_layout(
-        title='Best Model AUC Comparison',
+        title="Best Model AUC Comparison",
         xaxis_title="Model",
         yaxis_title="AUC(Delta)",
-        xaxis={'tickangle': 45},  # Rotate labels for better readability
+        xaxis={"tickangle": 45},  # Rotate labels for better readability
         showlegend=True,
-        font=dict(family="Times New Roman", size=12, color="black")
+        font=dict(family="Times New Roman", size=12, color="black"),
     )
-    filepath = str(out_dir / 'best_vs_others_nop.html')
+    filepath = str(out_dir / "best_vs_others_nop.html")
     print(filepath)
     fig.write_html(filepath)
 
@@ -260,10 +304,10 @@ def best_model_boxplot(results, out_dir):
 
 
 if __name__ == "__main__":
-    #data_dir = Path("/mnt/storage/scratch/axel/cats")
+    # data_dir = Path("/mnt/storage/scratch/axel/cats")
     # main(data_dir=Path("E:/Cats"),
     #      dataset_path=Path('E:/dataset.csv'),
     #      out_dirname="paper_debug_pub",
     #      create_dataset=True,
     #      n_bootstrap=11)
-    typer.run(main)
+    typer.run(all_clf)
