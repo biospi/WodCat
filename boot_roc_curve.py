@@ -690,7 +690,8 @@ def boostrap_auc_peak(results, out_dir):
 
         time_of_day = df["time_of_day"].values[0]
         max_scount = df["Max sample count per indiv"].values[0]
-        filename = f"{time_of_day}_{ntop}_{max_scount}_{s_length}_auc_per_npeak_bootstrap.png"
+        clf = df["Classifier"].values[0].replace("(", "_").replace(")", "_")
+        filename = f"{clf}_{time_of_day}_{ntop}_{max_scount}_{s_length}_auc_per_npeak_bootstrap.png"
         out_dir.mkdir(parents=True, exist_ok=True)
         filepath = out_dir / filename
         print(filepath)
