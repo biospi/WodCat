@@ -60,7 +60,7 @@ def worker(
     all_train_proba_list = []
     prec_list_test = []
     prec_list_train = []
-    print(f"bootstrap results progress {i}/{tot}...")
+    #print(f"bootstrap results progress {i}/{tot}...")
 
     all_test_proba = []
     all_test_y = []
