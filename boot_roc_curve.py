@@ -585,9 +585,10 @@ def boostrap_auc_peak(results, out_dir):
     n_peak = df["N peaks"].astype(int).max()
     x_axis = np.arange(1, n_peak+1).astype(str)
 
+    df.to_csv(out_dir / "results.csv", index=False)
     print(df)
 
-    dfs_ntop = [group for _, group in df.groupby(["N top", "time_of_day", "Max sample count per indiv", "Sample length (seconds)"])]
+    dfs_ntop = [group for _, group in df.groupby(["N top", "time_of_day", "Max sample count per indiv", "Sample length (seconds)", "Classifier"])]
     for df in dfs_ntop:
         ntop = int(df["N top"].values[0])
         s_length = df["Sample length (seconds)"].values[0]
