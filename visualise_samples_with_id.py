@@ -8,6 +8,11 @@ import matplotlib.pyplot as plt
 from model.data_loader import load_activity_data
 from preprocessing.preprocessing import apply_preprocessing_steps
 
+from matplotlib import rcParams
+# Set matplotlib to use Times New Roman
+rcParams['font.family'] = 'serif'
+rcParams['font.serif'] = ['Times New Roman']
+
 IDS = [
     "'Greg'",
     "'Henry'",
@@ -157,7 +162,7 @@ def make_plot(A, output_dir, id, n_meta):
         legend=False,
         title=title,
         alpha=0.7,
-        xlabel="Time(s)",
+        xlabel="Time(seconds)",
         ylabel="Activity count",
     ).get_figure()
     #plt.ylim(0, 70)
