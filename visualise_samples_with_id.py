@@ -160,7 +160,7 @@ def make_plot(A, output_dir, id, n_meta):
         subplots=False,
         grid=True,
         legend=False,
-        title=title,
+        title=None,
         alpha=0.7,
         xlabel="Time(seconds)",
         ylabel="Activity count",
@@ -171,7 +171,7 @@ def make_plot(A, output_dir, id, n_meta):
     fig.set_size_inches(4, 4)  # Adjust the figure size as needed
     filepath = output_dir / f"{id}.png"
     print(filepath)
-    fig.savefig(filepath, dpi=500)
+    fig.savefig(filepath, dpi=500, bbox_inches="tight")
 
 
 if __name__ == "__main__":
