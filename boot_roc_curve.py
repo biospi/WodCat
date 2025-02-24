@@ -422,7 +422,7 @@ def boostrap_auc_peak_delta(results, out_dir):
         s_length = df["Sample length (seconds)"].values[0]
         fig, ax1 = plt.subplots()
 
-        ax2 = ax1.twinx()
+        # ax2 = ax1.twinx()
         dfs = [group for _, group in df.groupby(["pipeline"])]
 
         x_ticks = sorted(df["N peaks"].unique())
@@ -431,14 +431,14 @@ def boostrap_auc_peak_delta(results, out_dir):
             y_ = df[df["N peaks"] == x_t][["N training samples", "N testing samples"]].values[0].sum()
             y_ticks.append(y_)
 
-        ax2.bar(
-            x_ticks,
-            y_ticks,
-            color="grey",
-            label="n samples",
-            alpha=0.4,
-            width=0.2,
-        )
+        # ax2.bar(
+        #     x_ticks,
+        #     y_ticks,
+        #     color="grey",
+        #     label="n samples",
+        #     alpha=0.4,
+        #     width=0.2,
+        # )
 
         colors = list(mcolors.TABLEAU_COLORS.keys())
         print(colors)
@@ -515,10 +515,10 @@ def boostrap_auc_peak_delta(results, out_dir):
         fig.suptitle("Delta L1 Normalised AUC with N peak increase")
         ax1.set_xlabel("Number of peaks")
         ax1.set_ylabel("Delta AUC (Compared to Normalised)")
-        ax2.set_ylabel("Number of samples")
+        # ax2.set_ylabel("Number of samples")
         # plt.legend()
         # ax1.legend(loc="lower right").set_visible(True)
-        ax2.legend(loc="upper left").set_visible(True)
+        # ax2.legend(loc="upper left").set_visible(True)
 
         color_data = []
         for item in colors_:
@@ -543,47 +543,50 @@ def boostrap_auc_peak_delta(results, out_dir):
         fig.savefig(filepath, dpi=500)
 
 
-def boostrap_auc_peak(results, out_dir):
-    if len(results) == 0:
-        print("None value in results!")
-        return
+def boostrap_auc_peak(results, out_dir, df_sav=None):
+    if df_sav is None:
+        if len(results) == 0:
+            print("None value in results!")
+            return
 
-    df = pd.DataFrame(
-        results,
-        columns=[
-            "AUC testing (95% CI)",
-            "AUC training (95% CI)",
-            "Class1 Precision testing (95% CI)",
-            "Class1 Precision training (95% CI)",
-            "N training samples",
-            "N testing samples",
-            "N peaks",
-            "Max sample count per indiv",
-            "N top",
-            "Sample length (seconds)",
-            "Classifier",
-            "Pre-processing",
-            "median_auc_test",
-            "median_auc_train",
-            "median_auc_test_bootstrap",
-            "median_auc_train_bootstrap",
-            "path",
-            "time_of_day"
-        ],
-    )
+        df = pd.DataFrame(
+            results,
+            columns=[
+                "AUC testing (95% CI)",
+                "AUC training (95% CI)",
+                "Class1 Precision testing (95% CI)",
+                "Class1 Precision training (95% CI)",
+                "N training samples",
+                "N testing samples",
+                "N peaks",
+                "Max sample count per indiv",
+                "N top",
+                "Sample length (seconds)",
+                "Classifier",
+                "Pre-processing",
+                "median_auc_test",
+                "median_auc_train",
+                "median_auc_test_bootstrap",
+                "median_auc_train_bootstrap",
+                "path",
+                "time_of_day"
+            ],
+        )
 
-    df = df[~pd.isna(df["median_auc_test"])]
-    df.loc[
-        df["median_auc_test"] <= 0.5, "median_auc_test"
-    ] = 0.5  # skitlearn can output auc <0.5 those are chance
-    # df = df[df["N peaks"] < 6]
-    df = df.sort_values("N peaks", ascending=True)
+        df = df[~pd.isna(df["median_auc_test"])]
+        df.loc[
+            df["median_auc_test"] <= 0.5, "median_auc_test"
+        ] = 0.5  # skitlearn can output auc <0.5 those are chance
+        # df = df[df["N peaks"] < 6]
+        df = df.sort_values("N peaks", ascending=True)
 
-    df["pipeline"] = df["Pre-processing"] + "->" + df["Classifier"]
-    df["N peaks"] = df["N peaks"].astype(int)
+        df["pipeline"] = df["Pre-processing"] + "->" + df["Classifier"]
+        df["N peaks"] = df["N peaks"].astype(int)
 
-    n_peak = df["N peaks"].astype(int).max()
-    x_axis = np.arange(1, n_peak+1).astype(str)
+        n_peak = df["N peaks"].astype(int).max()
+        x_axis = np.arange(1, n_peak+1).astype(str)
+    else:
+        df = df_sav
 
     df.to_csv(out_dir / "results.csv", index=False)
     print(df)
@@ -594,7 +597,7 @@ def boostrap_auc_peak(results, out_dir):
         s_length = df["Sample length (seconds)"].values[0]
         fig, ax1 = plt.subplots()
 
-        ax2 = ax1.twinx()
+        # ax2 = ax1.twinx()
         dfs = [group for _, group in df.groupby(["pipeline"])]
 
         x_ticks = sorted(df["N peaks"].unique())
@@ -603,14 +606,14 @@ def boostrap_auc_peak(results, out_dir):
             y_ = df[df["N peaks"] == x_t][["N training samples", "N testing samples"]].values[0].sum()
             y_ticks.append(y_)
 
-        ax2.bar(
-            x_ticks,
-            y_ticks,
-            color="grey",
-            label="n samples",
-            alpha=0.4,
-            width=0.2,
-        )
+        # ax2.bar(
+        #     x_ticks,
+        #     y_ticks,
+        #     color="grey",
+        #     label="n samples",
+        #     alpha=0.4,
+        #     width=0.2,
+        # )
 
         colors = list(mcolors.TABLEAU_COLORS.keys())
         print(colors)
@@ -673,10 +676,10 @@ def boostrap_auc_peak(results, out_dir):
         fig.suptitle("Evolution of AUC(training and testing) with N peak increase")
         ax1.set_xlabel("Number of peaks")
         ax1.set_ylabel("Median AUC")
-        ax2.set_ylabel("Number of samples")
+        # ax2.set_ylabel("Number of samples")
         # plt.legend()
         # ax1.legend(loc="lower right").set_visible(True)
-        ax2.legend(loc="upper left").set_visible(True)
+        # ax2.legend(loc="upper left").set_visible(True)
 
         color_data = []
         for item in colors_:
@@ -687,7 +690,7 @@ def boostrap_auc_peak(results, out_dir):
         )
         ax1.grid()
 
-        ax1.set_ylim(0.45, 1)
+        ax1.set_ylim(0.45, 0.65)
 
         time_of_day = df["time_of_day"].values[0]
         max_scount = df["Max sample count per indiv"].values[0]
@@ -703,6 +706,11 @@ def boostrap_auc_peak(results, out_dir):
 
 
 if __name__ == "__main__":
+    # df_results = pd.read_csv("C:/Users/fo18103/Downloads/results.csv")
+    # df_results = df_results[df_results["N peaks"] <= 28]
+    # print(df_results)
+    # out_dir = Path("C:/Users/fo18103/Downloads")
+    # boostrap_auc_peak(None, out_dir, df_sav=df_results)
 
     if len(sys.argv) > 1:
         res_folder = Path(sys.argv[1])
