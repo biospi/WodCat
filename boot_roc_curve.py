@@ -690,7 +690,7 @@ def boostrap_auc_peak(results, out_dir, df_sav=None):
         )
         ax1.grid()
 
-        ax1.set_ylim(0.45, 0.65)
+        ax1.set_ylim(0.45, 1)
 
         time_of_day = df["time_of_day"].values[0]
         max_scount = df["Max sample count per indiv"].values[0]
