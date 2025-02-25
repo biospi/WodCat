@@ -34,6 +34,17 @@ import matplotlib.pyplot as plt
 from utils.utils import purge_hpc_file, create_batch_script
 import plotly.graph_objects as go
 import scipy
+import os
+
+
+def find_samples_csv(root_dir):
+    result = []
+    folders = [f for f in root_dir.iterdir() if f.is_dir()]
+    for f in folders:
+        sample_dir = f / "dataset" / "samples.csv"
+        result.append(sample_dir)
+
+    return sorted(result)
 
 
 def main(
@@ -107,7 +118,10 @@ def main(
                     dataset_path=dataset_path,
                 )
 
-    datasets = sorted([x for x in Path(out_dir).glob("**/*/samples.csv")])
+    print("searching dataset...")
+    # datasets = sorted([x for x in Path(out_dir).glob("**/*/samples.csv")])
+    ##datasets = sorted(Path(out_dir).rglob("samples.csv"))
+    datasets = find_samples_csv(out_dir)
 
     #print(f"datasets={datasets}")
     # meta_columns = sorted([pd.read_csv(x).values.flatten().tolist() for x in Path(out_dir).glob("**/*/meta_columns.csv")])
@@ -267,10 +281,9 @@ def best_model_boxplot(results, out_dir):
 
 
 if __name__ == "__main__":
-    # data_dir = Path("/mnt/storage/scratch/axel/cats")
     # main(data_dir=Path("E:/Cats"),
     #      dataset_path=Path('E:/dataset.csv'),
-    #      out_dirname="paper_debug_pub",
-    #      create_dataset=True,
-    #      n_bootstrap=11)
+    #      out_dirname="paper_debug_regularisation_36",
+    #      create_dataset=False,
+    #      ml_exist=True)
     typer.run(main)
