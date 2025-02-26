@@ -212,10 +212,10 @@ def main(
 
     print("Create n peak comparison ROC curve...")
     boot_roc_curve.boostrap_auc_peak(results, out_dir)
-    #boot_roc_curve.boostrap_auc_peak_delta(results, out_dir)
+    boot_roc_curve.boostrap_auc_peak_delta(results, out_dir)
 
     #print("Create boxplot best model")
-    #best_model_boxplot(results, out_dir)
+    best_model_boxplot(results, out_dir)
 
 
 def best_model_boxplot(results, out_dir):
